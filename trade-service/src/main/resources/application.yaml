@@ -1,0 +1,14 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: trade-service
+  profiles:
+    active: local
+
+harbor:
+  swagger:
+    title:
+    desc:
+    package:
+# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

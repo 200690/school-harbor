@@ -1,0 +1,14 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: harbor-service
+  profiles:
+    active: local
+
+harbor:
+  swagger:
+    title: 二手交易接口
+    desc: "二手交易接口"
+    package:
+# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

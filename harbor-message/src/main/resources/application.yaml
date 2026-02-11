@@ -1,0 +1,14 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: harbor-message
+  profiles:
+    active: local
+
+harbor:
+  swagger:
+    title: 消息队列接口测试
+    desc: "消息队列接口测试"
+    package:
+# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

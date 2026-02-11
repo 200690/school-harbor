@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="harbor-part-time" />
+        <module name="harbor-utils" />
+        <module name="harbor-common" />
+        <module name="harbor-second-hand" />
+        <module name="harbor-pay-service" />
+        <module name="harbor-gateway" />
+        <module name="user-service" />
+        <module name="harbor-trade-service" />
+        <module name="harbor-message" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="harbor-common" options="-parameters" />
+      <module name="harbor-gateway" options="-parameters" />
+      <module name="harbor-message" options="-parameters" />
+      <module name="harbor-part-time" options="-parameters" />
+      <module name="harbor-pay-service" options="-parameters" />
+      <module name="harbor-second-hand" options="-parameters" />
+      <module name="harbor-trade-service" options="-parameters" />
+      <module name="harbor-utils" options="-parameters" />
+      <module name="user-service" options="-parameters" />
+    </option>
+  </component>
+</project>
