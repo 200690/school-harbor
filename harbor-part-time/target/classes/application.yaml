@@ -1,0 +1,13 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: harbor-part-time
+  profiles:
+    active: local
+harbor:
+  swagger:
+    title: 兼职接口测试
+    desc: "兼职接口测试"
+    package: com.harbor.comtroller
+# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123
