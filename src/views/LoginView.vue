@@ -1,0 +1,152 @@
+<template>
+  <div class="login">
+    <!-- 登录表单 -->
+    <div class="login-container">
+      <div class="login-form-wrapper">
+        <h2 class="login-title">用户登录</h2>
+        <el-form :model="loginForm" :rules="rules" ref="loginForm" label-width="80px" class="login-form">
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="loginForm.username" placeholder="请输入用户名或手机号"></el-input>
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input type="password" v-model="loginForm.password" placeholder="请输入密码" show-password></el-input>
+          </el-form-item>
+          <el-form-item>
+            <div class="login-actions">
+              <el-checkbox v-model="rememberMe">记住我</el-checkbox>
+              <router-link to="/user/register" class="register-link">立即注册</router-link>
+            </div>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" class="login-btn" @click="handleLogin" :loading="loading">登录</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { login } from '@/api/user'
+
+export default {
+  name: 'LoginView',
+  components: {
+  },
+  data() {
+    return {
+      loginForm: {
+        username: '',
+        password: ''
+      },
+      rememberMe: false,
+      loading: false,
+      rules: {
+        username: [
+          { required: true, message: '请输入用户名或手机号', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 6, message: '密码长度至少为6位', trigger: 'blur' }
+        ]
+      }
+    }
+  },
+  methods: {
+    async handleLogin() {
+      this.$refs.loginForm.validate(async (valid) => {
+        if (valid) {
+          this.loading = true;
+          try {
+            const response = await login(this.loginForm);
+            const { token, user } = response.data;
+            
+            // 存储token和用户信息
+            localStorage.setItem('token', token);
+            localStorage.setItem('userInfo', JSON.stringify(user));
+            
+            this.$message.success('登录成功');
+            // 登录成功后跳转到首页
+            this.$router.push('/');
+          } catch (error) {
+            console.error('登录失败:', error);
+          } finally {
+            this.loading = false;
+          }
+        } else {
+          console.log('表单验证失败');
+          return false;
+        }
+      });
+    }
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.login {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 60px;
+  padding: 40px 0;
+  background-color: #f5f7fa;
+}
+
+.login-form-wrapper {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  width: 400px;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.login-form {
+  margin-top: 20px;
+}
+
+.login-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.register-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.3s;
+  
+  &:hover {
+    color: #66B1FF;
+  }
+}
+
+.login-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .login-form-wrapper {
+    width: 90%;
+    padding: 20px;
+  }
+}
+</style>
