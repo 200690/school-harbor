@@ -12,7 +12,7 @@
             <li><router-link to="/">首页</router-link></li>
             <li><router-link to="/part-time">兼职</router-link></li>
             <li><router-link to="/second-hand">二手交易</router-link></li>
-            <li><router-link to="/user/center">个人中心</router-link></li>
+            <li><router-link to="/user/user/center">个人中心</router-link></li>
             <li><router-link to="/about">关于我们</router-link></li>
           </ul>
         </div>

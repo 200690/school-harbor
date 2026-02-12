@@ -4,7 +4,7 @@
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item><router-link to="/user/center">个人中心</router-link></el-breadcrumb-item>
+        <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
         <el-breadcrumb-item>我的评价</el-breadcrumb-item>
       </el-breadcrumb>
 
@@ -199,7 +199,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .user-evaluations {
   min-height: 100vh;
-  padding: 20px 0;
+  padding: 80px 0 20px;
 }
 
 .breadcrumb {

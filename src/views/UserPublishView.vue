@@ -4,7 +4,7 @@
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item><router-link to="/user/center">个人中心</router-link></el-breadcrumb-item>
+        <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
         <el-breadcrumb-item>我的发布</el-breadcrumb-item>
       </el-breadcrumb>
 
@@ -55,7 +55,7 @@
                     <el-button size="small" type="primary" @click="viewDetail(post)">
                       查看详情
                     </el-button>
-                    <el-button size="small" type="success" @click="editPost()">
+                    <el-button size="small" type="success" @click="editPost(post)">
                         编辑
                       </el-button>
                     <el-button size="small" type="warning" @click="toggleStatus(post)">
@@ -91,7 +91,7 @@
                     <el-button size="small" type="primary" @click="viewDetail(post)">
                       查看详情
                     </el-button>
-                    <el-button size="small" type="success" @click="editPost()">
+                    <el-button size="small" type="success" @click="editPost(post)">
                       编辑
                     </el-button>
                     <el-button size="small" type="warning" @click="toggleStatus(post)">
@@ -127,7 +127,7 @@
                     <el-button size="small" type="primary" @click="viewDetail(post)">
                       查看详情
                     </el-button>
-                    <el-button size="small" type="success" @click="editPost()">
+                    <el-button size="small" type="success" @click="editPost(post)">
                       编辑
                     </el-button>
                     <el-button size="small" type="warning" @click="toggleStatus(post)">
@@ -187,9 +187,13 @@ const viewDetail = (post) => {
 }
 
 // 编辑发布
-const editPost = () => {
+const editPost = (post) => {
   ElMessage.info('跳转到编辑页面')
-  // 这里应该导航到编辑页面
+  if (post.type === 'second-hand') {
+    router.push(`/second-hand/edit/${post.id}`)
+  } else {
+    router.push(`/part-time/edit/${post.id}`)
+  }
 }
 
 // 切换状态（上架/下架）
@@ -222,7 +226,8 @@ onMounted(async () => {
 <style scoped lang="scss">
 .user-publish {
   min-height: 100vh;
-  padding: 20px 0;
+  padding-top: 80px;
+  padding-bottom: 20px;
 }
 
 .breadcrumb {

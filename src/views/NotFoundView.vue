@@ -27,7 +27,7 @@
           <router-link to="/second-hand" class="link-item">
             <i class="el-icon-s-goods"></i> 二手交易
           </router-link>
-          <router-link to="/user/center" class="link-item">
+          <router-link to="/user/user/center" class="link-item">
             <i class="el-icon-user"></i> 个人中心
           </router-link>
         </div>

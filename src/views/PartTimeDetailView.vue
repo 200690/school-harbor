@@ -182,7 +182,7 @@ export default {
 <style scoped lang="scss">
 .part-time-detail {
   min-height: 100vh;
-  padding: 20px 0;
+  padding: 80px 0 20px;
 }
 
 .breadcrumb {

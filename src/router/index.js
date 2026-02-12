@@ -22,6 +22,11 @@ const routes = [
     component: PartTimeDetailView
   },
   {
+    path: '/part-time/edit/:id',
+    name: 'part-time-edit',
+    component: () => import('../views/PartTimeEditView.vue')
+  },
+  {
     path: '/second-hand',
     name: 'second-hand',
     component: SecondHandListView
@@ -30,6 +35,11 @@ const routes = [
     path: '/second-hand/detail/:id',
     name: 'second-hand-detail',
     component: SecondHandDetailView
+  },
+  {
+    path: '/second-hand/edit/:id',
+    name: 'second-hand-edit',
+    component: () => import('../views/SecondHandEditView.vue')
   },
   {
     path: '/user/login',
@@ -42,49 +52,79 @@ const routes = [
     component: () => import('../views/RegisterView.vue')
   },
   {
-    path: '/user/center',
+    path: '/user/user/center',
     name: 'user-center',
     component: () => import('../views/UserCenterView.vue')
   },
   {
-    path: '/user/info',
+    path: '/user/user/info',
     name: 'user-info',
     component: () => import('../views/UserInfoView.vue')
   },
   {
-    path: '/user/publish',
+    path: '/user/user/publish',
     name: 'user-publish',
     component: () => import('../views/UserPublishView.vue')
   },
   {
-    path: '/user/applications',
+    path: '/user/user/applications',
     name: 'user-applications',
     component: () => import('../views/UserApplicationsView.vue')
   },
   {
-    path: '/user/purchases',
+    path: '/user/user/purchases',
     name: 'user-purchases',
     component: () => import('../views/UserPurchasesView.vue')
   },
   {
-    path: '/user/messages',
+    path: '/user/user/messages',
     name: 'user-messages',
     component: () => import('../views/UserMessagesView.vue')
   },
   {
-    path: '/user/evaluations',
+    path: '/user/user/evaluations',
     name: 'user-evaluations',
     component: () => import('../views/UserEvaluationsView.vue')
   },
   {
-    path: '/user/favorites',
+    path: '/user/user/favorites',
     name: 'user-favorites',
     component: () => import('../views/UserFavoritesView.vue')
   },
   {
-    path: '/user/settings',
+    path: '/user/user/settings',
     name: 'user-settings',
     component: () => import('../views/UserSettingsView.vue')
+  },
+  {
+    path: '/user/user/follows',
+    name: 'user-follows',
+    component: () => import('../views/UserFollowsView.vue')
+  },
+  {
+    path: '/user/user/blacklist',
+    name: 'user-blacklist',
+    component: () => import('../views/UserBlacklistView.vue')
+  },
+  {
+    path: '/user/user/report/:id',
+    name: 'user-report',
+    component: () => import('../views/UserReportView.vue')
+  },
+  {
+    path: '/user/user/after-sales/:id',
+    name: 'user-after-sales',
+    component: () => import('../views/UserAfterSalesView.vue')
+  },
+  {
+    path: '/user/profile/:id',
+    name: 'user-profile',
+    component: () => import('../views/UserProfileView.vue')
+  },
+  {
+    path: '/user/admin',
+    name: 'user-admin',
+    component: () => import('../views/UserAdminView.vue')
   },
   {
     path: '/about',
@@ -100,7 +140,15 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  // 配置滚动行为，每次导航到新页面时滚动到顶部
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  }
 })
 
 export default router

@@ -6,7 +6,7 @@
         <h2 class="login-title">用户登录</h2>
         <el-form :model="loginForm" :rules="rules" ref="loginForm" label-width="80px" class="login-form">
           <el-form-item label="用户名" prop="username">
-            <el-input v-model="loginForm.username" placeholder="请输入用户名或手机号"></el-input>
+            <el-input v-model="loginForm.username" placeholder="请输入手机号"></el-input>
           </el-form-item>
           <el-form-item label="密码" prop="password">
             <el-input type="password" v-model="loginForm.password" placeholder="请输入密码" show-password></el-input>
@@ -43,7 +43,7 @@ export default {
       loading: false,
       rules: {
         username: [
-          { required: true, message: '请输入用户名或手机号', trigger: 'blur' }
+          { required: true, message: '请输入手机号', trigger: 'blur' }
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },

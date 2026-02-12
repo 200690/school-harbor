@@ -3,9 +3,11 @@
     <!-- 导航栏 - 404页面不显示 -->
     <AppNavbar v-if="!isNotFoundPage" />
     
-    <!-- 页面过渡动画 -->
+    <!-- 页面过渡动画和组件缓存 -->
     <transition name="fade" mode="out-in">
-      <router-view />
+      <keep-alive :include="['HomeView']">
+        <router-view />
+      </keep-alive>
     </transition>
     
     <!-- 页脚 - 404页面不显示 -->

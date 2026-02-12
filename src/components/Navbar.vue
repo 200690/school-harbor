@@ -12,7 +12,7 @@
         <router-link to="/" class="nav-item">首页</router-link>
         <router-link to="/part-time" class="nav-item">兼职</router-link>
         <router-link to="/second-hand" class="nav-item">二手交易</router-link>
-        <router-link to="/user/center" class="nav-item">个人中心</router-link>
+        <router-link to="/user/user/center" class="nav-item">个人中心</router-link>
       </div>
       
       <!-- 搜索框 -->
@@ -58,7 +58,7 @@
           <router-link to="/" class="mobile-nav-item" @click="closeMobileMenu">首页</router-link>
           <router-link to="/part-time" class="mobile-nav-item" @click="closeMobileMenu">兼职</router-link>
           <router-link to="/second-hand" class="mobile-nav-item" @click="closeMobileMenu">二手交易</router-link>
-          <router-link to="/user/center" class="mobile-nav-item" @click="closeMobileMenu">个人中心</router-link>
+          <router-link to="/user/user/center" class="mobile-nav-item" @click="closeMobileMenu">个人中心</router-link>
           <router-link to="/user/login" class="mobile-nav-item" @click="closeMobileMenu">登录</router-link>
           <router-link to="/user/register" class="mobile-nav-item mobile-nav-item-primary" @click="closeMobileMenu">注册</router-link>
         </div>

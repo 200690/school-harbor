@@ -51,7 +51,12 @@
           <div class="job-info">
             <h3 class="job-title">{{ job.title }}</h3>
             <div class="job-meta">
-              <span class="meta-item"><i class="el-icon-s-flag"></i> {{ job.employer }}</span>
+              <span class="meta-item">
+                <i class="el-icon-s-flag"></i>
+                <router-link :to="`/user/profile/${job.employerId || 1}`" class="employer-link">
+                  {{ job.employer }}
+                </router-link>
+              </span>
               <span class="meta-item"><i class="el-icon-s-position"></i> {{ job.location }}</span>
               <span class="meta-item"><i class="el-icon-time"></i> {{ job.workTime }}</span>
             </div>
@@ -185,11 +190,11 @@ export default {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-top: 80px;
 }
 
 .main-content {
   flex: 1;
-  margin-top: 60px;
   padding: 20px 0;
 }
 
@@ -266,6 +271,15 @@ export default {
   margin-right: 16px;
   font-size: 14px;
   color: #666;
+}
+
+.employer-link {
+  color: #409EFF;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .job-description {

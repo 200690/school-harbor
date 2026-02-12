@@ -4,7 +4,7 @@
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item><router-link to="/user/center">个人中心</router-link></el-breadcrumb-item>
+        <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
         <el-breadcrumb-item>我的购买</el-breadcrumb-item>
       </el-breadcrumb>
 
@@ -69,6 +69,12 @@
               <el-button v-if="purchase.status === 'pending'" size="small" type="danger" @click="cancelOrder(purchase.id)">
                 取消订单
               </el-button>
+              <el-button size="small" type="danger" @click="reportOrder(purchase.id)">
+                举报
+              </el-button>
+              <el-button size="small" type="warning" @click="afterSales(purchase.id)">
+                售后
+              </el-button>
             </div>
           </div>
         </div>
@@ -92,8 +98,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElConfirm } from 'element-plus'
 import { useUserStore } from '../stores/user'
+
+const router = useRouter()
 
 const userStore = useUserStore()
 const activeStatus = ref('all')
@@ -199,6 +208,20 @@ const cancelOrder = (id) => {
   })
 }
 
+// 举报订单
+const reportOrder = (id) => {
+  ElMessage.info('跳转到举报页面')
+  // 这里应该导航到举报页面
+  router.push(`/user/user/report/${id}`)
+}
+
+// 售后
+const afterSales = (id) => {
+  ElMessage.info('跳转到售后页面')
+  // 这里应该导航到售后页面
+  router.push(`/user/user/after-sales/${id}`)
+}
+
 // 分页处理
 const handleSizeChange = (size) => {
   pageSize.value = size
@@ -219,7 +242,8 @@ onMounted(async () => {
 <style scoped lang="scss">
 .user-purchases {
   min-height: 100vh;
-  padding: 20px 0;
+  padding-top: 80px;
+  padding-bottom: 20px;
 }
 
 .breadcrumb {

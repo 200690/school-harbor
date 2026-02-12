@@ -11,8 +11,28 @@ export const useUserStore = defineStore('user', {
       email: 'xiaoming@example.com',
       avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20friendly%20student&image_size=square',
       registerTime: '2026-01-01',
-      balance: 0
+      balance: 0,
+      creditScore: 60
     },
+    // 关注和黑名单
+    userFollows: [
+      {
+        id: 1,
+        userId: 2,
+        username: '张三',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20friendly%20young%20man&image_size=square',
+        followTime: '2026-02-10'
+      }
+    ],
+    userBlacklist: [
+      {
+        id: 1,
+        userId: 3,
+        username: '李四',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20serious%20man&image_size=square',
+        blockTime: '2026-02-05'
+      }
+    ],
     isLoggedIn: !!localStorage.getItem('token') || true, // 默认登录状态
     // 用户相关数据
     userPosts: [
@@ -295,6 +315,78 @@ export const useUserStore = defineStore('user', {
           if (message) {
             message.read = true
           }
+          resolve({ data: { success: true } })
+        }, 300)
+      })
+    },
+
+    // 模拟获取用户关注列表
+    async getUserFollows() {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({ data: this.userFollows })
+        }, 300)
+      })
+    },
+
+    // 模拟获取用户黑名单
+    async getUserBlacklist() {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({ data: this.userBlacklist })
+        }, 300)
+      })
+    },
+
+    // 模拟关注用户
+    async followUser(userId, username, avatar) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const newFollow = {
+            id: Date.now(),
+            userId,
+            username,
+            avatar,
+            followTime: new Date().toISOString().split('T')[0]
+          }
+          this.userFollows.push(newFollow)
+          resolve({ data: { success: true } })
+        }, 300)
+      })
+    },
+
+    // 模拟取消关注
+    async unfollowUser(userId) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          this.userFollows = this.userFollows.filter(follow => follow.userId !== userId)
+          resolve({ data: { success: true } })
+        }, 300)
+      })
+    },
+
+    // 模拟拉黑用户
+    async blockUser(userId, username, avatar) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const newBlock = {
+            id: Date.now(),
+            userId,
+            username,
+            avatar,
+            blockTime: new Date().toISOString().split('T')[0]
+          }
+          this.userBlacklist.push(newBlock)
+          resolve({ data: { success: true } })
+        }, 300)
+      })
+    },
+
+    // 模拟取消拉黑
+    async unblockUser(userId) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          this.userBlacklist = this.userBlacklist.filter(block => block.userId !== userId)
           resolve({ data: { success: true } })
         }, 300)
       })

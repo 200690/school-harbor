@@ -4,7 +4,7 @@
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item><router-link to="/user/center">个人中心</router-link></el-breadcrumb-item>
+        <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
         <el-breadcrumb-item>消息通知</el-breadcrumb-item>
       </el-breadcrumb>
 
@@ -264,7 +264,8 @@ onMounted(async () => {
 <style scoped lang="scss">
 .user-messages {
   min-height: 100vh;
-  padding: 20px 0;
+  padding-top: 80px;
+  padding-bottom: 20px;
 }
 
 .breadcrumb {

@@ -62,6 +62,11 @@
               <span class="location"><i class="el-icon-s-position"></i> {{ item.location }}</span>
               <span class="publish-time">{{ item.publishTime }}</span>
             </div>
+            <div class="item-seller">
+              <router-link :to="`/user/profile/${item.sellerId || 1}`" class="seller-link">
+                <i class="el-icon-user"></i> {{ item.sellerName || '卖家' }}
+              </router-link>
+            </div>
             <div class="item-tags">
               <span class="tag tag-primary">{{ item.category }}</span>
               <span class="tag tag-success">{{ item.condition }}</span>
@@ -196,11 +201,11 @@ export default {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-top: 80px;
 }
 
 .main-content {
   flex: 1;
-  margin-top: 60px;
   padding: 20px 0;
 }
 
@@ -321,6 +326,23 @@ export default {
 .publish-time {
   font-size: 12px;
   color: #999;
+}
+
+.item-seller {
+  margin: 8px 0;
+}
+
+.seller-link {
+  font-size: 14px;
+  color: #409EFF;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .item-tags {

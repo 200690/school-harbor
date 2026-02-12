@@ -8,4 +8,9 @@ import { createPinia } from 'pinia'
 
 const pinia = createPinia()
 
-createApp(App).use(router).use(ElementPlus).use(pinia).mount('#app')
+createApp(App).use(router).use(ElementPlus, {
+  // 全局配置
+  message: {
+    duration: 1500 // 设置消息显示时间为 1.5 秒
+  }
+}).use(pinia).mount('#app')
