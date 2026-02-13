@@ -10,6 +10,9 @@ module.exports = defineConfig({
           '^/api': ''
         }
       }
+    },
+    client: {
+      overlay: false // 禁用错误覆盖层，避免显示ResizeObserver循环错误
     }
   }
 })

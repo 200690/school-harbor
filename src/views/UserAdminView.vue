@@ -19,9 +19,22 @@
           <div class="admin-section">
             <div class="section-header">
               <h3>用户信息管理</h3>
-              <el-input v-model="userSearch" placeholder="搜索用户" clearable style="width: 200px;" />
+              <div class="search-filter">
+                <el-input v-model="userSearch" placeholder="搜索用户" clearable style="width: 200px; margin-right: 10px;" />
+                <el-select v-model="userStatusFilter" placeholder="用户状态" clearable style="width: 120px; margin-right: 10px;">
+                  <el-option label="正常" value="normal" />
+                  <el-option label="已拉黑" value="blocked" />
+                </el-select>
+                <el-select v-model="userCreditFilter" placeholder="信誉分" clearable style="width: 120px; margin-right: 10px;">
+                  <el-option label="差 (0-60)" value="poor" />
+                  <el-option label="良 (60-80)" value="good" />
+                  <el-option label="优秀 (80-95)" value="excellent" />
+                  <el-option label="极好 (95-100)" value="perfect" />
+                </el-select>
+                <el-button type="primary" @click="resetUserFilter">重置筛选</el-button>
+              </div>
             </div>
-            <el-table :data="filteredUsers" style="width: 100%" border>
+            <el-table :data="pagedUsers" style="width: 100%" border>
               <el-table-column prop="id" label="用户ID" width="80" />
               <el-table-column label="头像" width="80">
                 <template #default="scope">
@@ -44,6 +57,17 @@
                 </template>
               </el-table-column>
             </el-table>
+            <div class="pagination-container">
+              <el-pagination
+                v-model:current-page="userCurrentPage"
+                v-model:page-size="userPageSize"
+                :page-sizes="[10, 20, 50, 100]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="filteredUsers.length"
+                @size-change="handleUserSizeChange"
+                @current-change="handleUserCurrentChange"
+              />
+            </div>
           </div>
         </el-tab-pane>
 
@@ -52,11 +76,26 @@
           <div class="admin-section">
             <div class="section-header">
               <h3>订单管理</h3>
-              <el-input v-model="orderSearch" placeholder="搜索订单" clearable style="width: 200px;" />
+              <div class="search-filter">
+                <el-input v-model="orderSearch" placeholder="搜索订单" clearable style="width: 200px; margin-right: 10px;" />
+                <el-select v-model="orderStatusFilter" placeholder="订单状态" clearable style="width: 120px; margin-right: 10px;">
+                  <el-option label="已完成" value="已完成" />
+                  <el-option label="待收货" value="待收货" />
+                </el-select>
+                <el-select v-model="orderUserFilter" placeholder="按用户筛选" clearable style="width: 120px; margin-right: 10px;">
+                  <el-option v-for="user in users" :key="user.id" :label="user.username" :value="user.id" />
+                </el-select>
+                <el-button type="primary" @click="resetOrderFilter">重置筛选</el-button>
+              </div>
             </div>
-            <el-table :data="filteredOrders" style="width: 100%" border>
+            <el-table :data="pagedOrders" style="width: 100%" border>
               <el-table-column prop="id" label="订单ID" width="80" />
               <el-table-column prop="userId" label="用户ID" width="80" />
+              <el-table-column label="用户名" width="120">
+                <template #default="scope">
+                  {{ getUsernameById(scope.row.userId) }}
+                </template>
+              </el-table-column>
               <el-table-column prop="itemTitle" label="商品名称" />
               <el-table-column prop="price" label="价格" width="100">
                 <template #default="scope">
@@ -76,6 +115,17 @@
                 </template>
               </el-table-column>
             </el-table>
+            <div class="pagination-container">
+              <el-pagination
+                v-model:current-page="orderCurrentPage"
+                v-model:page-size="orderPageSize"
+                :page-sizes="[10, 20, 50, 100]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="filteredOrders.length"
+                @size-change="handleOrderSizeChange"
+                @current-change="handleOrderCurrentChange"
+              />
+            </div>
           </div>
         </el-tab-pane>
 
@@ -84,9 +134,15 @@
           <div class="admin-section">
             <div class="section-header">
               <h3>商品管理</h3>
-              <el-input v-model="goodsSearch" placeholder="搜索商品" clearable style="width: 200px;" />
+              <div class="search-filter">
+                <el-input v-model="goodsSearch" placeholder="搜索商品" clearable style="width: 200px; margin-right: 10px;" />
+                <el-select v-model="goodsSellerFilter" placeholder="按卖家筛选" clearable style="width: 120px; margin-right: 10px;">
+                  <el-option v-for="user in users" :key="user.id" :label="user.username" :value="user.id" />
+                </el-select>
+                <el-button type="primary" @click="resetGoodsFilter">重置筛选</el-button>
+              </div>
             </div>
-            <el-table :data="filteredGoods" style="width: 100%" border>
+            <el-table :data="pagedGoods" style="width: 100%" border>
               <el-table-column prop="id" label="商品ID" width="80" />
               <el-table-column label="图片" width="100">
                 <template #default="scope">
@@ -112,6 +168,17 @@
                 </template>
               </el-table-column>
             </el-table>
+            <div class="pagination-container">
+              <el-pagination
+                v-model:current-page="goodsCurrentPage"
+                v-model:page-size="goodsPageSize"
+                :page-sizes="[10, 20, 50, 100]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="filteredGoods.length"
+                @size-change="handleGoodsSizeChange"
+                @current-change="handleGoodsCurrentChange"
+              />
+            </div>
           </div>
         </el-tab-pane>
 
@@ -120,9 +187,16 @@
           <div class="admin-section">
             <div class="section-header">
               <h3>争议订单管理</h3>
-              <el-input v-model="disputeSearch" placeholder="搜索争议" clearable style="width: 200px;" />
+              <div class="search-filter">
+                <el-input v-model="disputeSearch" placeholder="搜索争议" clearable style="width: 200px; margin-right: 10px;" />
+                <el-select v-model="disputeStatusFilter" placeholder="争议状态" clearable style="width: 120px; margin-right: 10px;">
+                  <el-option label="待处理" value="待处理" />
+                  <el-option label="已处理" value="已处理" />
+                </el-select>
+                <el-button type="primary" @click="resetDisputeFilter">重置筛选</el-button>
+              </div>
             </div>
-            <el-table :data="filteredDisputes" style="width: 100%" border>
+            <el-table :data="pagedDisputes" style="width: 100%" border>
               <el-table-column prop="id" label="争议ID" width="80" />
               <el-table-column prop="orderId" label="订单ID" width="80" />
               <el-table-column prop="userId" label="用户ID" width="80" />
@@ -141,6 +215,17 @@
                 </template>
               </el-table-column>
             </el-table>
+            <div class="pagination-container">
+              <el-pagination
+                v-model:current-page="disputeCurrentPage"
+                v-model:page-size="disputePageSize"
+                :page-sizes="[10, 20, 50, 100]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="filteredDisputes.length"
+                @size-change="handleDisputeSizeChange"
+                @current-change="handleDisputeCurrentChange"
+              />
+            </div>
           </div>
         </el-tab-pane>
       </el-tabs>
@@ -150,16 +235,54 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElConfirm } from 'element-plus'
 
 // 活跃选项卡
 const activeTab = ref('users')
+const router = useRouter()
+const route = useRoute()
+
+// 从URL参数中获取初始选项卡
+onMounted(() => {
+  // 模拟从后端获取数据
+  console.log('管理员页面加载完成')
+  
+  // 检查URL参数中的tab或table参数
+  if (route.query.tab) {
+    activeTab.value = route.query.tab
+  } else if (route.query.table) {
+    activeTab.value = route.query.table
+  }
+})
 
 // 搜索关键词
 const userSearch = ref('')
 const orderSearch = ref('')
 const goodsSearch = ref('')
 const disputeSearch = ref('')
+
+// 用户管理分页和筛选
+const userCurrentPage = ref(1)
+const userPageSize = ref(10)
+const userStatusFilter = ref('')
+const userCreditFilter = ref('')
+
+// 订单管理分页和筛选
+const orderCurrentPage = ref(1)
+const orderPageSize = ref(10)
+const orderStatusFilter = ref('')
+const orderUserFilter = ref('')
+
+// 商品管理分页和筛选
+const goodsCurrentPage = ref(1)
+const goodsPageSize = ref(10)
+const goodsSellerFilter = ref('')
+
+// 争议管理分页和筛选
+const disputeCurrentPage = ref(1)
+const disputePageSize = ref(10)
+const disputeStatusFilter = ref('')
 
 // 模拟用户数据
 const users = ref([
@@ -275,41 +398,100 @@ const disputes = ref([
 
 // 过滤后的用户数据
 const filteredUsers = computed(() => {
-  if (!userSearch.value) return users.value
-  return users.value.filter(user => 
-    user.username.includes(userSearch.value) ||
-    user.phone.includes(userSearch.value) ||
-    user.email.includes(userSearch.value)
-  )
+  return users.value.filter(user => {
+    const matchesSearch = !userSearch.value || 
+      user.username.includes(userSearch.value) ||
+      user.phone.includes(userSearch.value) ||
+      user.email.includes(userSearch.value)
+    
+    const matchesStatus = !userStatusFilter.value || 
+      (userStatusFilter.value === 'normal' && !user.isBlocked) ||
+      (userStatusFilter.value === 'blocked' && user.isBlocked)
+    
+    const matchesCredit = !userCreditFilter.value || (
+      (userCreditFilter.value === 'poor' && user.creditScore >= 0 && user.creditScore < 60) ||
+      (userCreditFilter.value === 'good' && user.creditScore >= 60 && user.creditScore < 80) ||
+      (userCreditFilter.value === 'excellent' && user.creditScore >= 80 && user.creditScore < 95) ||
+      (userCreditFilter.value === 'perfect' && user.creditScore >= 95 && user.creditScore <= 100)
+    )
+    
+    return matchesSearch && matchesStatus && matchesCredit
+  })
+})
+
+// 分页后的用户数据
+const pagedUsers = computed(() => {
+  const startIndex = (userCurrentPage.value - 1) * userPageSize.value
+  const endIndex = startIndex + userPageSize.value
+  return filteredUsers.value.slice(startIndex, endIndex)
 })
 
 // 过滤后的订单数据
 const filteredOrders = computed(() => {
-  if (!orderSearch.value) return orders.value
-  return orders.value.filter(order => 
-    order.itemTitle.includes(orderSearch.value)
-  )
+  return orders.value.filter(order => {
+    const matchesSearch = !orderSearch.value || 
+      order.itemTitle.includes(orderSearch.value)
+    
+    const matchesStatus = !orderStatusFilter.value || 
+      order.status === orderStatusFilter.value
+    
+    const matchesUser = !orderUserFilter.value || 
+      order.userId === parseInt(orderUserFilter.value)
+    
+    return matchesSearch && matchesStatus && matchesUser
+  })
+})
+
+// 分页后的订单数据
+const pagedOrders = computed(() => {
+  const startIndex = (orderCurrentPage.value - 1) * orderPageSize.value
+  const endIndex = startIndex + orderPageSize.value
+  return filteredOrders.value.slice(startIndex, endIndex)
 })
 
 // 过滤后的商品数据
 const filteredGoods = computed(() => {
-  if (!goodsSearch.value) return goods.value
-  return goods.value.filter(good => 
-    good.title.includes(goodsSearch.value)
-  )
+  return goods.value.filter(good => {
+    const matchesSearch = !goodsSearch.value || 
+      good.title.includes(goodsSearch.value)
+    
+    const matchesSeller = !goodsSellerFilter.value || 
+      good.sellerId === parseInt(goodsSellerFilter.value)
+    
+    return matchesSearch && matchesSeller
+  })
+})
+
+// 分页后的商品数据
+const pagedGoods = computed(() => {
+  const startIndex = (goodsCurrentPage.value - 1) * goodsPageSize.value
+  const endIndex = startIndex + goodsPageSize.value
+  return filteredGoods.value.slice(startIndex, endIndex)
 })
 
 // 过滤后的争议数据
 const filteredDisputes = computed(() => {
-  if (!disputeSearch.value) return disputes.value
-  return disputes.value.filter(dispute => 
-    dispute.disputeType.includes(disputeSearch.value)
-  )
+  return disputes.value.filter(dispute => {
+    const matchesSearch = !disputeSearch.value || 
+      dispute.disputeType.includes(disputeSearch.value)
+    
+    const matchesStatus = !disputeStatusFilter.value || 
+      dispute.status === disputeStatusFilter.value
+    
+    return matchesSearch && matchesStatus
+  })
+})
+
+// 分页后的争议数据
+const pagedDisputes = computed(() => {
+  const startIndex = (disputeCurrentPage.value - 1) * disputePageSize.value
+  const endIndex = startIndex + disputePageSize.value
+  return filteredDisputes.value.slice(startIndex, endIndex)
 })
 
 // 查看用户详情
 const viewUserDetail = (id) => {
-  ElMessage.info(`查看用户 ${id} 的详情`)
+  router.push(`/user/admin/user/${id}`)
 }
 
 // 拉黑用户
@@ -329,9 +511,27 @@ const blockUser = (id) => {
   })
 }
 
+// 用户管理分页方法
+const handleUserSizeChange = (size) => {
+  userPageSize.value = size
+  userCurrentPage.value = 1
+}
+
+const handleUserCurrentChange = (current) => {
+  userCurrentPage.value = current
+}
+
+// 重置用户筛选
+const resetUserFilter = () => {
+  userSearch.value = ''
+  userStatusFilter.value = ''
+  userCreditFilter.value = ''
+  userCurrentPage.value = 1
+}
+
 // 查看订单详情
 const viewOrderDetail = (id) => {
-  ElMessage.info(`查看订单 ${id} 的详情`)
+  router.push(`/user/admin/order/${id}`)
 }
 
 // 删除订单
@@ -351,9 +551,27 @@ const deleteOrder = (id) => {
   })
 }
 
+// 订单管理分页方法
+const handleOrderSizeChange = (size) => {
+  orderPageSize.value = size
+  orderCurrentPage.value = 1
+}
+
+const handleOrderCurrentChange = (current) => {
+  orderCurrentPage.value = current
+}
+
+// 重置订单筛选
+const resetOrderFilter = () => {
+  orderSearch.value = ''
+  orderStatusFilter.value = ''
+  orderUserFilter.value = ''
+  orderCurrentPage.value = 1
+}
+
 // 查看商品详情
 const viewGoodsDetail = (id) => {
-  ElMessage.info(`查看商品 ${id} 的详情`)
+  router.push(`/user/admin/goods/${id}`)
 }
 
 // 删除商品
@@ -373,9 +591,32 @@ const deleteGoods = (id) => {
   })
 }
 
+// 商品管理分页方法
+const handleGoodsSizeChange = (size) => {
+  goodsPageSize.value = size
+  goodsCurrentPage.value = 1
+}
+
+const handleGoodsCurrentChange = (current) => {
+  goodsCurrentPage.value = current
+}
+
+// 重置商品筛选
+const resetGoodsFilter = () => {
+  goodsSearch.value = ''
+  goodsSellerFilter.value = ''
+  goodsCurrentPage.value = 1
+}
+
+// 根据用户ID获取用户名
+const getUsernameById = (userId) => {
+  const user = users.value.find(u => u.id === userId)
+  return user ? user.username : '未知用户'
+}
+
 // 查看争议详情
 const viewDisputeDetail = (id) => {
-  ElMessage.info(`查看争议 ${id} 的详情`)
+  router.push(`/user/admin/dispute/${id}`)
 }
 
 // 处理争议
@@ -389,15 +630,41 @@ const handleDispute = (id) => {
     if (dispute) {
       dispute.status = 'resolved'
       ElMessage.success('处理争议成功')
+      // 处理完成后跳转到用户管理页面
+      router.push('/user/admin?tab=users')
     }
   }).catch(() => {
     // 取消操作
   })
 }
 
+// 争议管理分页方法
+const handleDisputeSizeChange = (size) => {
+  disputePageSize.value = size
+  disputeCurrentPage.value = 1
+}
+
+const handleDisputeCurrentChange = (current) => {
+  disputeCurrentPage.value = current
+}
+
+// 重置争议筛选
+const resetDisputeFilter = () => {
+  disputeSearch.value = ''
+  disputeStatusFilter.value = ''
+  disputeCurrentPage.value = 1
+}
+
 onMounted(() => {
   // 模拟从后端获取数据
   console.log('管理员页面加载完成')
+  
+  // 检查URL参数中的tab或table参数
+  if (route.query.tab) {
+    activeTab.value = route.query.tab
+  } else if (route.query.table) {
+    activeTab.value = route.query.table
+  }
 })
 </script>
 
@@ -444,6 +711,17 @@ onMounted(() => {
   font-size: 16px;
   font-weight: bold;
   color: #333;
+}
+
+.search-filter {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .user-avatar-small {

@@ -127,6 +127,26 @@ const routes = [
     component: () => import('../views/UserAdminView.vue')
   },
   {
+    path: '/user/admin/order/:id',
+    name: 'admin-order-detail',
+    component: () => import('../views/AdminOrderDetailView.vue')
+  },
+  {
+    path: '/user/admin/user/:id',
+    name: 'admin-user-detail',
+    component: () => import('../views/AdminUserDetailView.vue')
+  },
+  {
+    path: '/user/admin/goods/:id',
+    name: 'admin-goods-detail',
+    component: () => import('../views/AdminGoodsDetailView.vue')
+  },
+  {
+    path: '/user/admin/dispute/:id',
+    name: 'admin-dispute-detail',
+    component: () => import('../views/AdminDisputeDetailView.vue')
+  },
+  {
     path: '/about',
     name: 'about',
     component: () => import('../views/AboutView.vue')

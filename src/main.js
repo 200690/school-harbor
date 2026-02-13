@@ -1,3 +1,12 @@
+// 捕获并忽略ResizeObserver循环错误
+window.addEventListener('error', (e) => {
+  if (e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
+    // 忽略ResizeObserver循环错误
+    e.stopPropagation();
+    e.preventDefault();
+  }
+});
+
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
