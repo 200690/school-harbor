@@ -1,4 +1,4 @@
-package com.harbor.damain.vo;
+package com.harbor.user.domain.vo;
 
 import lombok.Data;
 

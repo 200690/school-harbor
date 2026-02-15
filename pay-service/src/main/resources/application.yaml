@@ -15,5 +15,5 @@ harbor:
   swagger:
     title: 支付接口测试
     desc: "支付接口测试"
-    package: com.harbor.controller
+    package: com.harbor.user.controller
 # keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

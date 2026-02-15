@@ -6,60 +6,61 @@
 	<parent>
 		<groupId>com.harbor</groupId>
 		<artifactId>school-harbor-backend</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.0.0</version>
 	</parent>
 
 	<artifactId>user-service</artifactId>
-	<!--    <description>harbor-user</description>-->
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+
 	<properties>
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
 	<dependencies>
-		<!--		引入nacos-->
+		<!-- 引入nacos -->
 		<dependency>
 			<groupId>com.alibaba.cloud</groupId>
 			<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
 		</dependency>
-<!--		引入common-->
+
+		<!-- 引入common -->
 		<dependency>
 			<groupId>com.harbor</groupId>
 			<artifactId>harbor-common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
-		<!--		引入utils-->
+
+		<!-- 引入utils -->
 		<dependency>
 			<groupId>com.harbor</groupId>
 			<artifactId>harbor-utils</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
-		<!--web-->
+
+		<!-- web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-		<!--数据库-->
+
+		<!-- 数据库驱动 -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
-		<!--mybatis-->
+
+		<!-- ✅ 正确：使用 mybatis-plus-spring-boot3-starter -->
 		<dependency>
 			<groupId>com.baomidou</groupId>
-			<artifactId>mybatis-plus-boot-starter</artifactId>
+			<artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+			<version>3.5.9</version>
+		</dependency>
+
+		<!-- 如果还需要其他 mybatis-plus 功能 -->
+		<dependency>
+			<groupId>com.baomidou</groupId>
+			<artifactId>mybatis-plus-core</artifactId>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 
@@ -72,5 +73,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

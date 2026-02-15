@@ -1,4 +1,4 @@
-package com.harbor.damain.po;
+package com.harbor.user.domain.po;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

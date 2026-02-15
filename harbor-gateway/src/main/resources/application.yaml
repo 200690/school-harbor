@@ -5,7 +5,18 @@ spring:
     name: harbor-gateway
   profiles:
     active: local
-
+  cloud:
+    nacos:
+      server-addr: 115.190.252.109:8848
+      config:
+        file-extension: yaml
+        shared-configs:
+          - dataId: shared-log.yaml # 共享日志配置
+  datasource:
+    url: jdbc:mysql://115.190.252.109:3306/user?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123
 harbor:
   jwt:
     location: classpath:harbor.jks
