@@ -29,11 +29,38 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
+		<!--		引入nacos-->
 		<dependency>
 			<groupId>com.alibaba.cloud</groupId>
 			<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
 		</dependency>
-
+<!--		引入common-->
+		<dependency>
+			<groupId>com.harbor</groupId>
+			<artifactId>harbor-common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<!--		引入utils-->
+		<dependency>
+			<groupId>com.harbor</groupId>
+			<artifactId>harbor-utils</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<!--web-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<!--数据库-->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+		<!--mybatis-->
+		<dependency>
+			<groupId>com.baomidou</groupId>
+			<artifactId>mybatis-plus-boot-starter</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
