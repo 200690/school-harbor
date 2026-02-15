@@ -1,5 +1,0 @@
-harbor:
-  db:
-    host: 115.190.252.109
-    pw: 123
-    database: second-hand
