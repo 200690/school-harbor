@@ -1,5 +1,9 @@
 HELP.md
 target/
+# 忽略所有子模块的 target 目录
+*/target/
+*/*/target/
+**/target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
 !**/src/test/**
