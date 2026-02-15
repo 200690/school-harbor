@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.exception.ForbiddenException;
 import com.harbor.user.config.JwtProperties;
 import com.harbor.user.domain.dto.LoginFormDTO;
+import com.harbor.user.domain.dto.UserRegisterDTO;
 import com.harbor.user.domain.po.User;
 import com.harbor.user.domain.vo.UserLoginVO;
 import com.harbor.user.mapper.UserMapper;
@@ -15,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -55,5 +58,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         vo.setToken(token);
         log.info("user2:{}", vo);
         return vo;
+    }
+
+    @Override
+    public void register(UserRegisterDTO userRegisterDTO) {
+        //TODO 用户注册的密码加密写入数据库
+        User user = new User()
+                .setUsername(userRegisterDTO.getUsername())
+                .setPassword(userRegisterDTO.getPassword())
+                .setPhone(userRegisterDTO.getPhone())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateTime(LocalDateTime.now());
+
+        Assert.isNull(lambdaQuery().eq(User::getPhone, user.getPhone()).one(), "用户已存在");
+        this.save(user);
+        log.info("用户注册成功：{}", user);
     }
 }

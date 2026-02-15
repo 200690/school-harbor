@@ -1,12 +1,15 @@
 package com.harbor.user.domain.vo;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
+
 import java.time.LocalDateTime;
 
 /**
  * 用户信息 VO - 用于返回给前端
  */
 @Data
+@Accessors(chain = true)
 public class UserVO {
 
     /**

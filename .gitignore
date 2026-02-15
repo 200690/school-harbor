@@ -37,3 +37,4 @@ logs/
 
 harbor-search
 .mvn
+**/test

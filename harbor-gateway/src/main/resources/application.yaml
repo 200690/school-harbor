@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8089
 spring:
   application:
     name: harbor-gateway
@@ -8,15 +8,10 @@ spring:
   cloud:
     nacos:
       server-addr: 115.190.252.109:8848
-      config:
-        file-extension: yaml
-        shared-configs:
-          - dataId: shared-log.yaml # 共享日志配置
-  datasource:
-    url: jdbc:mysql://115.190.252.109:3306/user?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 123
+#      config:
+#        file-extension: yaml
+#        shared-configs:
+#          - dataId: shared-log.yaml # 共享日志配置
 harbor:
   jwt:
     location: classpath:harbor.jks
