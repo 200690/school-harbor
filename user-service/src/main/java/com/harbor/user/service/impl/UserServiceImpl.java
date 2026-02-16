@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.exception.ForbiddenException;
 import com.harbor.user.config.JwtProperties;
 import com.harbor.user.domain.dto.LoginFormDTO;
+import com.harbor.user.domain.dto.RechargeDTO;
 import com.harbor.user.domain.dto.UserRegisterDTO;
+import com.harbor.user.domain.po.RechargeRecord;
 import com.harbor.user.domain.po.User;
 import com.harbor.user.domain.vo.UserLoginVO;
 import com.harbor.user.mapper.UserMapper;
@@ -12,8 +14,10 @@ import com.harbor.user.service.IUserService;
 import com.harbor.user.utils.JwtTool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
@@ -30,6 +34,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     private final JwtProperties jwtProperties;
 
+    /**
+     * 用户登录
+     *
+     * @param loginDTO 登录参数
+     * @return 登录结果
+     */
     @Override
     public UserLoginVO login(LoginFormDTO loginDTO) {
         // 1.数据校验
@@ -54,12 +64,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         UserLoginVO vo = new UserLoginVO();
         vo.setUserId(user.getId());
         vo.setUsername(user.getUsername());
-        vo.setBalance(user.getBalance());
         vo.setToken(token);
         log.info("user2:{}", vo);
         return vo;
     }
 
+    /**
+     * 用户注册
+     *
+     * @param userRegisterDTO 注册参数
+     */
     @Override
     public void register(UserRegisterDTO userRegisterDTO) {
         //TODO 用户注册的密码加密写入数据库
