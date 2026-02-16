@@ -2,6 +2,7 @@ package com.harbor.user.controller.user;
 
 import com.harbor.result.Result;
 import com.harbor.user.domain.dto.LoginFormDTO;
+import com.harbor.user.domain.dto.RechargeDTO;
 import com.harbor.user.domain.dto.UserRegisterDTO;
 import com.harbor.user.domain.vo.UserLoginVO;
 import com.harbor.user.service.IUserService;
@@ -34,4 +35,6 @@ public class UserController {
         userService.register(userRegisterDTO);
         return Result.success();
     }
+
+
 }
