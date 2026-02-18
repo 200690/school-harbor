@@ -61,6 +61,24 @@
         </div>
       </div>
       
+      <!-- 余额卡片 -->
+      <div class="balance-card card">
+        <div class="balance-header">
+          <h3 class="balance-title">账户余额</h3>
+          <button class="recharge-btn btn btn-primary" @click="showRechargeDialog">充值</button>
+        </div>
+        <div class="balance-content">
+          <div class="balance-item">
+            <span class="balance-label">可用余额</span>
+            <span class="balance-value">¥{{ userInfo.balance || 0 }}</span>
+          </div>
+          <div class="balance-item">
+            <span class="balance-label">冻结资金</span>
+            <span class="balance-value frozen">{{ userInfo.frozenBalance || 0 }}</span>
+          </div>
+        </div>
+      </div>
+      
       <!-- 功能导航 -->
       <div class="function-nav-section">
         <h3 class="section-title">快捷功能</h3>
@@ -140,11 +158,50 @@
       </div>
     </div>
   </div>
+  
+  <!-- 充值弹窗 -->
+  <el-dialog
+    v-model="rechargeDialogVisible"
+    title="账户充值"
+    width="400px"
+    center
+  >
+    <div class="recharge-dialog-content">
+      <div class="recharge-amount-input">
+        <el-input
+          v-model="rechargeAmount"
+          placeholder="请输入充值金额"
+          type="number"
+          step="1"
+          min="1"
+        />
+      </div>
+      <div class="recharge-options">
+        <el-radio-group v-model="rechargeAmount">
+          <el-radio
+            v-for="option in rechargeOptions"
+            :key="option"
+            :label="option"
+            @click="selectRechargeAmount(option)"
+          >
+            ¥{{ option }}
+          </el-radio>
+        </el-radio-group>
+      </div>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="rechargeDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleRecharge">确认充值</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
+import { ElDialog, ElInput, ElButton, ElMessage, ElRadioGroup, ElRadio } from 'element-plus'
 
 const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
@@ -156,6 +213,36 @@ const userFavorites = ref(userStore.userFavorites)
 const userFollows = ref(userStore.userFollows)
 const userBlacklist = ref(userStore.userBlacklist)
 const recentActivities = ref(userStore.recentActivities)
+
+// 充值弹窗
+const rechargeDialogVisible = ref(false)
+const rechargeAmount = ref('')
+const rechargeOptions = ref(['50', '100', '200', '500', '1000'])
+
+// 显示充值弹窗
+const showRechargeDialog = () => {
+  rechargeDialogVisible.value = true
+}
+
+// 充值处理
+const handleRecharge = () => {
+  if (!rechargeAmount.value || isNaN(rechargeAmount.value) || parseFloat(rechargeAmount.value) <= 0) {
+    ElMessage.error('请输入有效的充值金额')
+    return
+  }
+  
+  // 模拟充值成功
+  const amount = parseFloat(rechargeAmount.value)
+  userInfo.value.balance = (userInfo.value.balance || 0) + amount
+  ElMessage.success(`充值成功，金额：¥${amount}`)
+  rechargeDialogVisible.value = false
+  rechargeAmount.value = ''
+}
+
+// 选择充值金额
+const selectRechargeAmount = (amount) => {
+  rechargeAmount.value = amount
+}
 
 // 获取信誉等级
 const getCreditLevel = (score) => {
@@ -405,6 +492,90 @@ onMounted(async () => {
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
+}
+
+/* 余额卡片样式 */
+.balance-card {
+  margin-bottom: 30px;
+  padding: 30px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.balance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.balance-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+}
+
+.recharge-btn {
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.balance-content {
+  display: flex;
+  gap: 40px;
+}
+
+.balance-item {
+  flex: 1;
+}
+
+.balance-label {
+  display: block;
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.balance-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+  
+  &.frozen {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 20px;
+  }
+}
+
+/* 充值弹窗样式 */
+.recharge-dialog-content {
+  padding: 20px 0;
+}
+
+.recharge-amount-input {
+  margin-bottom: 24px;
+}
+
+.recharge-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 /* 功能导航样式 */

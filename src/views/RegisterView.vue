@@ -96,7 +96,7 @@ export default {
             await register(registerData);
             this.$message.success('注册成功，请登录');
             // 注册成功后跳转到登录页
-            this.$router.push('/user/login');
+            this.$router.push('/user/user/login');
           } catch (error) {
             console.error('注册失败:', error);
           } finally {

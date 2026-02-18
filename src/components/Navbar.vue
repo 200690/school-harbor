@@ -28,9 +28,12 @@
       </div>
       
       <!-- 用户操作 -->
-      <div class="user-actions">
-        <router-link to="/user/login" class="user-btn">登录</router-link>
-        <router-link to="/user/register" class="user-btn user-btn-primary">注册</router-link>
+      <div class="user-actions" v-if="!isLoggedIn">
+        <router-link to="/user/user/login" class="user-btn">登录</router-link>
+        <router-link to="/user/user/register" class="user-btn user-btn-primary">注册</router-link>
+      </div>
+      <div class="user-actions" v-else>
+        <el-button type="text" class="user-btn" @click="handleLogout">注销</el-button>
       </div>
       
       <!-- 汉堡菜单按钮 - 移动端 -->
@@ -59,8 +62,13 @@
           <router-link to="/part-time" class="mobile-nav-item" @click="closeMobileMenu">兼职</router-link>
           <router-link to="/second-hand" class="mobile-nav-item" @click="closeMobileMenu">二手交易</router-link>
           <router-link to="/user/user/center" class="mobile-nav-item" @click="closeMobileMenu">个人中心</router-link>
-          <router-link to="/user/login" class="mobile-nav-item" @click="closeMobileMenu">登录</router-link>
-          <router-link to="/user/register" class="mobile-nav-item mobile-nav-item-primary" @click="closeMobileMenu">注册</router-link>
+          <template v-if="!isLoggedIn">
+            <router-link to="/user/user/login" class="mobile-nav-item" @click="closeMobileMenu">登录</router-link>
+            <router-link to="/user/user/register" class="mobile-nav-item mobile-nav-item-primary" @click="closeMobileMenu">注册</router-link>
+          </template>
+          <template v-else>
+            <el-button type="text" class="mobile-nav-item" @click="handleLogout">注销</el-button>
+          </template>
         </div>
       </div>
     </div>
@@ -77,10 +85,24 @@ export default {
       searchKeyword: '',
       mobileSearchKeyword: '',
       isMobileMenuOpen: false,
-      Search
+      Search,
+      isLoggedIn: false
     }
   },
+  mounted() {
+    // 组件挂载时检查登录状态
+    this.checkLoginStatus()
+    // 监听storage变化，处理其他标签页的登录状态变化
+    window.addEventListener('storage', this.checkLoginStatus)
+  },
+  beforeUnmount() {
+    // 移除监听器
+    window.removeEventListener('storage', this.checkLoginStatus)
+  },
   methods: {
+    checkLoginStatus() {
+      this.isLoggedIn = !!localStorage.getItem('token')
+    },
     handleSearch() {
       if (this.searchKeyword) {
         // 这里可以根据搜索关键词跳转到相应的列表页
@@ -107,6 +129,19 @@ export default {
     },
     closeMobileMenu() {
       this.isMobileMenuOpen = false
+    },
+    handleLogout() {
+      // 清除token和用户信息
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
+      // 立即更新登录状态
+      this.checkLoginStatus()
+      // 显示成功消息
+      this.$message.success('注销成功')
+      // 关闭移动端菜单
+      this.closeMobileMenu()
+      // 刷新页面或跳转到首页
+      this.$router.push('/')
     }
   }
 }

@@ -32,8 +32,10 @@
 
           <!-- 手机号 -->
           <el-form-item label="手机号" prop="phone">
-            <el-input v-model="form.phone" placeholder="请输入手机号" disabled />
-            <el-button type="text" size="small" class="change-btn">更换手机号</el-button>
+            <div class="phone-input-group">
+              <el-input v-model="form.phone" placeholder="请输入手机号" disabled />
+              <el-button type="text" size="small" class="change-btn" @click="showPhoneDialog">更换手机号</el-button>
+            </div>
           </el-form-item>
 
           <!-- 邮箱 -->
@@ -76,6 +78,46 @@
       </div>
     </div>
   </div>
+  
+  <!-- 更换手机号弹窗 -->
+  <el-dialog
+    v-model="phoneDialogVisible"
+    title="更换手机号"
+    width="400px"
+    center
+  >
+    <div class="phone-dialog-content">
+      <el-form :model="phoneForm" :rules="phoneRules" ref="phoneFormRef" label-width="80px">
+        <!-- 验证码 -->
+        <el-form-item label="验证码" prop="verificationCode">
+          <el-input
+            v-model="phoneForm.verificationCode"
+            placeholder="请输入验证码"
+          >
+            <template #append>
+              <el-button type="text" @click="sendVerificationCode" :disabled="countdown > 0">
+                {{ countdown > 0 ? `${countdown}s后重新发送` : '发送验证码' }}
+              </el-button>
+            </template>
+          </el-input>
+        </el-form-item>
+        
+        <!-- 新手机号 -->
+        <el-form-item label="新手机号" prop="newPhone">
+          <el-input
+            v-model="phoneForm.newPhone"
+            placeholder="请输入新手机号"
+          />
+        </el-form-item>
+      </el-form>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="phoneDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitPhoneChange">确认更换</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -86,6 +128,7 @@ import { getUserInfo, updateUserInfo } from '@/api/user'
 
 const router = useRouter()
 const formRef = ref(null)
+const phoneFormRef = ref(null)
 
 const form = reactive({
   username: '',
@@ -97,6 +140,22 @@ const form = reactive({
   registerTime: ''
 })
 
+const phoneForm = reactive({
+  newPhone: '',
+  verificationCode: ''
+})
+
+const phoneRules = {
+  newPhone: [
+    { required: true, message: '请输入新手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
+  verificationCode: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { min: 6, max: 6, message: '验证码长度为6位', trigger: 'blur' }
+  ]
+}
+
 const rules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -106,6 +165,76 @@ const rules = {
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
   ]
+}
+
+// 更换手机号弹窗
+const phoneDialogVisible = ref(false)
+const countdown = ref(0)
+let countdownTimer = null
+
+// 显示更换手机号弹窗
+const showPhoneDialog = () => {
+  phoneDialogVisible.value = true
+}
+
+// 发送验证码
+const sendVerificationCode = () => {
+  if (!phoneForm.newPhone) {
+    ElMessage.error('请先输入新手机号')
+    return
+  }
+  
+  // 模拟发送验证码
+  ElMessage.success('验证码已发送，请注意查收')
+  
+  // 开始倒计时
+  startCountdown()
+}
+
+// 开始倒计时
+const startCountdown = () => {
+  countdown.value = 60
+  
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+  }
+  
+  countdownTimer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(countdownTimer)
+    }
+  }, 1000)
+}
+
+// 提交更换手机号
+const submitPhoneChange = async () => {
+  if (!phoneFormRef.value) return
+  
+  await phoneFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        // 模拟更换手机号成功
+        form.phone = phoneForm.newPhone
+        ElMessage.success('手机号更换成功')
+        phoneDialogVisible.value = false
+        
+        // 重置表单
+        phoneForm.newPhone = ''
+        phoneForm.verificationCode = ''
+        if (countdownTimer) {
+          clearInterval(countdownTimer)
+          countdown.value = 0
+        }
+      } catch (error) {
+        console.error('更换手机号失败:', error)
+        ElMessage.error('更换手机号失败，请重试')
+      }
+    } else {
+      ElMessage.error('请检查表单填写是否正确')
+      return false
+    }
+  })
 }
 
 const submitForm = async () => {
@@ -203,8 +332,26 @@ onMounted(async () => {
   margin-left: 10px;
 }
 
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .el-form-item {
   margin-bottom: 24px;
+}
+
+/* 更换手机号弹窗样式 */
+.phone-dialog-content {
+  padding: 20px 0;
+}
+
+.dialog-footer {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 @media (max-width: 768px) {

@@ -5,8 +5,8 @@
       <div class="login-form-wrapper">
         <h2 class="login-title">用户登录</h2>
         <el-form :model="loginForm" :rules="rules" ref="loginForm" label-width="80px" class="login-form">
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="loginForm.username" placeholder="请输入手机号"></el-input>
+          <el-form-item label="手机号" prop="phone">
+            <el-input v-model="loginForm.phone" placeholder="请输入手机号"></el-input>
           </el-form-item>
           <el-form-item label="密码" prop="password">
             <el-input type="password" v-model="loginForm.password" placeholder="请输入密码" show-password></el-input>
@@ -14,7 +14,7 @@
           <el-form-item>
             <div class="login-actions">
               <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-              <router-link to="/user/register" class="register-link">立即注册</router-link>
+              <router-link to="/user/user/register" class="register-link">立即注册</router-link>
             </div>
           </el-form-item>
           <el-form-item>
@@ -36,14 +36,15 @@ export default {
   data() {
     return {
       loginForm: {
-        username: '',
+        phone: '',
         password: ''
       },
       rememberMe: false,
       loading: false,
       rules: {
-        username: [
-          { required: true, message: '请输入手机号', trigger: 'blur' }
+        phone: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
@@ -59,15 +60,18 @@ export default {
           this.loading = true;
           try {
             const response = await login(this.loginForm);
-            const { token, user } = response.data;
+            const { token, userId, username } = response || {};
             
             // 存储token和用户信息
-            localStorage.setItem('token', token);
-            localStorage.setItem('userInfo', JSON.stringify(user));
+            if (token) {
+              localStorage.setItem('token', token);
+              localStorage.setItem('userInfo', JSON.stringify({ userId, username }));
+            }
             
             this.$message.success('登录成功');
-            // 登录成功后跳转到首页
-            this.$router.push('/');
+            // 登录成功后刷新页面，确保导航栏状态更新
+            window.location.href = '/';
+            // this.$router.push('/');
           } catch (error) {
             console.error('登录失败:', error);
           } finally {

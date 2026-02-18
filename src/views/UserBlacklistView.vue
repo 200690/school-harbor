@@ -13,28 +13,58 @@
         <h2 class="page-title">黑名单</h2>
       </div>
 
-      <!-- 黑名单列表 -->
-      <div class="blacklist-list">
-        <div v-if="userBlacklist.length === 0" class="empty-state">
-          <el-empty description="暂无拉黑的用户" />
-        </div>
-        <div v-else class="blacklist-items">
-          <div v-for="block in userBlacklist" :key="block.id" class="blacklist-item">
-            <div class="user-avatar">
-              <img :src="block.avatar" :alt="block.username" />
+      <!-- 黑名单标签页 -->
+      <el-tabs v-model="activeTab" class="blacklist-tabs">
+        <!-- 用户黑名单 -->
+        <el-tab-pane label="用户黑名单" name="user">
+          <div class="blacklist-list">
+            <div v-if="userBlacklist.length === 0" class="empty-state">
+              <el-empty description="暂无拉黑的用户" />
             </div>
-            <div class="user-info">
-              <h3 class="user-name">{{ block.username }}</h3>
-              <p class="block-time">拉黑时间：{{ block.blockTime }}</p>
-            </div>
-            <div class="user-actions">
-              <button class="btn btn-success" @click="unblockUser(block.userId)">
-                取消拉黑
-              </button>
+            <div v-else class="blacklist-items">
+              <div v-for="block in userBlacklist" :key="block.id" class="blacklist-item">
+                <div class="user-avatar">
+                  <img :src="block.avatar" :alt="block.username" />
+                </div>
+                <div class="user-info">
+                  <h3 class="user-name">{{ block.username }}</h3>
+                  <p class="block-time">拉黑时间：{{ block.blockTime }}</p>
+                </div>
+                <div class="user-actions">
+                  <button class="btn btn-success" @click="unblockUser(block.userId)">
+                    取消拉黑
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </el-tab-pane>
+        
+        <!-- 商品黑名单 -->
+        <el-tab-pane label="商品黑名单" name="item">
+          <div class="blacklist-list">
+            <div v-if="itemBlacklist.length === 0" class="empty-state">
+              <el-empty description="暂无拉黑的商品" />
+            </div>
+            <div v-else class="blacklist-items">
+              <div v-for="block in itemBlacklist" :key="block.id" class="blacklist-item">
+                <div class="item-image">
+                  <img :src="block.itemImage" :alt="block.itemTitle" />
+                </div>
+                <div class="item-info">
+                  <h3 class="item-title">{{ block.itemTitle }}</h3>
+                  <p class="block-time">拉黑时间：{{ block.blockTime }}</p>
+                </div>
+                <div class="item-actions">
+                  <button class="btn btn-success" @click="unblockItem(block.itemId)">
+                    取消拉黑
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </div>
 </template>
@@ -46,8 +76,10 @@ import { useUserStore } from '../stores/user'
 
 const userStore = useUserStore()
 const userBlacklist = ref([])
+const itemBlacklist = ref([])
+const activeTab = ref('user')
 
-// 取消拉黑
+// 取消拉黑用户
 const unblockUser = async (userId) => {
   try {
     await userStore.unblockUser(userId)
@@ -58,10 +90,23 @@ const unblockUser = async (userId) => {
   }
 }
 
+// 取消拉黑商品
+const unblockItem = async (itemId) => {
+  try {
+    await userStore.unblockItem(itemId)
+    itemBlacklist.value = userStore.itemBlacklist
+    ElMessage.success('取消拉黑成功')
+  } catch (error) {
+    ElMessage.error('取消拉黑失败')
+  }
+}
+
 onMounted(async () => {
   // 获取黑名单列表
   await userStore.getUserBlacklist()
+  await userStore.getItemBlacklist()
   userBlacklist.value = userStore.userBlacklist
+  itemBlacklist.value = userStore.itemBlacklist
 })
 </script>
 
@@ -155,6 +200,40 @@ onMounted(async () => {
   gap: 10px;
 }
 
+.item-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.item-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.blacklist-tabs {
+  margin-bottom: 20px;
+}
+
 @media (max-width: 768px) {
   .page-title {
     font-size: 20px;
@@ -170,9 +249,33 @@ onMounted(async () => {
     gap: 12px;
   }
   
-  .user-actions {
+  .user-actions,
+  .item-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+}
+
+/* 按钮样式 */
+.btn {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.btn-success {
+  background-color: #67C23A;
+  color: #fff;
+  
+  &:hover {
+    background-color: #85ce61;
   }
 }
 </style>

@@ -33,6 +33,22 @@ export const useUserStore = defineStore('user', {
         blockTime: '2026-02-05'
       }
     ],
+    itemBlacklist: [
+      {
+        id: 1,
+        itemId: 2,
+        itemTitle: '二手手机',
+        itemImage: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=second%20hand%20smartphone&image_size=square',
+        blockTime: '2026-02-10'
+      },
+      {
+        id: 2,
+        itemId: 3,
+        itemTitle: '旧笔记本电脑',
+        itemImage: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=old%20laptop%20computer&image_size=square',
+        blockTime: '2026-02-08'
+      }
+    ],
     isLoggedIn: !!localStorage.getItem('token') || true, // 默认登录状态
     // 用户相关数据
     userPosts: [
@@ -387,6 +403,42 @@ export const useUserStore = defineStore('user', {
       return new Promise((resolve) => {
         setTimeout(() => {
           this.userBlacklist = this.userBlacklist.filter(block => block.userId !== userId)
+          resolve({ data: { success: true } })
+        }, 300)
+      })
+    },
+
+    // 模拟获取商品黑名单
+    async getItemBlacklist() {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({ data: this.itemBlacklist })
+        }, 300)
+      })
+    },
+
+    // 模拟拉黑商品
+    async blockItem(itemId, itemTitle, itemImage) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const newBlock = {
+            id: Date.now(),
+            itemId,
+            itemTitle,
+            itemImage,
+            blockTime: new Date().toISOString().split('T')[0]
+          }
+          this.itemBlacklist.push(newBlock)
+          resolve({ data: { success: true } })
+        }, 300)
+      })
+    },
+
+    // 模拟取消拉黑商品
+    async unblockItem(itemId) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          this.itemBlacklist = this.itemBlacklist.filter(block => block.itemId !== itemId)
           resolve({ data: { success: true } })
         }, 300)
       })

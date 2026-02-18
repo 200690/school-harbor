@@ -8,6 +8,10 @@ import SecondHandDetailView from '../views/SecondHandDetailView.vue'
 const routes = [
   {
     path: '/',
+    redirect: '/index'
+  },
+  {
+    path: '/index',
     name: 'home',
     component: HomeView
   },
@@ -42,12 +46,12 @@ const routes = [
     component: () => import('../views/SecondHandEditView.vue')
   },
   {
-    path: '/user/login',
+    path: '/user/user/login',
     name: 'login',
     component: () => import('../views/LoginView.vue')
   },
   {
-    path: '/user/register',
+    path: '/user/user/register',
     name: 'register',
     component: () => import('../views/RegisterView.vue')
   },

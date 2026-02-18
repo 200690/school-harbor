@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function login(data) {
   return request({
-    url: '/user/login',
+    url: '/user/user/login',
     method: 'post',
     data
   })
@@ -10,7 +10,7 @@ export function login(data) {
 
 export function register(data) {
   return request({
-    url: '/user/register',
+    url: '/user/user/register',
     method: 'post',
     data
   })
@@ -18,14 +18,14 @@ export function register(data) {
 
 export function getUserInfo() {
   return request({
-    url: '/user/info',
+    url: '/user/user/info',
     method: 'get'
   })
 }
 
 export function updateUserInfo(data) {
   return request({
-    url: '/user/update',
+    url: '/user/user/update',
     method: 'put',
     data
   })
@@ -33,7 +33,7 @@ export function updateUserInfo(data) {
 
 export function changePassword(data) {
   return request({
-    url: '/user/password',
+    url: '/user/user/password',
     method: 'put',
     data
   })
@@ -41,7 +41,7 @@ export function changePassword(data) {
 
 export function logout() {
   return request({
-    url: '/user/logout',
+    url: '/user/user/logout',
     method: 'post'
   })
 }

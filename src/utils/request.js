@@ -2,8 +2,9 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
 const request = axios.create({
-  baseURL: process.env.VUE_APP_BASE_API || '/api',
-  timeout: 15000
+  baseURL: '/api',
+  timeout: 15000,
+  withCredentials: true
 })
 
 request.interceptors.request.use(
@@ -24,18 +25,18 @@ request.interceptors.response.use(
   response => {
     const res = response.data
 
-    if (res.code !== 200) {
-      ElMessage.error({ message: res.message || '请求失败', duration: 1500 })
+    if (res.code !== 1) {
+      ElMessage.error({ message: res.msg || '请求失败', duration: 1500 })
 
       if (res.code === 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
-        window.location.href = '/user/login'
+        window.location.href = '/user/user/login'
       }
 
-      return Promise.reject(new Error(res.message || '请求失败'))
+      return Promise.reject(new Error(res.msg || '请求失败'))
     } else {
-      return res
+      return res.data
     }
   },
   error => {
@@ -50,7 +51,7 @@ request.interceptors.response.use(
           ElMessage.error({ message: '未授权，请重新登录', duration: 1500 })
           localStorage.removeItem('token')
           localStorage.removeItem('userInfo')
-          window.location.href = '/user/login'
+          window.location.href = '/user/user/login'
           break
         case 403:
           ElMessage.error({ message: '拒绝访问', duration: 1500 })
