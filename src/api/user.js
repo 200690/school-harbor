@@ -16,9 +16,9 @@ export function register(data) {
   })
 }
 
-export function getUserInfo() {
+export function getUserInfo(id) {
   return request({
-    url: '/user/user/info',
+    url: `/user/user/info/${id}`,
     method: 'get'
   })
 }
@@ -26,7 +26,7 @@ export function getUserInfo() {
 export function updateUserInfo(data) {
   return request({
     url: '/user/user/update',
-    method: 'put',
+    method: 'post',
     data
   })
 }

@@ -202,6 +202,7 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import { ElDialog, ElInput, ElButton, ElMessage, ElRadioGroup, ElRadio } from 'element-plus'
+import request from '../utils/request'
 
 const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
@@ -225,18 +226,41 @@ const showRechargeDialog = () => {
 }
 
 // 充值处理
-const handleRecharge = () => {
+const handleRecharge = async () => {
   if (!rechargeAmount.value || isNaN(rechargeAmount.value) || parseFloat(rechargeAmount.value) <= 0) {
     ElMessage.error('请输入有效的充值金额')
     return
   }
   
-  // 模拟充值成功
-  const amount = parseFloat(rechargeAmount.value)
-  userInfo.value.balance = (userInfo.value.balance || 0) + amount
-  ElMessage.success(`充值成功，金额：¥${amount}`)
-  rechargeDialogVisible.value = false
-  rechargeAmount.value = ''
+  try {
+    const amount = parseFloat(rechargeAmount.value)
+    // 获取userId
+    const userId = userInfo.value.userId || userInfo.value.id || JSON.parse(localStorage.getItem('userInfo') || '{}').userId
+    
+    if (!userId) {
+      ElMessage.error('用户信息不完整，无法充值')
+      return
+    }
+    
+    // 发送充值请求
+    await request({
+      url: '/user/balance/recharge',
+      method: 'post',
+      data: { 
+        amount, 
+        userId 
+      }
+    })
+    
+    // 请求成功后更新余额
+    userInfo.value.balance = (userInfo.value.balance || 0) + amount
+    ElMessage.success(`充值成功，金额：¥${amount}`)
+    rechargeDialogVisible.value = false
+    rechargeAmount.value = ''
+  } catch (error) {
+    console.error('充值失败:', error)
+    ElMessage.error('充值失败，请稍后重试')
+  }
 }
 
 // 选择充值金额

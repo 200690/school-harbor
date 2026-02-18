@@ -17,11 +17,18 @@
           <el-form-item label="头像">
             <div class="avatar-uploader">
               <el-avatar :size="100" :src="form.avatar">
-                <img :src="form.avatar" :alt="form.username" />
+                <img v-if="form.avatar" :src="form.avatar" alt="头像" />
               </el-avatar>
-              <el-button type="primary" size="small" class="upload-btn">
+              <el-button type="primary" size="small" class="upload-btn" @click="triggerFileInput">
                 <i class="el-icon-upload"></i> 更换头像
               </el-button>
+              <input 
+                type="file" 
+                ref="fileInput" 
+                style="display: none" 
+                accept="image/*" 
+                @change="handleAvatarUpload"
+              />
             </div>
           </el-form-item>
 
@@ -129,6 +136,7 @@ import { getUserInfo, updateUserInfo } from '@/api/user'
 const router = useRouter()
 const formRef = ref(null)
 const phoneFormRef = ref(null)
+const fileInput = ref(null)
 
 const form = reactive({
   username: '',
@@ -207,6 +215,33 @@ const startCountdown = () => {
   }, 1000)
 }
 
+// 触发文件输入框
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+// 处理头像上传
+const handleAvatarUpload = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // 检查文件大小
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('头像大小不能超过5MB')
+    return
+  }
+  
+  // 预览头像
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.avatar = e.target.result
+  }
+  reader.readAsDataURL(file)
+  
+  // 清空文件输入
+  event.target.value = ''
+}
+
 // 提交更换手机号
 const submitPhoneChange = async () => {
   if (!phoneFormRef.value) return
@@ -243,11 +278,21 @@ const submitForm = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        // 获取用户ID
+        const userId = JSON.parse(localStorage.getItem('userInfo') || '{}').userId || JSON.parse(localStorage.getItem('userInfo') || '{}').id
+        
+        if (!userId) {
+          ElMessage.error('用户信息不完整，无法保存')
+          return
+        }
+        
         // 准备更新数据
         const updateData = {
-          phone: form.phone,
-          email: form.email,
-          avatar: form.avatar
+          id: parseInt(userId),
+          img: form.avatar,
+          gender: form.gender === '男' ? 1 : form.gender === '女' ? 0 : 2,
+          signature: form.bio,
+          email: form.email
         }
         
         await updateUserInfo(updateData)
@@ -265,22 +310,33 @@ const submitForm = async () => {
 }
 
 const resetForm = () => {
-  if (!formRef.value) return
-  formRef.value.resetFields()
-  // 重新获取用户信息
-  fetchUserInfo()
+  // 跳转到个人中心
+  router.push('/user/user/center')
 }
 
 const fetchUserInfo = async () => {
   try {
-    const response = await getUserInfo()
-    const userInfo = response.data
+    // 获取用户ID
+    const userId = JSON.parse(localStorage.getItem('userInfo') || '{}').userId || JSON.parse(localStorage.getItem('userInfo') || '{}').id
+    
+    if (!userId) {
+      ElMessage.error('用户信息不完整，无法获取资料')
+      return
+    }
+    
+    const response = await getUserInfo(userId)
+    const userInfo = response
     // 更新表单数据
     form.username = userInfo.username
     form.phone = userInfo.phone
     form.email = userInfo.email
-    form.avatar = userInfo.avatar
+    form.avatar = userInfo.img || userInfo.avatar
+    form.bio = userInfo.signature || form.bio
     form.registerTime = userInfo.createTime
+    // 处理性别字段
+    if (userInfo.gender !== undefined) {
+      form.gender = userInfo.gender === 1 ? '男' : userInfo.gender === 0 ? '女' : '保密'
+    }
   } catch (error) {
     console.error('获取用户信息失败:', error)
     ElMessage.error('获取用户信息失败')
