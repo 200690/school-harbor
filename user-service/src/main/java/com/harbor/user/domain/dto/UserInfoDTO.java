@@ -8,14 +8,14 @@ import lombok.Data;
  * 用户更新 DTO
  */
 @Data
-public class UserUpdateDTO {
+public class UserInfoDTO {
 
     @NotNull(message = "用户ID不能为空")
     private Long id;
 
     private String img;
 
-    private String gender;
+    private int gender;
 
     private String signature;
 

@@ -2,17 +2,14 @@ package com.harbor.user.controller.user;
 
 import com.harbor.result.Result;
 import com.harbor.user.domain.dto.LoginFormDTO;
-import com.harbor.user.domain.dto.RechargeDTO;
 import com.harbor.user.domain.dto.UserRegisterDTO;
-import com.harbor.user.domain.vo.UserLoginVO;
+import com.harbor.user.domain.vo.UserVO;
 import com.harbor.user.service.IUserService;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @ApiOperation("用户相关接口")
 @Slf4j
@@ -36,5 +33,18 @@ public class UserController {
         return Result.success();
     }
 
+    @ApiOperation("查询用户信息接口")
+    @GetMapping("info/{id}")
+    public Result<UserVO> info(@PathVariable Long id){
+        log.info("开始查询用户信息");
+        return Result.success(userService.getUserInfo(id));
+    }
 
+//    @ApiOperation("更新用户信息接口")
+//    @PostMapping("update")
+//    public Result updateUserInfo(@RequestBody @Validated UserRegisterDTO userRegisterDTO){
+//        log.info("开始更新用户信息");
+//        userService.updateUserInfo(userRegisterDTO);
+//        return Result.success();
+//    }
 }

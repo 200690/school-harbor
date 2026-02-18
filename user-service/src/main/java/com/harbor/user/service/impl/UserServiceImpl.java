@@ -1,26 +1,23 @@
 package com.harbor.user.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.exception.ForbiddenException;
 import com.harbor.user.config.JwtProperties;
 import com.harbor.user.domain.dto.LoginFormDTO;
-import com.harbor.user.domain.dto.RechargeDTO;
 import com.harbor.user.domain.dto.UserRegisterDTO;
-import com.harbor.user.domain.po.RechargeRecord;
 import com.harbor.user.domain.po.User;
 import com.harbor.user.domain.vo.UserLoginVO;
+import com.harbor.user.domain.vo.UserVO;
 import com.harbor.user.mapper.UserMapper;
 import com.harbor.user.service.IUserService;
 import com.harbor.user.utils.JwtTool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -88,4 +85,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         this.save(user);
         log.info("用户注册成功：{}", user);
     }
+
+    /**
+     * 查询用户信息
+     *
+     * @return 用户信息
+     */
+    @Override
+    public UserVO getUserInfo(Long id) {
+        if(id == null & id < 0){
+            throw new ForbiddenException("用户不存在");
+        }
+        User user = lambdaQuery().eq(User::getId, id).one();
+        if(BeanUtil.isEmpty(user)){
+            throw new ForbiddenException("用户不存在");
+        }
+        UserVO userVO = new UserVO();
+        BeanUtil.copyProperties(user, userVO);
+        return userVO;
+    }
+
+
 }

@@ -49,4 +49,9 @@ public class UserBalance {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    /**
+     * 冻结余额
+     */
+    private int frozen_balance;
 }
