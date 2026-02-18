@@ -29,17 +29,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-        </dependency>
-
-        <!--        引入common-->
-        <dependency>
-            <groupId>com.harbor</groupId>
-            <artifactId>harbor-common</artifactId>
-            <version>1.0.0</version>
-        </dependency>
         <!--nacos配置管理-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
@@ -56,10 +45,11 @@
             <artifactId>harbor-common</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <!--网关-->
+        <!--网关 - 移除手动指定的版本号，让Spring Cloud自动管理-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway</artifactId>
+            <version>4.1.4</version>
         </dependency>
         <!--nacos discovery-->
         <dependency>

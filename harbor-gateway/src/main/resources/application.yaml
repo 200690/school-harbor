@@ -1,5 +1,5 @@
 server:
-  port: 8089
+  port: 8090
 spring:
   application:
     name: harbor-gateway
@@ -8,10 +8,51 @@ spring:
   cloud:
     nacos:
       server-addr: 115.190.252.109:8848
+    gateway:
+      routes:
+        - id: part-time # 路由规则id，自定义，唯一
+          uri: lb://harbor-part-time # 路由的目标服务，lb代表负载均衡，会从注册中心拉取服务列表
+          predicates: # 路由断言，判断当前请求是否符合当前规则，符合则路由到目标服务
+            - Path=/api/part-time/** # 这里是以请求路径作为判断规则
+          filters:
+            # 去掉 /api，保留 /user/**
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+        - id: scend-hand
+          uri: lb://harbor-scend-hand
+          predicates:
+            - Path=/api/scend-hand/**
+          filters:
+            # 去掉 /api，保留 /user/**
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+        - id: user
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            # 去掉 /api，保留 /user/**
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+#        - id: trade
+#          uri: lb://trade-service
+#          predicates:
+#            - Path=/orders/**
+        - id: pay
+          uri: lb://pay-service
+          predicates:
+            - Path=/api/pay/**
+          filters:
+            # 去掉 /api，保留 /user/**
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+
 #      config:
 #        file-extension: yaml
 #        shared-configs:
 #          - dataId: shared-log.yaml # 共享日志配置
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.cloud.loadbalancer: TRACE
+    org.springframework.cloud.client.discovery: DEBUG
+    reactor.netty: DEBUG
 harbor:
   jwt:
     location: classpath:harbor.jks
@@ -20,8 +61,9 @@ harbor:
     tokenTTL: 30m
   auth:
     excludePaths:
-      - /search/**
-      - /users/login
-      - /items/**
-      - /hi
+      - /api/part-time
+      - /api/user/user/login
+      - /api/user/user/register
+      - /api/second-hand
+      - /api/index
 # keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

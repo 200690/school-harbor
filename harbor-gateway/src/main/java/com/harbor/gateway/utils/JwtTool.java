@@ -1,11 +1,11 @@
-package com.harbor.user.utils;
+package com.harbor.gateway.utils;
 
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTValidator;
 import cn.hutool.jwt.signers.JWTSigner;
 import cn.hutool.jwt.signers.JWTSignerUtil;
-import com.hmall.common.exception.UnauthorizedException;
+import com.harbor.exception.UnauthorizedException;
 import org.springframework.stereotype.Component;
 
 import java.security.KeyPair;

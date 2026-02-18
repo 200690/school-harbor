@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.exception.ForbiddenException;
 import com.harbor.user.config.JwtProperties;
 import com.harbor.user.domain.dto.LoginFormDTO;
+import com.harbor.user.domain.dto.UserInfoDTO;
 import com.harbor.user.domain.dto.UserRegisterDTO;
 import com.harbor.user.domain.po.User;
 import com.harbor.user.domain.vo.UserLoginVO;
@@ -93,17 +94,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public UserVO getUserInfo(Long id) {
-        if(id == null & id < 0){
+        User user = checkUserById(id);
+        UserVO userVO = new UserVO();
+        BeanUtil.copyProperties(user, userVO);
+        return userVO;
+    }
+
+    /**
+     * 更新用户信息
+     *
+     * @param userInfoDTO 用户信息
+     */
+    @Override
+    public void updateUserInfo(UserInfoDTO userInfoDTO) {
+        User user = checkUserById(userInfoDTO.getId());
+        BeanUtil.copyProperties(userInfoDTO, user);
+        this.updateById(user);
+    }
+
+    private User checkUserById(Long id) {
+        if(id == null || id < 0){
             throw new ForbiddenException("用户不存在");
         }
         User user = lambdaQuery().eq(User::getId, id).one();
         if(BeanUtil.isEmpty(user)){
             throw new ForbiddenException("用户不存在");
         }
-        UserVO userVO = new UserVO();
-        BeanUtil.copyProperties(user, userVO);
-        return userVO;
+        if(user.getStatus() != 1){
+            throw new ForbiddenException("用户状态异常");
+        }
+        return user;
     }
-
-
 }

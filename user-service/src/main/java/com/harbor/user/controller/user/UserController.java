@@ -2,6 +2,7 @@ package com.harbor.user.controller.user;
 
 import com.harbor.result.Result;
 import com.harbor.user.domain.dto.LoginFormDTO;
+import com.harbor.user.domain.dto.UserInfoDTO;
 import com.harbor.user.domain.dto.UserRegisterDTO;
 import com.harbor.user.domain.vo.UserVO;
 import com.harbor.user.service.IUserService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @ApiOperation("用户相关接口")
 @Slf4j
 @RestController
+@RequestMapping("/user/user")
 @RequiredArgsConstructor
 public class UserController {
     private final IUserService userService;
@@ -40,11 +42,11 @@ public class UserController {
         return Result.success(userService.getUserInfo(id));
     }
 
-//    @ApiOperation("更新用户信息接口")
-//    @PostMapping("update")
-//    public Result updateUserInfo(@RequestBody @Validated UserRegisterDTO userRegisterDTO){
-//        log.info("开始更新用户信息");
-//        userService.updateUserInfo(userRegisterDTO);
-//        return Result.success();
-//    }
+    @ApiOperation("更新用户信息接口")
+    @PostMapping("update")
+    public Result updateUserInfo(@RequestBody @Validated UserInfoDTO userInfoDTO){
+        log.info("开始更新用户信息");
+        userService.updateUserInfo(userInfoDTO);
+        return Result.success();
+    }
 }
