@@ -49,12 +49,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
-            <version>9.0.73</version>
-            <scope>provided</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.tomcat.embed</groupId>-->
+<!--            <artifactId>tomcat-embed-core</artifactId>-->
+<!--            <version>9.0.73</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-core</artifactId>
@@ -101,6 +101,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Maven pom.xml -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

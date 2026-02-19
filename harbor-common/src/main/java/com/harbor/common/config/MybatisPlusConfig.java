@@ -1,4 +1,4 @@
-package com.harbor.secondHand.user.config;
+package com.harbor.common.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
