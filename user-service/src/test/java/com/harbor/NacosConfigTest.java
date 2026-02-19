@@ -1,6 +1,6 @@
 package com.harbor;
 
-import com.harbor.user.UserServiceApplication;
+import com.harbor.secondHand.user.UserServiceApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;

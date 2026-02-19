@@ -47,12 +47,12 @@ spring:
 #        file-extension: yaml
 #        shared-configs:
 #          - dataId: shared-log.yaml # 共享日志配置
-logging:
-  level:
-    org.springframework.cloud.gateway: TRACE
-    org.springframework.cloud.loadbalancer: TRACE
-    org.springframework.cloud.client.discovery: DEBUG
-    reactor.netty: DEBUG
+#logging:
+#  level:
+#    org.springframework.cloud.gateway: TRACE
+#    org.springframework.cloud.loadbalancer: TRACE
+#    org.springframework.cloud.client.discovery: DEBUG
+#    reactor.netty: DEBUG
 harbor:
   jwt:
     location: classpath:harbor.jks

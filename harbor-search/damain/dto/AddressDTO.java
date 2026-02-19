@@ -1,4 +1,4 @@
-package com.harbor.user.domain.dto;
+package com.harbor.secondHand.user.domain.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

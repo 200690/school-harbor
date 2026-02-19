@@ -1,4 +1,4 @@
-package com.harbor.gateway.utils;
+package com.harbor.secondHand.user.utils;
 
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.jwt.JWT;
