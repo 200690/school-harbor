@@ -1,4 +1,4 @@
-package com.harbor.partTime.domain.VO;
+package com.harbor.partTime.domain.vo;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,4 +1,4 @@
-package com.harbor.partTime.domain.DTO;
+package com.harbor.partTime.domain.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

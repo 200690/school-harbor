@@ -1,4 +1,4 @@
-package com.harbor.partTime.domain.PO;
+package com.harbor.partTime.domain.po;
 
 import com.baomidou.mybatisplus.annotation.*;
 import jakarta.validation.constraints.NotNull;

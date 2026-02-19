@@ -1,13 +1,15 @@
-package com.harbor.partTime.domain.VO;
+package com.harbor.partTime.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
 
 /**
  * 兼职视图对象
  */
+@Accessors(chain = true)
 @Data
 public class PartTimeVO {
 

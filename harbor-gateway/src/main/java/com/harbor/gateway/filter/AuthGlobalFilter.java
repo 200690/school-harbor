@@ -42,7 +42,7 @@ public class AuthGlobalFilter implements GlobalFilter , Ordered {
             token = headers.get(0);
         }
         log.info("token: {}", token);
-//        令牌校验 TODO
+//        令牌校验
         Long userId = null;
         try {
             userId = jwtTool.parseToken(token);

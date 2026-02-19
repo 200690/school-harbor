@@ -11,14 +11,14 @@ spring:
     gateway:
       routes:
         - id: part-time # 路由规则id，自定义，唯一
-          uri: lb://harbor-part-time # 路由的目标服务，lb代表负载均衡，会从注册中心拉取服务列表
+          uri: lb://part-time-service # 路由的目标服务，lb代表负载均衡，会从注册中心拉取服务列表
           predicates: # 路由断言，判断当前请求是否符合当前规则，符合则路由到目标服务
             - Path=/api/part-time/** # 这里是以请求路径作为判断规则
           filters:
             # 去掉 /api，保留 /user/**
             - RewritePath=/api/(?<segment>.*), /$\{segment}
         - id: second-hand
-          uri: lb://harbor-second-hand
+          uri: lb://second-hand-service
           predicates:
             - Path=/api/second-hand/**
           filters:
