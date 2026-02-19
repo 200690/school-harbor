@@ -60,7 +60,7 @@ export default {
           this.loading = true;
           try {
             const response = await login(this.loginForm);
-            const { token, userId, username } = response || {};
+            const { token, userId, username } = response.data || {};
             
             // 存储token和用户信息
             if (token) {

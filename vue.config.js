@@ -5,10 +5,10 @@ module.exports = defineConfig({
     port: 8080,
     proxy: {
       '/api': {
-        target: process.env.VUE_APP_API_URL || 'http://localhost:8090',  // 从环境变量读取
+        target: process.env.VUE_APP_API_URL || 'http://localhost:8090',
         changeOrigin: true,
         pathRewrite: {
-          '^/api': '/api'  // 保留 /api 前缀
+          '^/api': '/api'
         }
       }
     }

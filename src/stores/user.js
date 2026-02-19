@@ -192,10 +192,20 @@ export const useUserStore = defineStore('user', {
 
     async getUserInfoAction() {
       try {
-        const res = await getUserInfo()
+        // 从localStorage获取用户ID
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        const userId = userInfo.userId || userInfo.id
+        
+        if (!userId) {
+          // 如果没有用户ID，使用模拟数据
+          return { data: this.userInfo }
+        }
+        
+        const res = await getUserInfo(userId)
         this.setUserInfo(res.data)
         return res
       } catch (error) {
+        console.error('获取用户信息失败:', error)
         // 模拟获取用户信息成功
         return { data: this.userInfo }
       }

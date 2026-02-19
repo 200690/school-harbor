@@ -171,14 +171,10 @@ export default {
     },
     async contactSeller(itemId) {
       try {
-        const response = await buySecondHandItem(itemId);
-        if (response.data.success) {
-          this.$message.success('购买成功，请联系卖家完成交易');
-          // 刷新列表
-          this.fetchSecondHandList();
-        } else {
-          this.$message.error(response.data.message || '购买失败');
-        }
+        await buySecondHandItem(itemId);
+        this.$message.success('购买成功，请联系卖家完成交易');
+        // 刷新列表
+        this.fetchSecondHandList();
       } catch (error) {
         console.error('购买失败:', error);
         this.$message.error('购买失败');

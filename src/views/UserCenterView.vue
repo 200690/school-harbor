@@ -12,7 +12,10 @@
       <div class="user-info-card card">
         <div class="user-info-header">
           <div class="user-avatar">
-            <img :src="userInfo.avatar" :alt="userInfo.username" />
+            <img v-if="userInfo.avatar" :src="userInfo.avatar" :alt="userInfo.username" />
+            <div v-else class="default-avatar">
+              <i class="el-icon-user"></i>
+            </div>
           </div>
           <div class="user-basic-info">
             <h3 class="user-name">{{ userInfo.username }}</h3>
@@ -354,12 +357,26 @@ onMounted(async () => {
   overflow: hidden;
   border: 4px solid rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .user-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.default-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .user-basic-info {

@@ -325,7 +325,7 @@ const fetchUserInfo = async () => {
     }
     
     const response = await getUserInfo(userId)
-    const userInfo = response
+    const userInfo = response.data
     // 更新表单数据
     form.username = userInfo.username
     form.phone = userInfo.phone
@@ -335,7 +335,7 @@ const fetchUserInfo = async () => {
     form.registerTime = userInfo.createTime
     // 处理性别字段
     if (userInfo.gender !== undefined) {
-      form.gender = userInfo.gender === 1 ? '男' : userInfo.gender === 0 ? '女' : '保密'
+      form.gender = userInfo.gender === '1' || userInfo.gender === 1 ? '男' : userInfo.gender === '0' || userInfo.gender === 0 ? '女' : '保密'
     }
   } catch (error) {
     console.error('获取用户信息失败:', error)
