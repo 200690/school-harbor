@@ -13,7 +13,10 @@ export const usePartTimeStore = defineStore('partTime', {
   }),
 
   getters: {
-    jobCount: (state) => state.total
+    jobCount: (state) => state.total,
+    getJobById: (state) => (id) => {
+      return state.jobList.find(job => job.id === parseInt(id))
+    }
   },
 
   actions: {
@@ -26,8 +29,6 @@ export const usePartTimeStore = defineStore('partTime', {
         this.currentPage = res.data.currentPage || 1
         this.pageSize = res.data.pageSize || 10
         return res
-      } catch (error) {
-        throw error
       } finally {
         this.loading = false
       }
@@ -39,47 +40,25 @@ export const usePartTimeStore = defineStore('partTime', {
         const res = await getPartTimeDetail(id)
         this.jobDetail = res.data
         return res
-      } catch (error) {
-        throw error
       } finally {
         this.loading = false
       }
     },
 
     async createJobAction(data) {
-      try {
-        const res = await createPartTimeJob(data)
-        return res
-      } catch (error) {
-        throw error
-      }
+      return await createPartTimeJob(data)
     },
 
     async updateJobAction(id, data) {
-      try {
-        const res = await updatePartTimeJob(id, data)
-        return res
-      } catch (error) {
-        throw error
-      }
+      return await updatePartTimeJob(id, data)
     },
 
     async deleteJobAction(id) {
-      try {
-        const res = await deletePartTimeJob(id)
-        return res
-      } catch (error) {
-        throw error
-      }
+      return await deletePartTimeJob(id)
     },
 
     async applyJobAction(id) {
-      try {
-        const res = await applyPartTimeJob(id)
-        return res
-      } catch (error) {
-        throw error
-      }
+      return await applyPartTimeJob(id)
     },
 
     async getMyApplicationsAction(params) {
@@ -89,8 +68,6 @@ export const usePartTimeStore = defineStore('partTime', {
         this.myApplications = res.data.list || []
         this.total = res.data.total || 0
         return res
-      } catch (error) {
-        throw error
       } finally {
         this.loading = false
       }

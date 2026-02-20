@@ -7,41 +7,46 @@
       
       <!-- 搜索和筛选 -->
       <div class="search-filter">
-        <div class="search-box">
-          <input 
-            type="text" 
-            placeholder="搜索兼职职位" 
-            class="search-input"
-            v-model="searchKeyword"
-            @keyup.enter="handleSearch"
-          />
-          <button class="search-btn" @click="handleSearch">
-            <i class="el-icon-search"></i>
-          </button>
-        </div>
-        
-        <div class="filter-options">
-          <el-select v-model="filterType" placeholder="兼职类型" class="filter-select">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="校内兼职" value="campus"></el-option>
-            <el-option label="校外兼职" value="off-campus"></el-option>
-            <el-option label="实习" value="internship"></el-option>
-          </el-select>
+        <div class="filter-row">
+          <div class="search-box">
+            <input 
+              type="text" 
+              placeholder="搜索兼职职位" 
+              class="search-input"
+              v-model="searchKeyword"
+            />
+            <button class="search-btn" @click="handleSearch">
+              <i class="el-icon-search"></i> 搜索
+            </button>
+          </div>
           
-          <el-select v-model="filterSalary" placeholder="薪资范围" class="filter-select">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="10元/小时以下" value="<10"></el-option>
-            <el-option label="10-15元/小时" value="10-15"></el-option>
-            <el-option label="15-20元/小时" value="15-20"></el-option>
-            <el-option label="20元/小时以上" value=">20"></el-option>
-          </el-select>
-          
-          <el-select v-model="filterTime" placeholder="工作时间" class="filter-select">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="周末" value="weekend"></el-option>
-            <el-option label="工作日" value="weekday"></el-option>
-            <el-option label="弹性时间" value="flexible"></el-option>
-          </el-select>
+          <div class="filter-options">
+            <el-select v-model="filterType" placeholder="兼职类型" class="filter-select">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="校内兼职" value="1"></el-option>
+              <el-option label="校外兼职" value="2"></el-option>
+              <el-option label="实习" value="3"></el-option>
+            </el-select>
+            
+            <el-select v-model="filterCreditScore" placeholder="信誉分" class="filter-select">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="差 (0-60)" value="0-60"></el-option>
+              <el-option label="中等 (61-80)" value="61-80"></el-option>
+              <el-option label="优秀 (81-100)" value="81-100"></el-option>
+            </el-select>
+            
+            <el-select v-model="sortField" placeholder="排序字段" class="filter-select">
+              <el-option label="发布时间" value="publishTime"></el-option>
+              <el-option label="浏览量" value="viewCount"></el-option>
+              <el-option label="申请人数" value="applicantCount"></el-option>
+              <el-option label="信誉分" value="creditScore"></el-option>
+            </el-select>
+            
+            <button class="sort-toggle-btn" @click="toggleSort">
+              <i :class="sortOrder === 'desc' ? 'el-icon-sort-down' : 'el-icon-sort-up'"></i>
+              {{ sortOrder === 'desc' ? '降序' : '升序' }}
+            </button>
+          </div>
         </div>
       </div>
       
@@ -53,7 +58,7 @@
             <div class="job-meta">
               <span class="meta-item">
                 <i class="el-icon-s-flag"></i>
-                <router-link :to="`/user/profile/${job.employerId || 1}`" class="employer-link">
+                <router-link :to="`/user/profile/${job.publisherId || 1}`" class="employer-link">
                   {{ job.employer }}
                 </router-link>
               </span>
@@ -62,9 +67,11 @@
             </div>
             <p class="job-description">{{ job.description }}</p>
             <div class="job-tags">
-              <span class="tag tag-primary">{{ job.type }}</span>
-              <span class="tag tag-success">薪资: {{ job.salary }}</span>
+              <span class="tag tag-primary">{{ job.typeName || getJobTypeText(job.type) }}</span>
+              <span class="tag tag-success">薪资: {{ job.salaryDesc }}</span>
               <span class="tag tag-info">{{ job.publishTime }}</span>
+              <span class="tag tag-warning">浏览: {{ job.viewCount }}</span>
+              <span class="tag tag-info">申请: {{ job.applicantCount }}</span>
             </div>
           </div>
           <div class="job-actions">
@@ -99,7 +106,8 @@
 </template>
 
 <script>
-import { getPartTimeList, applyPartTimeJob } from '@/api/partTime'
+import { applyPartTimeJob } from '@/api/partTime'
+import { usePartTimeStore } from '@/stores/partTime'
 
 export default {
   name: 'PartTimeListView',
@@ -109,77 +117,92 @@ export default {
     return {
       searchKeyword: '',
       filterType: '',
-      filterSalary: '',
-      filterTime: '',
+      filterCreditScore: '',
+      sortField: 'publishTime',
+      sortOrder: 'desc',
       currentPage: 1,
       pageSize: 10,
-      totalJobs: 0,
-      jobs: [],
       loading: false
     }
   },
+  computed: {
+    partTimeStore() {
+      return usePartTimeStore()
+    },
+    jobs() {
+      return this.partTimeStore.jobList
+    },
+    totalJobs() {
+      return this.partTimeStore.total
+    }
+  },
   mounted() {
-    // 组件创建时获取兼职列表
-    this.fetchPartTimeList();
+    this.fetchPartTimeList()
   },
   methods: {
     async fetchPartTimeList() {
-      this.loading = true;
+      this.loading = true
       try {
-        // 构建查询参数
         const params = {
           page: this.currentPage,
           size: this.pageSize,
           keyword: this.searchKeyword,
-          type: this.filterType,
-          workTime: this.filterTime
-        };
+          sortField: this.sortField,
+          sortOrder: this.sortOrder
+        }
         
-        // 处理薪资范围筛选
-        if (this.filterSalary) {
-          const salaryRange = this.filterSalary.split('-');
-          if (salaryRange.length === 2) {
-            params.salaryMin = parseInt(salaryRange[0]);
-            params.salaryMax = parseInt(salaryRange[1]);
-          } else if (this.filterSalary.startsWith('<')) {
-            params.salaryMax = parseInt(this.filterSalary.substring(1));
-          } else if (this.filterSalary.startsWith('>')) {
-            params.salaryMin = parseInt(this.filterSalary.substring(1));
+        if (this.filterType) {
+          params.types = [parseInt(this.filterType)]
+        }
+        
+        if (this.filterCreditScore) {
+          const range = this.filterCreditScore.split('-')
+          if (range.length === 2) {
+            params.creditScore = parseInt(range[0])
           }
         }
         
-        const response = await getPartTimeList(params);
-        const { records, total } = response.data;
-        this.jobs = records;
-        this.totalJobs = total;
+        await this.partTimeStore.getJobListAction(params)
       } catch (error) {
-        console.error('获取兼职列表失败:', error);
-        this.$message.error('获取兼职列表失败');
+        console.error('获取兼职列表失败:', error)
+        this.$message.error('获取兼职列表失败')
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
     handleSearch() {
-      // 重置页码并搜索
-      this.currentPage = 1;
-      this.fetchPartTimeList();
+      this.currentPage = 1
+      this.fetchPartTimeList()
+    },
+    toggleSort() {
+      this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc'
+      this.fetchPartTimeList()
     },
     async applyJob(jobId) {
       try {
-        await applyPartTimeJob(jobId);
-        this.$message.success('申请成功，请等待审核');
+        await applyPartTimeJob(jobId)
+        this.$message.success('申请成功，请等待审核')
       } catch (error) {
-        console.error('申请兼职失败:', error);
-        this.$message.error('申请兼职失败');
+        console.error('申请兼职失败:', error)
+        this.$message.error('申请兼职失败')
       }
     },
     handleSizeChange(size) {
-      this.pageSize = size;
-      this.fetchPartTimeList();
+      this.pageSize = size
+      this.fetchPartTimeList()
     },
     handleCurrentChange(current) {
-      this.currentPage = current;
-      this.fetchPartTimeList();
+      this.currentPage = current
+      this.fetchPartTimeList()
+    },
+    
+    getJobTypeText(type) {
+      const typeMap = {
+        1: '校内兼职',
+        2: '校外兼职',
+        3: '实习'
+      }
+      return typeMap[type] || type
     }
   }
 }
@@ -214,18 +237,89 @@ export default {
   margin-bottom: 30px;
 }
 
+.filter-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .search-box {
-  margin-bottom: 20px;
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 120px 12px 16px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s;
+
+  &:focus {
+    outline: none;
+    border-color: #409EFF;
+  }
+}
+
+.search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 8px 16px;
+  background-color: #409EFF;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    background-color: #66B1FF;
+  }
 }
 
 .filter-options {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .filter-select {
-  width: 200px;
+  width: 160px;
+}
+
+.sort-toggle-btn {
+  padding: 8px 20px;
+  border: 1px solid #dcdfe6;
+  background-color: #fff;
+  color: #606266;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  &:hover {
+    color: #409EFF;
+    border-color: #c6e2ff;
+    background-color: #ecf5ff;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 /* 兼职列表样式 */
@@ -329,6 +423,15 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    min-width: 100%;
+  }
+  
   .list-item {
     flex-direction: column;
   }
@@ -346,7 +449,6 @@ export default {
   
   .filter-select {
     width: 100%;
-    margin-bottom: 10px;
   }
   
   .filter-options {

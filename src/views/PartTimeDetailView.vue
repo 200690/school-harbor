@@ -17,12 +17,14 @@
             <span class="meta-item"><i class="el-icon-s-flag"></i> {{ jobDetail.employer }}</span>
             <span class="meta-item"><i class="el-icon-s-position"></i> {{ jobDetail.location }}</span>
             <span class="meta-item"><i class="el-icon-time"></i> {{ jobDetail.workTime }}</span>
-            <span class="meta-item"><i class="el-icon-money"></i> {{ jobDetail.salary }}</span>
+            <span class="meta-item"><i class="el-icon-money"></i> {{ jobDetail.salaryDesc }}</span>
           </div>
           <div class="job-tags">
-            <span class="tag tag-primary">{{ jobDetail.type }}</span>
-            <span class="tag tag-success">{{ jobDetail.experience }}</span>
-            <span class="tag tag-warning">{{ jobDetail.education }}</span>
+            <span class="tag tag-primary">{{ jobDetail.typeName }}</span>
+            <span class="tag tag-success">状态: {{ jobDetail.statusName }}</span>
+            <span class="tag tag-warning">信誉分: {{ jobDetail.creditScore }}</span>
+            <span class="tag tag-info">浏览: {{ jobDetail.viewCount }}</span>
+            <span class="tag tag-info">申请: {{ jobDetail.applicantCount }}</span>
           </div>
         </div>
 
@@ -30,22 +32,17 @@
         <div class="job-content">
           <div class="content-section">
             <h3 class="section-title"><i class="el-icon-document"></i> 职位描述</h3>
-            <div class="content-text" v-html="jobDetail.description"></div>
+            <div class="content-text">{{ jobDetail.description }}</div>
           </div>
 
           <div class="content-section">
             <h3 class="section-title"><i class="el-icon-user"></i> 任职要求</h3>
-            <div class="content-text" v-html="jobDetail.requirements"></div>
+            <div class="content-text">{{ jobDetail.requirements }}</div>
           </div>
 
           <div class="content-section">
-            <h3 class="section-title"><i class="el-icon-time"></i> 工作时间</h3>
-            <p class="content-text">{{ jobDetail.workSchedule }}</p>
-          </div>
-
-          <div class="content-section">
-            <h3 class="section-title"><i class="el-icon-money"></i> 薪资福利</h3>
-            <p class="content-text">{{ jobDetail.benefits }}</p>
+            <h3 class="section-title"><i class="el-icon-time"></i> 发布时间</h3>
+            <p class="content-text">{{ jobDetail.publishTime }}</p>
           </div>
 
           <div class="content-section">
@@ -53,7 +50,6 @@
             <div class="contact-info">
               <p><strong>联系人：</strong>{{ jobDetail.contactPerson }}</p>
               <p><strong>联系电话：</strong>{{ jobDetail.contactPhone }}</p>
-              <p><strong>联系邮箱：</strong>{{ jobDetail.contactEmail }}</p>
             </div>
           </div>
         </div>
@@ -83,8 +79,8 @@
               </div>
               <div class="job-description">{{ job.description }}</div>
               <div class="job-tags">
-                <span class="tag tag-primary">{{ job.type }}</span>
-                <span class="tag tag-success">薪资: {{ job.salary }}</span>
+                <span class="tag tag-primary">{{ job.typeName }}</span>
+                <span class="tag tag-success">薪资: {{ job.salaryDesc }}</span>
               </div>
             </div>
             <router-link :to="`/part-time/detail/${job.id}`" class="btn btn-primary">查看详情</router-link>
@@ -96,28 +92,35 @@
 </template>
 
 <script>
+import { getPartTimeDetail, applyPartTimeJob } from '@/api/partTime'
+import { usePartTimeStore } from '@/stores/partTime'
+
 export default {
   name: 'PartTimeDetailView',
   data() {
     return {
-      jobId: this.$route.params.id || 1,
+      jobId: null,
       jobDetail: {
         id: 1,
         title: '校园超市收银员',
         employer: '校园超市',
         location: '校内',
         workTime: '周末 9:00-18:00',
-        salary: '15元/小时',
-        type: '校内兼职',
-        experience: '无需经验',
-        education: '不限学历',
-        description: '<p>1. 负责超市收银工作</p><p>2. 协助整理货架</p><p>3. 解答顾客疑问</p><p>4. 保持收银台整洁</p>',
-        requirements: '<p>1. 在校学生</p><p>2. 责任心强</p><p>3. 沟通能力良好</p><p>4. 能吃苦耐劳</p>',
-        workSchedule: '每周六、周日，9:00-18:00，中间有1小时休息时间',
-        benefits: '15元/小时，工作环境舒适，可提供工作证明',
+        salaryDesc: '15元/小时',
+        salaryUnit: '元/小时',
+        type: 1,
+        typeName: '校内兼职',
+        description: '负责超市收银工作',
+        requirements: '责任心强',
         contactPerson: '张经理',
         contactPhone: '138****8888',
-        contactEmail: 'manager@campusmart.com'
+        publisherId: 1,
+        status: 1,
+        statusName: '招聘中',
+        publishTime: '2026-02-20 23:59:52',
+        viewCount: 120,
+        applicantCount: 5,
+        creditScore: 85
       },
       recommendedJobs: [
         {
@@ -126,7 +129,7 @@ export default {
           employer: '校图书馆',
           location: '校内',
           workTime: '周一至周五 18:00-21:00',
-          salary: '12元/小时',
+          salaryDesc: '12元/小时',
           type: '校内兼职',
           description: '负责图书整理、上架等工作'
         },
@@ -136,7 +139,7 @@ export default {
           employer: '学生会',
           location: '校内',
           workTime: '弹性时间',
-          salary: '200元/次',
+          salaryDesc: '200元/次',
           type: '校内兼职',
           description: '协助策划和组织社团活动'
         },
@@ -146,31 +149,60 @@ export default {
           employer: '个人',
           location: '校外',
           workTime: '周末 2小时',
-          salary: '50元/小时',
+          salaryDesc: '50元/小时',
           type: '校外兼职',
           description: '初中数学家教'
         }
-      ]
+      ],
+      loading: false
+    }
+  },
+  computed: {
+    partTimeStore() {
+      return usePartTimeStore()
     }
   },
   created() {
+    this.jobId = this.$route.params.id
     this.fetchJobDetail()
   },
+  watch: {
+    '$route.params.id'(newId) {
+      this.jobId = newId
+      this.fetchJobDetail()
+    }
+  },
   methods: {
-    fetchJobDetail() {
-      // 后期从后端获取数据
-      console.log('获取兼职详情:', this.jobId)
+    async fetchJobDetail() {
+      this.loading = true
+      try {
+        console.log('正在获取兼职详情，ID:', this.jobId)
+        
+        const cachedJob = this.partTimeStore.getJobById(this.jobId)
+        if (cachedJob) {
+          console.log('从缓存中获取到兼职数据:', cachedJob)
+          this.jobDetail = cachedJob
+        } else {
+          console.log('缓存中未找到，从后端获取兼职详情')
+          const response = await getPartTimeDetail(this.jobId)
+          console.log('获取到的兼职详情数据:', response.data)
+          this.jobDetail = response.data
+        }
+      } catch (error) {
+        console.error('获取兼职详情失败:', error)
+        this.$message.error('获取兼职详情失败')
+      } finally {
+        this.loading = false
+      }
     },
-    applyForJob() {
-      this.$confirm('确定要申请该兼职吗？', '申请兼职', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'primary'
-      }).then(() => {
+    async applyForJob() {
+      try {
+        await applyPartTimeJob(this.jobId)
         this.$message.success('申请成功！请等待雇主联系')
-      }).catch(() => {
-        this.$message.info('已取消申请')
-      })
+      } catch (error) {
+        console.error('申请兼职失败:', error)
+        this.$message.error('申请兼职失败')
+      }
     },
     shareJob() {
       this.$message.info('分享功能开发中...')

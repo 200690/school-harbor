@@ -7,44 +7,56 @@
       
       <!-- 搜索和筛选 -->
       <div class="search-filter">
-        <div class="search-box">
-          <input 
-            type="text" 
-            placeholder="搜索二手物品" 
-            class="search-input"
-            v-model="searchKeyword"
-            @keyup.enter="handleSearch"
-          />
-          <button class="search-btn" @click="handleSearch">
-            <i class="el-icon-search"></i>
-          </button>
-        </div>
-        
-        <div class="filter-options">
-          <el-select v-model="filterCategory" placeholder="物品分类" class="filter-select">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="教材教辅" value="textbook"></el-option>
-            <el-option label="电子产品" value="electronics"></el-option>
-            <el-option label="生活用品" value="life"></el-option>
-            <el-option label="运动器材" value="sports"></el-option>
-            <el-option label="其他" value="other"></el-option>
-          </el-select>
+        <div class="filter-row">
+          <div class="search-box">
+            <input 
+              type="text" 
+              placeholder="搜索二手物品" 
+              class="search-input"
+              v-model="searchKeyword"
+            />
+            <button class="search-btn" @click="handleSearch">
+              <i class="el-icon-search"></i> 搜索
+            </button>
+          </div>
           
-          <el-select v-model="filterPrice" placeholder="价格范围" class="filter-select">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="50元以下" value="<50"></el-option>
-            <el-option label="50-200元" value="50-200"></el-option>
-            <el-option label="200-500元" value="200-500"></el-option>
-            <el-option label="500元以上" value=">500"></el-option>
-          </el-select>
-          
-          <el-select v-model="filterCondition" placeholder="物品成色" class="filter-select">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="全新" value="new"></el-option>
-            <el-option label="九成新" value="90%"></el-option>
-            <el-option label="八成新" value="80%"></el-option>
-            <el-option label="七成新及以下" value="<70%"></el-option>
-          </el-select>
+          <div class="filter-options">
+            <el-select v-model="filterCategory" placeholder="物品分类" class="filter-select">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="教材教辅" value="textbook"></el-option>
+              <el-option label="电子产品" value="electronics"></el-option>
+              <el-option label="生活用品" value="life"></el-option>
+              <el-option label="运动器材" value="sports"></el-option>
+              <el-option label="其他" value="other"></el-option>
+            </el-select>
+            
+            <el-select v-model="filterPrice" placeholder="价格范围" class="filter-select">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="50元以下" value="<50"></el-option>
+              <el-option label="50-200元" value="50-200"></el-option>
+              <el-option label="200-500元" value="200-500"></el-option>
+              <el-option label="500元以上" value=">500"></el-option>
+            </el-select>
+            
+            <el-select v-model="filterCondition" placeholder="物品成色" class="filter-select">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="全新" value="new"></el-option>
+              <el-option label="九成新" value="90%"></el-option>
+              <el-option label="八成新" value="80%"></el-option>
+              <el-option label="七成新及以下" value="<70%"></el-option>
+            </el-select>
+            
+            <el-select v-model="sortField" placeholder="排序字段" class="filter-select">
+              <el-option label="发布时间" value="publishTime"></el-option>
+              <el-option label="价格" value="price"></el-option>
+              <el-option label="浏览量" value="viewCount"></el-option>
+            </el-select>
+            
+            <button class="sort-toggle-btn" @click="toggleSort">
+              <i :class="sortOrder === 'desc' ? 'el-icon-sort-down' : 'el-icon-sort-up'"></i>
+              {{ sortOrder === 'desc' ? '降序' : '升序' }}
+            </button>
+          </div>
         </div>
       </div>
       
@@ -116,6 +128,8 @@ export default {
       filterCategory: '',
       filterPrice: '',
       filterCondition: '',
+      sortField: 'publishTime',
+      sortOrder: 'desc',
       currentPage: 1,
       pageSize: 10,
       totalItems: 0,
@@ -124,69 +138,70 @@ export default {
     }
   },
   mounted() {
-    // 组件创建时获取二手物品列表
-    this.fetchSecondHandList();
+    this.fetchSecondHandList()
   },
   methods: {
     async fetchSecondHandList() {
-      this.loading = true;
+      this.loading = true
       try {
-        // 构建查询参数
         const params = {
           page: this.currentPage,
           size: this.pageSize,
           keyword: this.searchKeyword,
           category: this.filterCategory,
-          condition: this.filterCondition
-        };
+          condition: this.filterCondition,
+          sortField: this.sortField,
+          sortOrder: this.sortOrder
+        }
         
-        // 处理价格范围筛选
         if (this.filterPrice) {
-          const priceRange = this.filterPrice.split('-');
+          const priceRange = this.filterPrice.split('-')
           if (priceRange.length === 2) {
-            params.priceMin = parseInt(priceRange[0]);
-            params.priceMax = parseInt(priceRange[1]);
+            params.priceMin = parseInt(priceRange[0])
+            params.priceMax = parseInt(priceRange[1])
           } else if (this.filterPrice.startsWith('<')) {
-            params.priceMax = parseInt(this.filterPrice.substring(1));
+            params.priceMax = parseInt(this.filterPrice.substring(1))
           } else if (this.filterPrice.startsWith('>')) {
-            params.priceMin = parseInt(this.filterPrice.substring(1));
+            params.priceMin = parseInt(this.filterPrice.substring(1))
           }
         }
         
-        const response = await getSecondHandList(params);
-        const { records, total } = response.data;
-        this.items = records;
-        this.totalItems = total;
+        const response = await getSecondHandList(params)
+        const { records, total } = response.data
+        this.items = records
+        this.totalItems = total
       } catch (error) {
-        console.error('获取二手物品列表失败:', error);
-        this.$message.error('获取二手物品列表失败');
+        console.error('获取二手物品列表失败:', error)
+        this.$message.error('获取二手物品列表失败')
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
     handleSearch() {
-      // 重置页码并搜索
-      this.currentPage = 1;
-      this.fetchSecondHandList();
+      this.currentPage = 1
+      this.fetchSecondHandList()
+    },
+    toggleSort() {
+      this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc'
+      this.fetchSecondHandList()
     },
     async contactSeller(itemId) {
       try {
-        await buySecondHandItem(itemId);
-        this.$message.success('购买成功，请联系卖家完成交易');
-        // 刷新列表
-        this.fetchSecondHandList();
+        await buySecondHandItem(itemId)
+        this.$message.success('购买成功，请联系卖家完成交易')
+        this.fetchSecondHandList()
       } catch (error) {
-        console.error('购买失败:', error);
-        this.$message.error('购买失败');
+        console.error('购买失败:', error)
+        this.$message.error('购买失败')
       }
     },
     handleSizeChange(size) {
-      this.pageSize = size;
-      this.fetchSecondHandList();
+      this.pageSize = size
+      this.fetchSecondHandList()
     },
     handleCurrentChange(current) {
-      this.currentPage = current;
-      this.fetchSecondHandList();
+      this.currentPage = current
+      this.fetchSecondHandList()
     }
   }
 }
@@ -221,18 +236,89 @@ export default {
   margin-bottom: 30px;
 }
 
+.filter-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .search-box {
-  margin-bottom: 20px;
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 120px 12px 16px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s;
+
+  &:focus {
+    outline: none;
+    border-color: #409EFF;
+  }
+}
+
+.search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 8px 16px;
+  background-color: #409EFF;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    background-color: #66B1FF;
+  }
 }
 
 .filter-options {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .filter-select {
-  width: 200px;
+  width: 160px;
+}
+
+.sort-toggle-btn {
+  padding: 8px 20px;
+  border: 1px solid #dcdfe6;
+  background-color: #fff;
+  color: #606266;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  &:hover {
+    color: #409EFF;
+    border-color: #c6e2ff;
+    background-color: #ecf5ff;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 /* 二手物品列表样式 */
@@ -374,13 +460,21 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    min-width: 100%;
+  }
+  
   .item-list {
     grid-template-columns: 1fr;
   }
   
   .filter-select {
     width: 100%;
-    margin-bottom: 10px;
   }
   
   .filter-options {
