@@ -6,12 +6,12 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("second_hand_browse_history")
-public class SecondHandBrowseHistoryPO {
+@TableName("second_hand_favorite")
+public class FavoritePO {
     @TableId(type = IdType.AUTO)
-    private Long id;                      // 浏览记录ID
+    private Long id;                      // 收藏ID
     private Long userId;                   // 用户ID
     private Long itemId;                   // 商品ID
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime browseTime;      // 浏览时间
+    private LocalDateTime createTime;      // 收藏时间
 }

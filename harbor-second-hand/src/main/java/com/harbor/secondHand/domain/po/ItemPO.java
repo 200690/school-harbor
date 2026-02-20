@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("second_hand_item")
-public class SecondHandItemPO {
+public class ItemPO {
     @TableId(type = IdType.AUTO)
     private Long id;                    // 商品ID
     private String title;                // 商品标题
@@ -16,6 +16,7 @@ public class SecondHandItemPO {
     private Integer categoryId;          // 分类ID
     private BigDecimal price;            // 价格
     private BigDecimal originalPrice;    // 原价/参考价
+    @TableField("`condition`")
     private Integer condition;           // 成色：1-全新，2-99新，3-95新，4-9成新，5-8成新，6-7成新及以下
     private String coverImage;           // 封面图片URL
     private String images;               // 图片列表（JSON数组或逗号分隔）

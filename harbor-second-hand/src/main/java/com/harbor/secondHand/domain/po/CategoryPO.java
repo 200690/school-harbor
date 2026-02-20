@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @TableName("second_hand_category")
-public class SecondHandCategoryPO {
+public class CategoryPO {
     @TableId(type = IdType.AUTO)
     private Integer id;          // 分类ID
     private String name;          // 分类名称

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("second_hand_comment")
-public class SecondHandCommentPO {
+public class CommentPO {
     @TableId(type = IdType.AUTO)
     private Long id;                      // 留言ID
     private Long itemId;                   // 商品ID
