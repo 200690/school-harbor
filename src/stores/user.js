@@ -49,7 +49,7 @@ export const useUserStore = defineStore('user', {
         blockTime: '2026-02-08'
       }
     ],
-    isLoggedIn: !!localStorage.getItem('token') || true, // 默认登录状态
+    isLoggedIn: !!localStorage.getItem('token'), // 根据token判断登录状态
     // 用户相关数据
     userPosts: [
       {
@@ -246,10 +246,10 @@ export const useUserStore = defineStore('user', {
     },
 
     checkLogin() {
-      if (!this.token) {
-        return false
-      }
-      return true
+      const token = localStorage.getItem('token')
+      this.token = token || ''
+      this.isLoggedIn = !!token
+      return this.isLoggedIn
     },
 
     // 模拟获取用户发布的信息

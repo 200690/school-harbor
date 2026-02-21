@@ -10,7 +10,7 @@ export function getPartTimeList(params) {
 
 export function getPartTimeDetail(id) {
   return request({
-    url: `/part-time/${id}`,
+    url: `/part-time/item/${id}`,
     method: 'get'
   })
 }

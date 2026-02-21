@@ -5,12 +5,12 @@
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
         <el-breadcrumb-item><router-link to="/part-time">兼职</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item>编辑兼职</el-breadcrumb-item>
+        <el-breadcrumb-item>{{ isEditMode ? '编辑兼职' : '发布兼职' }}</el-breadcrumb-item>
       </el-breadcrumb>
 
       <!-- 页面标题 -->
       <div class="page-header">
-        <h2 class="page-title">编辑兼职</h2>
+        <h2 class="page-title">{{ isEditMode ? '编辑兼职' : '发布兼职' }}</h2>
       </div>
 
       <!-- 编辑表单 -->
@@ -69,13 +69,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
 const formRef = ref(null)
+
+// 判断是编辑模式还是发布模式
+const isEditMode = computed(() => {
+  return route.params.id !== 'new'
+})
 
 // 表单数据
 const formData = reactive({
@@ -147,11 +152,10 @@ const cancelEdit = () => {
 
 // 加载数据
 const loadData = () => {
-  const id = route.params.id
-  // 这里应该调用 API 获取数据
-  // 暂时使用模拟数据
-  if (id) {
-    // 模拟加载数据
+  // 只有在编辑模式下才加载数据
+  if (isEditMode.value) {
+    // 这里应该调用 API 获取数据
+    // 暂时使用模拟数据
     formData.title = '校园超市收银员兼职'
     formData.salary = '15元/小时'
     formData.type = 'campus'

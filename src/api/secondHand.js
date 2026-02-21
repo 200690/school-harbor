@@ -10,14 +10,14 @@ export function getSecondHandList(params) {
 
 export function getSecondHandDetail(id) {
   return request({
-    url: `/second-hand/${id}`,
+    url: `/second-hand/item/${id}`,
     method: 'get'
   })
 }
 
 export function createSecondHandItem(data) {
   return request({
-    url: '/second-hand',
+    url: '/second-hand/products',
     method: 'post',
     data
   })

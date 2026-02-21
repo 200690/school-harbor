@@ -149,11 +149,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElConfirm } from 'element-plus'
+import { useRouter, useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../stores/user'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const activeTab = ref('all')
 
@@ -172,9 +173,11 @@ const partTimePosts = computed(() => {
 
 // 导航到发布页面
 const navigateToPublish = (type) => {
-  // 这里应该导航到发布页面，暂时先跳转到列表页
-  router.push(`/${type}`)
-  ElMessage.info('跳转到发布页面')
+  if (type === 'second-hand') {
+    router.push('/second-hand/edit/new')
+  } else if (type === 'part-time') {
+    router.push('/item/edit/new')
+  }
 }
 
 // 查看详情
@@ -182,7 +185,7 @@ const viewDetail = (post) => {
   if (post.type === 'second-hand') {
     router.push(`/second-hand/detail/${post.id}`)
   } else {
-    router.push(`/part-time/detail/${post.id}`)
+    router.push(`/item/${post.id}`)
   }
 }
 
@@ -192,7 +195,7 @@ const editPost = (post) => {
   if (post.type === 'second-hand') {
     router.push(`/second-hand/edit/${post.id}`)
   } else {
-    router.push(`/part-time/edit/${post.id}`)
+    router.push(`/item/edit/${post.id}`)
   }
 }
 
@@ -204,7 +207,7 @@ const toggleStatus = (post) => {
 
 // 删除发布
 const deletePost = (postId) => {
-  ElConfirm('确定要删除这条发布吗？', '删除确认', {
+  ElMessageBox.confirm('确定要删除这条发布吗？', '删除确认', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -220,6 +223,14 @@ onMounted(async () => {
   // 从 store 获取用户发布的内容
   await userStore.getUserPosts()
   allPosts.value = userStore.userPosts
+  
+  // 检查 URL 参数，设置默认标签页
+  const type = route.query.type
+  if (type === 'second-hand') {
+    activeTab.value = 'second-hand'
+  } else if (type === 'part-time') {
+    activeTab.value = 'part-time'
+  }
 })
 </script>
 

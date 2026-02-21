@@ -9,39 +9,41 @@
       </el-breadcrumb>
 
       <!-- 商品详情 -->
-      <div class="detail-card">
+      <div class="detail-card" v-if="itemDetail">
         <!-- 商品图片和信息 -->
         <div class="item-header">
           <div class="item-images">
             <div class="main-image">
-              <img :src="itemDetail.image" :alt="itemDetail.title" />
+              <img :src="cleanImageUrl(itemDetail.coverImage)" :alt="itemDetail.title" />
             </div>
             <div class="image-list">
               <div class="image-item" v-for="(img, index) in itemDetail.images" :key="index">
-                <img :src="img" :alt="itemDetail.title" />
+                <img :src="cleanImageUrl(img)" :alt="itemDetail.title" />
               </div>
             </div>
           </div>
           
           <div class="item-info">
             <h1 class="item-title">{{ itemDetail.title }}</h1>
-            <div class="item-price">¥{{ itemDetail.price }}</div>
+            <div class="item-price">
+              <span class="current-price">¥{{ itemDetail.price }}</span>
+              <span class="original-price" v-if="itemDetail.originalPrice">原价 ¥{{ itemDetail.originalPrice }}</span>
+            </div>
             <div class="item-meta">
-              <span class="meta-item"><i class="el-icon-s-goods"></i> {{ itemDetail.category }}</span>
+              <span class="meta-item"><i class="el-icon-view"></i> {{ itemDetail.viewCount || 0 }} 浏览</span>
+              <span class="meta-item"><i class="el-icon-star-off"></i> {{ itemDetail.favoriteCount || 0 }} 收藏</span>
               <span class="meta-item"><i class="el-icon-time"></i> {{ itemDetail.publishTime }}</span>
-              <span class="meta-item"><i class="el-icon-s-flag"></i> {{ itemDetail.condition }}</span>
             </div>
             <div class="item-location">
               <i class="el-icon-location"></i>
-              <span>{{ itemDetail.location }}</span>
+              <span>{{ itemDetail.school }} - {{ itemDetail.location }}</span>
             </div>
             <div class="seller-info">
               <div class="seller-avatar">
-                <img :src="itemDetail.seller.avatar" :alt="itemDetail.seller.username" />
+                <img :src="itemDetail.sellerAvatar || '/default-avatar.png'" :alt="itemDetail.sellerName || '卖家'" />
               </div>
               <div class="seller-details">
-                <h4>{{ itemDetail.seller.username }}</h4>
-                <p>发布了 {{ itemDetail.seller.publishCount }} 件商品</p>
+                <h4>{{ itemDetail.sellerName || '卖家' }}</h4>
               </div>
               <el-button type="primary" class="contact-btn">
                 <i class="el-icon-chat-line-round"></i> 联系卖家
@@ -62,35 +64,34 @@
         <div class="item-content">
           <div class="content-section">
             <h3 class="section-title"><i class="el-icon-document"></i> 商品描述</h3>
-            <div class="content-text" v-html="itemDetail.description"></div>
+            <div class="content-text">
+              <p v-if="itemDetail.description">{{ itemDetail.description }}</p>
+              <p v-else>暂无商品描述</p>
+            </div>
           </div>
 
           <div class="content-section">
             <h3 class="section-title"><i class="el-icon-info"></i> 商品详情</h3>
             <div class="detail-info">
               <div class="info-row">
-                <span class="info-label">商品类别：</span>
-                <span class="info-value">{{ itemDetail.category }}</span>
-              </div>
-              <div class="info-row">
                 <span class="info-label">商品成色：</span>
-                <span class="info-value">{{ itemDetail.condition }}</span>
+                <span class="info-value">{{ itemDetail.conditionDesc || getConditionText(itemDetail.condition) }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">购买时间：</span>
-                <span class="info-value">{{ itemDetail.purchaseTime }}</span>
+                <span class="info-label">浏览次数：</span>
+                <span class="info-value">{{ itemDetail.viewCount || 0 }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">使用时长：</span>
-                <span class="info-value">{{ itemDetail.usageTime }}</span>
+                <span class="info-label">收藏次数：</span>
+                <span class="info-value">{{ itemDetail.favoriteCount || 0 }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">是否包邮：</span>
-                <span class="info-value">{{ itemDetail.freeShipping ? '是' : '否' }}</span>
+                <span class="info-label">发布时间：</span>
+                <span class="info-value">{{ itemDetail.publishTime }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">交易方式：</span>
-                <span class="info-value">{{ itemDetail.tradeMethod }}</span>
+                <span class="info-label">更新时间：</span>
+                <span class="info-value">{{ itemDetail.updateTime }}</span>
               </div>
             </div>
           </div>
@@ -98,27 +99,31 @@
           <div class="content-section">
             <h3 class="section-title"><i class="el-icon-location"></i> 交易地点</h3>
             <div class="location-info">
-              <p>{{ itemDetail.location }}</p>
-              <p>{{ itemDetail.tradeAddress }}</p>
+              <p>{{ itemDetail.school }} - {{ itemDetail.location }}</p>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- 加载状态 -->
+      <div v-else class="loading-container">
+        <el-skeleton :rows="10" animated />
+      </div>
+
       <!-- 推荐商品 -->
-      <div class="recommended-items">
-        <h3 class="section-title">推荐商品</h3>
+      <div class="recommended-items" v-if="recommendedItems.length > 0">
+        <h3 class="section-title">相关推荐</h3>
         <div class="item-list">
           <div class="list-item" v-for="item in recommendedItems" :key="item.id">
             <div class="item-image">
-              <img :src="item.image" :alt="item.title" />
+              <img :src="cleanImageUrl(item.coverImage)" :alt="item.title" />
             </div>
             <div class="item-info">
               <h4 class="item-title">{{ item.title }}</h4>
-              <p class="item-description">{{ item.description }}</p>
+              <p class="item-description">{{ item.conditionDesc || getConditionText(item.condition) }}</p>
               <div class="item-meta">
                 <span class="price">¥{{ item.price }}</span>
-                <span class="location"><i class="el-icon-location"></i> {{ item.location }}</span>
+                <span class="location"><i class="el-icon-view"></i> {{ item.viewCount || 0 }}</span>
               </div>
             </div>
             <router-link :to="`/second-hand/detail/${item.id}`" class="btn btn-primary">查看详情</router-link>
@@ -135,6 +140,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useSecondHandStore } from '../stores/secondHand'
 import { useUserStore } from '../stores/user'
+import { getSecondHandDetail } from '@/api/secondHand'
 
 const route = useRoute()
 const router = useRouter()
@@ -142,8 +148,8 @@ const secondHandStore = useSecondHandStore()
 const userStore = useUserStore()
 
 const itemId = ref(route.params.id || 1)
-const itemDetail = ref(secondHandStore.itemDetail)
-const recommendedItems = ref(secondHandStore.itemList.slice(1, 4)) // 取前3个作为推荐
+const itemDetail = ref(null)
+const recommendedItems = ref([])
 
 // 计算是否已收藏
 const isFavorite = computed(() => {
@@ -165,9 +171,8 @@ const toggleFavorite = async () => {
 const buyItem = async () => {
   try {
     await secondHandStore.buyItemAction(Number(itemId.value))
-    await userStore.getUserPurchases() // 更新用户购买记录
+    await userStore.getUserPurchases()
     ElMessage.success('购买成功')
-    // 跳转到购买记录页面
     setTimeout(() => {
       router.push('/user/purchases')
     }, 1500)
@@ -179,11 +184,34 @@ const buyItem = async () => {
 // 获取商品详情
 const fetchItemDetail = async () => {
   try {
-    await secondHandStore.getItemDetail(Number(itemId.value))
-    itemDetail.value = secondHandStore.itemDetail
+    console.log('正在获取商品详情，ID:', itemId.value)
+    const response = await getSecondHandDetail(itemId.value)
+    console.log('后端返回的商品详情:', response.data)
+    itemDetail.value = response.data
+    // 设置推荐商品为相关商品
+    recommendedItems.value = response.data.relatedItems || []
   } catch (error) {
+    console.error('获取商品详情失败:', error)
     ElMessage.error('获取商品详情失败')
   }
+}
+
+// 清理图片URL（去除多余的反引号和引号）
+const cleanImageUrl = (url) => {
+  if (!url) return '/default-image.png'
+  return url.replace(/`/g, '').replace(/"/g, '').trim()
+}
+
+// 获取成色文本
+const getConditionText = (condition) => {
+  const conditionMap = {
+    1: '全新',
+    2: '九成新',
+    3: '八成新',
+    4: '七成新及以下',
+    5: '其他'
+  }
+  return conditionMap[condition] || '未知'
 }
 
 onMounted(async () => {
@@ -286,9 +314,22 @@ onMounted(async () => {
 }
 
 .item-price {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.current-price {
   font-size: 32px;
   font-weight: bold;
   color: #F56C6C;
+}
+
+.original-price {
+  font-size: 16px;
+  color: #999;
+  text-decoration: line-through;
 }
 
 .item-meta {
@@ -543,6 +584,14 @@ onMounted(async () => {
   &:hover {
     background-color: #66B1FF;
   }
+}
+
+.loading-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  margin-bottom: 30px;
 }
 
 @media (max-width: 768px) {

@@ -91,7 +91,7 @@
                 </div>
               </div>
               <div class="job-actions">
-                <router-link :to="`/part-time/detail/${job.id}`" class="btn btn-primary">
+                <router-link :to="`/item/${job.id}`" class="btn btn-primary">
                   查看详情
                 </router-link>
               </div>

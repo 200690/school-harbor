@@ -21,12 +21,12 @@ const routes = [
     component: PartTimeListView
   },
   {
-    path: '/part-time/detail/:id',
+    path: '/item/:id',
     name: 'part-time-detail',
     component: PartTimeDetailView
   },
   {
-    path: '/part-time/edit/:id',
+    path: '/item/edit/:id',
     name: 'part-time-edit',
     component: () => import('../views/PartTimeEditView.vue')
   },
@@ -173,6 +173,21 @@ const router = createRouter({
       return { top: 0 }
     }
   }
+})
+
+// 全局前置守卫
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  
+  // 如果访问需要登录的页面，检查是否有token
+  if (to.path.startsWith('/user/user/') && to.path !== '/user/user/login' && to.path !== '/user/user/register') {
+    if (!token) {
+      next('/user/user/login')
+      return
+    }
+  }
+  
+  next()
 })
 
 export default router

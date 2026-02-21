@@ -75,7 +75,7 @@
             </div>
           </div>
           <div class="job-actions">
-            <router-link :to="`/part-time/detail/${job.id}`" class="btn btn-primary">查看详情</router-link>
+            <router-link :to="`/item/${job.id}`" class="btn btn-primary">查看详情</router-link>
             <button class="btn btn-success" @click="applyJob(job.id)">立即申请</button>
           </div>
         </div>
@@ -97,7 +97,7 @@
       
       <!-- 发布兼职按钮 -->
       <div class="publish-btn-container">
-        <router-link to="/part-time/publish" class="btn btn-primary publish-btn">
+        <router-link to="/user/user/publish?type=part-time" class="btn btn-primary publish-btn">
           <i class="el-icon-plus"></i> 发布兼职
         </router-link>
       </div>

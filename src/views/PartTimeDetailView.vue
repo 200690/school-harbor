@@ -83,7 +83,7 @@
                 <span class="tag tag-success">薪资: {{ job.salaryDesc }}</span>
               </div>
             </div>
-            <router-link :to="`/part-time/detail/${job.id}`" class="btn btn-primary">查看详情</router-link>
+            <router-link :to="`/item/${job.id}`" class="btn btn-primary">查看详情</router-link>
           </div>
         </div>
       </div>

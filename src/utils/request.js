@@ -31,7 +31,7 @@ request.interceptors.response.use(
       if (res.code === 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
-        window.location.href = '/user/user/login'
+        // 不自动跳转，让用户在下次操作时自然跳转
       }
 
       return Promise.reject(new Error(res.msg || '请求失败'))
@@ -48,10 +48,10 @@ request.interceptors.response.use(
           ElMessage.error({ message: '请求参数错误', duration: 1500 })
           break
         case 401:
-          ElMessage.error({ message: '未授权，请重新登录', duration: 1500 })
+          ElMessage.error({ message: '登录已过期，请重新登录', duration: 1500 })
           localStorage.removeItem('token')
           localStorage.removeItem('userInfo')
-          window.location.href = '/user/user/login'
+          // 不自动跳转，让用户在下次操作时自然跳转
           break
         case 403:
           ElMessage.error({ message: '拒绝访问', duration: 1500 })

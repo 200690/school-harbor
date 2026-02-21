@@ -5,12 +5,12 @@
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
         <el-breadcrumb-item><router-link to="/second-hand">二手交易</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item>编辑二手交易</el-breadcrumb-item>
+        <el-breadcrumb-item>{{ isEditMode ? '编辑二手交易' : '发布二手交易' }}</el-breadcrumb-item>
       </el-breadcrumb>
 
       <!-- 页面标题 -->
       <div class="page-header">
-        <h2 class="page-title">编辑二手交易</h2>
+        <h2 class="page-title">{{ isEditMode ? '编辑二手交易' : '发布二手交易' }}</h2>
       </div>
 
       <!-- 编辑表单 -->
@@ -24,27 +24,35 @@
             <el-input-number v-model="formData.price" :min="0" :step="0.01" placeholder="请输入价格" />
           </el-form-item>
 
-          <el-form-item label="分类" prop="category">
-            <el-select v-model="formData.category" placeholder="请选择分类">
-              <el-option label="教材教辅" value="textbook" />
-              <el-option label="电子产品" value="electronics" />
-              <el-option label="生活用品" value="life" />
-              <el-option label="运动器材" value="sports" />
-              <el-option label="其他" value="other" />
+          <el-form-item label="原价" prop="originalPrice">
+            <el-input-number v-model="formData.originalPrice" :min="0" :step="0.01" placeholder="请输入原价（可选）" />
+          </el-form-item>
+
+          <el-form-item label="分类" prop="categoryId">
+            <el-select v-model="formData.categoryId" placeholder="请选择分类">
+              <el-option label="教材教辅" :value="1" />
+              <el-option label="电子产品" :value="2" />
+              <el-option label="生活用品" :value="3" />
+              <el-option label="运动器材" :value="4" />
+              <el-option label="其他" :value="5" />
             </el-select>
           </el-form-item>
 
           <el-form-item label="成色" prop="condition">
             <el-select v-model="formData.condition" placeholder="请选择成色">
-              <el-option label="全新" value="new" />
-              <el-option label="九成新" value="90%" />
-              <el-option label="八成新" value="80%" />
-              <el-option label="七成新及以下" value="<70%" />
+              <el-option label="全新" :value="1" />
+              <el-option label="九成新" :value="2" />
+              <el-option label="八成新" :value="3" />
+              <el-option label="七成新及以下" :value="4" />
             </el-select>
           </el-form-item>
 
-          <el-form-item label="交易地点" prop="location">
-            <el-input v-model="formData.location" placeholder="请输入交易地点" />
+          <el-form-item label="学校" prop="school">
+            <el-input v-model="formData.school" placeholder="请输入学校名称" />
+          </el-form-item>
+
+          <el-form-item label="具体位置" prop="location">
+            <el-input v-model="formData.location" placeholder="请输入具体位置，如：东区宿舍6栋" />
           </el-form-item>
 
           <el-form-item label="描述" prop="description">
@@ -86,21 +94,29 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { createSecondHandItem, updateSecondHandItem } from '@/api/secondHand'
 
 const router = useRouter()
 const route = useRoute()
 const formRef = ref(null)
 const fileList = ref([])
 
+// 判断是编辑模式还是发布模式
+const isEditMode = computed(() => {
+  return route.params.id !== 'new'
+})
+
 // 表单数据
 const formData = reactive({
   title: '',
   price: 0,
-  category: '',
-  condition: '',
+  originalPrice: null,
+  categoryId: null,
+  condition: null,
+  school: 'XX学校',
   location: '',
   description: ''
 })
@@ -115,18 +131,20 @@ const rules = {
     { required: true, message: '请输入价格', trigger: 'blur' },
     { type: 'number', message: '请输入有效数字', trigger: 'blur' }
   ],
-  category: [
+  categoryId: [
     { required: true, message: '请选择分类', trigger: 'change' }
   ],
   condition: [
     { required: true, message: '请选择成色', trigger: 'change' }
   ],
+  school: [
+    { required: true, message: '请输入学校名称', trigger: 'blur' }
+  ],
   location: [
-    { required: true, message: '请输入交易地点', trigger: 'blur' }
+    { required: true, message: '请输入具体位置', trigger: 'blur' }
   ],
   description: [
-    { required: true, message: '请输入商品描述', trigger: 'blur' },
-    { min: 10, message: '描述长度至少 10 个字符', trigger: 'blur' }
+    { required: true, message: '请输入商品描述', trigger: 'blur' }
   ]
 }
 
@@ -145,12 +163,33 @@ const submitForm = async () => {
   if (!formRef.value) return
   try {
     await formRef.value.validate()
-    // 这里应该调用 API 提交数据
-    ElMessage.success('编辑成功')
+    
+    const submitData = {
+      title: formData.title,
+      description: formData.description,
+      categoryId: formData.categoryId,
+      price: formData.price,
+      condition: formData.condition,
+      school: formData.school,
+      location: formData.location
+    }
+    
+    if (formData.originalPrice) {
+      submitData.originalPrice = formData.originalPrice
+    }
+    
+    if (isEditMode.value) {
+      await updateSecondHandItem(route.params.id, submitData)
+      ElMessage.success('编辑成功')
+    } else {
+      await createSecondHandItem(submitData)
+      ElMessage.success('发布成功')
+    }
+    
     router.push('/user/user/publish')
   } catch (error) {
-    console.error('表单验证失败:', error)
-    ElMessage.error('请检查表单数据')
+    console.error('提交失败:', error)
+    ElMessage.error(error.message || '提交失败，请重试')
   }
 }
 
@@ -158,6 +197,8 @@ const submitForm = async () => {
 const resetForm = () => {
   if (!formRef.value) return
   formRef.value.resetFields()
+  // 重置学校为默认值
+  formData.school = 'XX学校'
 }
 
 // 取消编辑
@@ -167,15 +208,16 @@ const cancelEdit = () => {
 
 // 加载数据
 const loadData = () => {
-  const id = route.params.id
-  // 这里应该调用 API 获取数据
-  // 暂时使用模拟数据
-  if (id) {
-    // 模拟加载数据
+  // 只有在编辑模式下才加载数据
+  if (isEditMode.value) {
+    // 这里应该调用 API 获取数据
+    // 暂时使用模拟数据
     formData.title = '大学英语四级词汇书'
     formData.price = 25
-    formData.category = 'textbook'
-    formData.condition = '90%'
+    formData.originalPrice = 50
+    formData.categoryId = 1
+    formData.condition = 2
+    formData.school = 'XX大学'
     formData.location = '学校图书馆'
     formData.description = '全新未使用的大学英语四级词汇书，包含光盘和练习册。'
     // 模拟文件列表

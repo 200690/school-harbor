@@ -130,7 +130,7 @@ const getStatusText = (status) => {
 
 // 查看兼职详情
 const viewJobDetail = (jobId) => {
-  router.push(`/part-time/detail/${jobId}`)
+  router.push(`/item/${jobId}`)
 }
 
 // 取消申请

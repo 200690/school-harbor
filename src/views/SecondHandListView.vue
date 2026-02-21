@@ -23,11 +23,11 @@
           <div class="filter-options">
             <el-select v-model="filterCategory" placeholder="物品分类" class="filter-select">
               <el-option label="全部" value=""></el-option>
-              <el-option label="教材教辅" value="textbook"></el-option>
-              <el-option label="电子产品" value="electronics"></el-option>
-              <el-option label="生活用品" value="life"></el-option>
-              <el-option label="运动器材" value="sports"></el-option>
-              <el-option label="其他" value="other"></el-option>
+              <el-option label="教材教辅" value="1"></el-option>
+              <el-option label="电子产品" value="2"></el-option>
+              <el-option label="生活用品" value="3"></el-option>
+              <el-option label="运动器材" value="4"></el-option>
+              <el-option label="其他" value="5"></el-option>
             </el-select>
             
             <el-select v-model="filterPrice" placeholder="价格范围" class="filter-select">
@@ -40,16 +40,17 @@
             
             <el-select v-model="filterCondition" placeholder="物品成色" class="filter-select">
               <el-option label="全部" value=""></el-option>
-              <el-option label="全新" value="new"></el-option>
-              <el-option label="九成新" value="90%"></el-option>
-              <el-option label="八成新" value="80%"></el-option>
-              <el-option label="七成新及以下" value="<70%"></el-option>
+              <el-option label="全新" value="1"></el-option>
+              <el-option label="九成新" value="2"></el-option>
+              <el-option label="八成新" value="3"></el-option>
+              <el-option label="七成新及以下" value="4"></el-option>
             </el-select>
             
             <el-select v-model="sortField" placeholder="排序字段" class="filter-select">
               <el-option label="发布时间" value="publishTime"></el-option>
               <el-option label="价格" value="price"></el-option>
               <el-option label="浏览量" value="viewCount"></el-option>
+              <el-option label="收藏量" value="favoriteCount"></el-option>
             </el-select>
             
             <button class="sort-toggle-btn" @click="toggleSort">
@@ -96,7 +97,7 @@
         <el-pagination
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
-          :current-page="currentPage"
+          :current-page="pageNum"
           :page-sizes="[10, 20, 50, 100]"
           :page-size="pageSize"
           layout="total, sizes, prev, pager, next, jumper"
@@ -107,7 +108,7 @@
       
       <!-- 发布二手物品按钮 -->
       <div class="publish-btn-container">
-        <router-link to="/second-hand/publish" class="btn btn-primary publish-btn">
+        <router-link to="/user/user/publish?type=second-hand" class="btn btn-primary publish-btn">
           <i class="el-icon-plus"></i> 发布二手物品
         </router-link>
       </div>
@@ -130,7 +131,7 @@ export default {
       filterCondition: '',
       sortField: 'publishTime',
       sortOrder: 'desc',
-      currentPage: 1,
+      pageNum: 1,
       pageSize: 10,
       totalItems: 0,
       items: [],
@@ -145,11 +146,12 @@ export default {
       this.loading = true
       try {
         const params = {
-          page: this.currentPage,
+          page: this.pageNum,
           size: this.pageSize,
           keyword: this.searchKeyword,
-          category: this.filterCategory,
-          condition: this.filterCondition,
+          categoryIds: this.filterCategory ? parseInt(this.filterCategory) : null,
+          condition: this.filterCondition ? parseInt(this.filterCondition) : null,
+          status: 1,
           sortField: this.sortField,
           sortOrder: this.sortOrder
         }
@@ -157,19 +159,25 @@ export default {
         if (this.filterPrice) {
           const priceRange = this.filterPrice.split('-')
           if (priceRange.length === 2) {
-            params.priceMin = parseInt(priceRange[0])
-            params.priceMax = parseInt(priceRange[1])
+            params.minPrice = parseInt(priceRange[0])
+            params.maxPrice = parseInt(priceRange[1])
           } else if (this.filterPrice.startsWith('<')) {
-            params.priceMax = parseInt(this.filterPrice.substring(1))
+            params.maxPrice = parseInt(this.filterPrice.substring(1))
           } else if (this.filterPrice.startsWith('>')) {
-            params.priceMin = parseInt(this.filterPrice.substring(1))
+            params.minPrice = parseInt(this.filterPrice.substring(1))
           }
         }
         
+        console.log('请求参数:', params)
         const response = await getSecondHandList(params)
-        const { records, total } = response.data
-        this.items = records
-        this.totalItems = total
+        console.log('后端返回的完整响应:', response)
+        console.log('后端返回的数据:', response.data)
+        
+        const { list, total } = response.data
+        this.items = list || []
+        this.totalItems = total || 0
+        console.log('处理后的items:', this.items)
+        console.log('处理后的total:', this.totalItems)
       } catch (error) {
         console.error('获取二手物品列表失败:', error)
         this.$message.error('获取二手物品列表失败')
@@ -178,7 +186,7 @@ export default {
       }
     },
     handleSearch() {
-      this.currentPage = 1
+      this.pageNum = 1
       this.fetchSecondHandList()
     },
     toggleSort() {
@@ -200,7 +208,7 @@ export default {
       this.fetchSecondHandList()
     },
     handleCurrentChange(current) {
-      this.currentPage = current
+      this.pageNum = current
       this.fetchSecondHandList()
     }
   }

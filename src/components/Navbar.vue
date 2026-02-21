@@ -77,6 +77,7 @@
 
 <script>
 import { Search } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 
 export default {
   name: 'AppNavbar',
@@ -85,23 +86,30 @@ export default {
       searchKeyword: '',
       mobileSearchKeyword: '',
       isMobileMenuOpen: false,
-      Search,
-      isLoggedIn: false
+      Search
+    }
+  },
+  computed: {
+    userStore() {
+      return useUserStore()
+    },
+    isLoggedIn() {
+      return !!localStorage.getItem('token')
     }
   },
   mounted() {
-    // 组件挂载时检查登录状态
-    this.checkLoginStatus()
     // 监听storage变化，处理其他标签页的登录状态变化
-    window.addEventListener('storage', this.checkLoginStatus)
+    window.addEventListener('storage', this.handleStorageChange)
   },
   beforeUnmount() {
     // 移除监听器
-    window.removeEventListener('storage', this.checkLoginStatus)
+    window.removeEventListener('storage', this.handleStorageChange)
   },
   methods: {
-    checkLoginStatus() {
-      this.isLoggedIn = !!localStorage.getItem('token')
+    handleStorageChange(event) {
+      if (event.key === 'token' || event.key === 'userInfo') {
+        this.userStore.checkLogin()
+      }
     },
     handleSearch() {
       if (this.searchKeyword) {
@@ -131,11 +139,7 @@ export default {
       this.isMobileMenuOpen = false
     },
     handleLogout() {
-      // 清除token和用户信息
-      localStorage.removeItem('token')
-      localStorage.removeItem('userInfo')
-      // 立即更新登录状态
-      this.checkLoginStatus()
+      this.userStore.logoutAction()
       // 显示成功消息
       this.$message.success('注销成功')
       // 关闭移动端菜单

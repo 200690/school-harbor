@@ -160,7 +160,7 @@ const viewDetail = (fav) => {
   if (fav.type === 'second-hand') {
     router.push(`/second-hand/detail/${fav.itemId}`)
   } else {
-    router.push(`/part-time/detail/${fav.itemId}`)
+    router.push(`/item/${fav.itemId}`)
   }
 }
 
