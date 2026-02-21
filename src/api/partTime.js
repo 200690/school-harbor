@@ -52,3 +52,11 @@ export function getMyApplications(params) {
     params
   })
 }
+
+export function publishPartTimeJob(data) {
+  return request({
+    url: '/part-time/newJob',
+    method: 'post',
+    data
+  })
+}

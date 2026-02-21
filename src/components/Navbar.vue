@@ -94,22 +94,28 @@ export default {
       return useUserStore()
     },
     isLoggedIn() {
-      return !!localStorage.getItem('token')
+      return this.userStore.isLoggedIn
     }
   },
   mounted() {
     // 监听storage变化，处理其他标签页的登录状态变化
     window.addEventListener('storage', this.handleStorageChange)
+    // 监听token过期事件
+    window.addEventListener('token-expired', this.handleTokenExpired)
   },
   beforeUnmount() {
     // 移除监听器
     window.removeEventListener('storage', this.handleStorageChange)
+    window.removeEventListener('token-expired', this.handleTokenExpired)
   },
   methods: {
     handleStorageChange(event) {
       if (event.key === 'token' || event.key === 'userInfo') {
         this.userStore.checkLogin()
       }
+    },
+    handleTokenExpired() {
+      this.userStore.checkLogin()
     },
     handleSearch() {
       if (this.searchKeyword) {

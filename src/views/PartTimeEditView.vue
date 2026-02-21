@@ -15,32 +15,40 @@
 
       <!-- 编辑表单 -->
       <div class="edit-form">
-        <el-form :model="formData" :rules="rules" ref="formRef" label-width="100px">
-          <el-form-item label="标题" prop="title">
-            <el-input v-model="formData.title" placeholder="请输入兼职标题" />
+        <el-form :model="formData" :rules="rules" ref="formRef" label-width="120px">
+          <el-form-item label="兼职标题" prop="title">
+            <el-input v-model="formData.title" placeholder="请输入兼职标题" maxlength="100" show-word-limit />
           </el-form-item>
 
-          <el-form-item label="薪资" prop="salary">
-            <el-input v-model="formData.salary" placeholder="请输入薪资，如：15元/小时" />
-          </el-form-item>
-
-          <el-form-item label="类型" prop="type">
-            <el-select v-model="formData.type" placeholder="请选择兼职类型">
-              <el-option label="校内兼职" value="campus" />
-              <el-option label="校外兼职" value="off-campus" />
-              <el-option label="实习" value="internship" />
-            </el-select>
+          <el-form-item label="招聘方" prop="employer">
+            <el-input v-model="formData.employer" placeholder="请输入招聘方名称" maxlength="100" show-word-limit />
           </el-form-item>
 
           <el-form-item label="工作地点" prop="location">
-            <el-input v-model="formData.location" placeholder="请输入工作地点" />
+            <el-input v-model="formData.location" placeholder="请输入工作地点" maxlength="100" show-word-limit />
           </el-form-item>
 
           <el-form-item label="工作时间" prop="workTime">
-            <el-input v-model="formData.workTime" placeholder="请输入工作时间，如：周末 9:00-17:00" />
+            <el-input v-model="formData.workTime" placeholder="请输入工作时间，如：周末 9:00-17:00" maxlength="100" show-word-limit />
           </el-form-item>
 
-          <el-form-item label="描述" prop="description">
+          <el-form-item label="薪资单位" prop="salaryUnit">
+            <el-input v-model="formData.salaryUnit" placeholder="请输入薪资单位，如：元/小时" maxlength="20" show-word-limit />
+          </el-form-item>
+
+          <el-form-item label="薪资说明" prop="salaryDesc">
+            <el-input v-model="formData.salaryDesc" placeholder="请输入薪资说明，如：15-20" maxlength="100" show-word-limit />
+          </el-form-item>
+
+          <el-form-item label="兼职类型" prop="type">
+            <el-select v-model="formData.type" placeholder="请选择兼职类型">
+              <el-option label="校内兼职" :value="1" />
+              <el-option label="校外兼职" :value="2" />
+              <el-option label="实习" :value="3" />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="兼职描述" prop="description">
             <el-input
               v-model="formData.description"
               type="textarea"
@@ -49,12 +57,21 @@
             />
           </el-form-item>
 
-          <el-form-item label="联系人" prop="contact">
-            <el-input v-model="formData.contact" placeholder="请输入联系人姓名" />
+          <el-form-item label="招聘要求" prop="requirements">
+            <el-input
+              v-model="formData.requirements"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入招聘要求"
+            />
           </el-form-item>
 
-          <el-form-item label="联系电话" prop="phone">
-            <el-input v-model="formData.phone" placeholder="请输入联系电话" />
+          <el-form-item label="联系人" prop="contactPerson">
+            <el-input v-model="formData.contactPerson" placeholder="请输入联系人姓名" maxlength="50" show-word-limit />
+          </el-form-item>
+
+          <el-form-item label="联系电话" prop="contactPhone">
+            <el-input v-model="formData.contactPhone" placeholder="请输入联系电话" />
           </el-form-item>
 
           <el-form-item>
@@ -72,6 +89,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { publishPartTimeJob } from '@/api/partTime'
 
 const router = useRouter()
 const route = useRoute()
@@ -85,43 +103,58 @@ const isEditMode = computed(() => {
 // 表单数据
 const formData = reactive({
   title: '',
-  salary: '',
-  type: '',
+  employer: '',
   location: '',
   workTime: '',
+  salaryUnit: '',
+  salaryDesc: '',
+  type: null,
   description: '',
-  contact: '',
-  phone: ''
+  requirements: '',
+  contactPerson: '',
+  contactPhone: ''
 })
 
-// 表单验证规则
 const rules = {
   title: [
-    { required: true, message: '请输入兼职标题', trigger: 'blur' },
-    { min: 1, max: 50, message: '标题长度在 1 到 50 个字符', trigger: 'blur' }
+    { required: true, message: '兼职标题不能为空', trigger: 'blur' },
+    { max: 100, message: '兼职标题不能超过100个字符', trigger: 'blur' }
   ],
-  salary: [
-    { required: true, message: '请输入薪资', trigger: 'blur' }
-  ],
-  type: [
-    { required: true, message: '请选择兼职类型', trigger: 'change' }
+  employer: [
+    { required: true, message: '招聘方不能为空', trigger: 'blur' },
+    { max: 100, message: '招聘方不能超过100个字符', trigger: 'blur' }
   ],
   location: [
-    { required: true, message: '请输入工作地点', trigger: 'blur' }
+    { required: true, message: '工作地点不能为空', trigger: 'blur' },
+    { max: 100, message: '工作地点不能超过100个字符', trigger: 'blur' }
   ],
   workTime: [
-    { required: true, message: '请输入工作时间', trigger: 'blur' }
+    { required: true, message: '工作时间不能为空', trigger: 'blur' },
+    { max: 100, message: '工作时间不能超过100个字符', trigger: 'blur' }
+  ],
+  salaryUnit: [
+    { max: 20, message: '薪资单位不能超过20个字符', trigger: 'blur' }
+  ],
+  salaryDesc: [
+    { max: 100, message: '薪资说明不能超过100个字符', trigger: 'blur' }
+  ],
+  type: [
+    { required: true, message: '兼职类型不能为空', trigger: 'change' },
+    { type: 'number', min: 1, max: 3, message: '兼职类型值错误', trigger: 'change' }
   ],
   description: [
-    { required: true, message: '请输入兼职描述', trigger: 'blur' },
-    { min: 10, message: '描述长度至少 10 个字符', trigger: 'blur' }
+    { required: true, message: '兼职描述不能为空', trigger: 'blur' }
   ],
-  contact: [
-    { required: true, message: '请输入联系人', trigger: 'blur' }
+  requirements: [
+    { required: true, message: '招聘要求不能为空', trigger: 'blur' }
   ],
-  phone: [
-    { required: true, message: '请输入联系电话', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+  contactPerson: [
+    { required: true, message: '联系人不能为空', trigger: 'blur' },
+    { max: 50, message: '联系人不能超过50个字符', trigger: 'blur' }
+  ],
+  contactPhone: [
+    { required: true, message: '联系电话不能为空', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '联系电话格式不正确', trigger: 'blur' }
   ]
 }
 
@@ -130,8 +163,21 @@ const submitForm = async () => {
   if (!formRef.value) return
   try {
     await formRef.value.validate()
-    // 这里应该调用 API 提交数据
-    ElMessage.success('编辑成功')
+    const requestData = {
+      title: formData.title,
+      employer: formData.employer,
+      location: formData.location,
+      workTime: formData.workTime,
+      salaryUnit: formData.salaryUnit,
+      salaryDesc: formData.salaryDesc,
+      type: formData.type,
+      description: formData.description,
+      requirements: formData.requirements,
+      contactPerson: formData.contactPerson,
+      contactPhone: formData.contactPhone
+    }
+    await publishPartTimeJob(requestData)
+    ElMessage.success('发布成功')
     router.push('/user/user/publish')
   } catch (error) {
     console.error('表单验证失败:', error)
@@ -152,18 +198,18 @@ const cancelEdit = () => {
 
 // 加载数据
 const loadData = () => {
-  // 只有在编辑模式下才加载数据
   if (isEditMode.value) {
-    // 这里应该调用 API 获取数据
-    // 暂时使用模拟数据
     formData.title = '校园超市收银员兼职'
-    formData.salary = '15元/小时'
-    formData.type = 'campus'
+    formData.employer = '校园超市'
     formData.location = '校园超市'
     formData.workTime = '周末 9:00-17:00'
+    formData.salaryUnit = '元/小时'
+    formData.salaryDesc = '15-20'
+    formData.type = 1
     formData.description = '负责校园超市收银工作，要求工作认真负责，有良好的服务态度。'
-    formData.contact = '张经理'
-    formData.phone = '13800138000'
+    formData.requirements = '1. 工作认真负责\n2. 有良好的服务态度\n3. 能够适应周末工作'
+    formData.contactPerson = '张经理'
+    formData.contactPhone = '13800138000'
   }
 }
 

@@ -31,6 +31,8 @@ request.interceptors.response.use(
       if (res.code === 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
+        // 触发自定义事件通知组件更新登录状态
+        window.dispatchEvent(new CustomEvent('token-expired'))
         // 不自动跳转，让用户在下次操作时自然跳转
       }
 
@@ -51,6 +53,8 @@ request.interceptors.response.use(
           ElMessage.error({ message: '登录已过期，请重新登录', duration: 1500 })
           localStorage.removeItem('token')
           localStorage.removeItem('userInfo')
+          // 触发自定义事件通知组件更新登录状态
+          window.dispatchEvent(new CustomEvent('token-expired'))
           // 不自动跳转，让用户在下次操作时自然跳转
           break
         case 403:
