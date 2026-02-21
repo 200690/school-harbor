@@ -48,10 +48,10 @@ public class PartTimePO {
 
     private Long publisherId;              // 发布者ID
 
-    private Integer status;                // 状态（0:已下架, 1:招聘中, 2:已招满, 3:已截止）
+    private Integer status = 1;                // 状态（0:已下架, 1:招聘中, 2:已招满, 3:已截止）
 
     @TableLogic
-    private Integer isDelete;              // 是否删除（0未删除，1已删除）
+    private Integer isDelete = 0;              // 是否删除（0未删除，1已删除）
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime publishTime;     // 发布时间
@@ -59,9 +59,12 @@ public class PartTimePO {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;      // 更新时间
 
-    private Integer viewCount;             // 浏览次数
+    private Integer viewCount = 0;             // 浏览次数
 
-    private Integer applicantCount;        // 申请人数
+    private Integer applicantCount = 0;        // 申请人数
 
-    private Integer creditScore;           // 信誉分（0-100）
+    @NotNull
+    private Long publish_id;
+
+    private Integer creditScore = 60;           // 信誉分（0-100）
 }

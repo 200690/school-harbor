@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.utils.UserContext;
+import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
 import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
@@ -102,6 +104,14 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         BeanUtil.copyProperties(item, itemDetailVO);
 
         return itemDetailVO;
+    }
+
+    @Override
+    public void createItem(ItemCreateDTO itemCreateDTO) {
+        ItemPO itemPO = new ItemPO();
+        BeanUtil.copyProperties(itemCreateDTO, itemPO);
+        itemPO.setSellerId(UserContext.getUser());
+        this.save(itemPO);
     }
 
     public void addViewCount(ItemPO itemPO){
