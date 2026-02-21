@@ -63,8 +63,5 @@ public class PartTimePO {
 
     private Integer applicantCount = 0;        // 申请人数
 
-    @NotNull
-    private Long publish_id;
-
     private Integer creditScore = 60;           // 信誉分（0-100）
 }

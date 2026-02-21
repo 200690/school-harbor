@@ -1,6 +1,7 @@
 package com.harbor.common.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +12,10 @@ import java.time.LocalDateTime;
  * 处理插入和更新时的自动填充字段
  */
 @Component
+@Slf4j
 public class MyMetaObjectHandler implements MetaObjectHandler {
+    public MyMetaObjectHandler() {
+    }
 
     /**
      * 插入时的填充策略

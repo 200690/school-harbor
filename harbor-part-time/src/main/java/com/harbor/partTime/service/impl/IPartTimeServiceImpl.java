@@ -1,18 +1,23 @@
 package com.harbor.partTime.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.utils.UserContext;
+import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
 import com.harbor.partTime.domain.po.PartTimePO;
 import com.harbor.partTime.domain.vo.PartTimeVO;
 import com.harbor.partTime.mapper.PartTimeMapper;
 import com.harbor.partTime.service.IPartTimeService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 @Service
+@Slf4j
 public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO> implements IPartTimeService {
 
     public PageDTO<PartTimeVO> queryPartTimeList(PartTimeQueryDTO dto) {
@@ -82,5 +87,16 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
 
         // 5. 转换为VO并返回
         return PageDTO.of(partTimePage, PartTimeVO.class);
+    }
+    /**
+     * 发布兼职
+     * @param partTimeCreateDTO
+     */
+    @Override
+    public void newJob(PartTimeCreateDTO partTimeCreateDTO) {
+        PartTimePO partTimePO = new PartTimePO();
+        partTimePO.setPublisherId(UserContext.getUser());
+        BeanUtil.copyProperties(partTimeCreateDTO, partTimePO);
+        this.save(partTimePO);
     }
 }

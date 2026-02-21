@@ -50,7 +50,5 @@ public class PartTimeCreateDTO {
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "联系电话格式不正确")
     private String contactPhone;
 
-    private Long publisherId;
-
     private Integer creditScore = 60;        // 信誉分，默认60
 }
