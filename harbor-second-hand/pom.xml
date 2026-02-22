@@ -9,7 +9,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>harbor-second-hand</artifactId>
+    <artifactId>second-hand</artifactId>
     <!--    <description>harbor-user</description>-->
     <url/>
     <licenses>

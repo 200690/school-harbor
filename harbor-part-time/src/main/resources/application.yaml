@@ -2,7 +2,7 @@ server:
   port: 8081
 spring:
   application:
-    name: part-time-service
+    name: part-time
   profiles:
     active: local
   datasource:
