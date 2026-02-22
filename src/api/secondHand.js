@@ -31,13 +31,6 @@ export function updateSecondHandItem(id, data) {
   })
 }
 
-export function deleteSecondHandItem(id) {
-  return request({
-    url: `/second-hand/${id}`,
-    method: 'delete'
-  })
-}
-
 export function buySecondHandItem(id) {
   return request({
     url: `/second-hand/${id}/buy`,
@@ -50,5 +43,41 @@ export function getMyItems(params) {
     url: '/second-hand/my-items',
     method: 'get',
     params
+  })
+}
+
+export function getMySecondHandItems(id) {
+  return request({
+    url: `/second-hand/myItems/${id}`,
+    method: 'get'
+  })
+}
+
+export function updateSecondHandStatus(id, status) {
+  return request({
+    url: `/second-hand/${id}/${status}`,
+    method: 'put'
+  })
+}
+
+export function getSecondHandItemDetail(id) {
+  return request({
+    url: `/second-hand/item/${id}`,
+    method: 'get'
+  })
+}
+
+export function changeSecondHandItem(data) {
+  return request({
+    url: '/second-hand/changeItem',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteSecondHandItem(id) {
+  return request({
+    url: `/second-hand/deleteItem/${id}`,
+    method: 'delete'
   })
 }

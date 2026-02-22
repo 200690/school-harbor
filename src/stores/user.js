@@ -236,10 +236,12 @@ export const useUserStore = defineStore('user', {
 
     async logoutAction() {
       try {
+        console.log('[UserStore] 用户主动退出登录')
         await logout()
       } catch (error) {
         console.error('退出登录失败:', error)
       } finally {
+        console.log('[UserStore] 清除token和userInfo')
         this.setToken('')
         this.setUserInfo(null)
       }

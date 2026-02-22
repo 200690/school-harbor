@@ -59,7 +59,6 @@
           </div>
           <div class="user-actions">
             <router-link to="/user/user/info" class="btn btn-primary">编辑资料</router-link>
-            <router-link to="/user/user/settings" class="btn btn-secondary">账号设置</router-link>
           </div>
         </div>
       </div>

@@ -1,5 +1,22 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
+
+// 监听localStorage变化，追踪token清除原因
+const originalSetItem = localStorage.setItem
+const originalRemoveItem = localStorage.removeItem
+
+localStorage.setItem = function(key, value) {
+  console.log(`[localStorage] SET ${key} = ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}`)
+  console.trace('localStorage.setItem 调用栈')
+  return originalSetItem.call(this, key, value)
+}
+
+localStorage.removeItem = function(key) {
+  console.log(`[localStorage] REMOVE ${key}`)
+  console.trace('localStorage.removeItem 调用栈')
+  return originalRemoveItem.call(this, key)
+}
 
 const request = axios.create({
   baseURL: '/api',
@@ -29,11 +46,14 @@ request.interceptors.response.use(
       ElMessage.error({ message: res.msg || '请求失败', duration: 1500 })
 
       if (res.code === 401) {
+        console.error('[Token清除] 响应码401 - token过期')
+        console.error('[Token清除] 响应数据:', res)
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
         // 触发自定义事件通知组件更新登录状态
         window.dispatchEvent(new CustomEvent('token-expired'))
-        // 不自动跳转，让用户在下次操作时自然跳转
+        // 强制跳转到登录页
+        router.push('/user/user/login')
       }
 
       return Promise.reject(new Error(res.msg || '请求失败'))
@@ -50,12 +70,15 @@ request.interceptors.response.use(
           ElMessage.error({ message: '请求参数错误', duration: 1500 })
           break
         case 401:
+          console.error('[Token清除] HTTP状态码401 - 未授权')
+          console.error('[Token清除] 错误响应:', error.response)
           ElMessage.error({ message: '登录已过期，请重新登录', duration: 1500 })
           localStorage.removeItem('token')
           localStorage.removeItem('userInfo')
           // 触发自定义事件通知组件更新登录状态
           window.dispatchEvent(new CustomEvent('token-expired'))
-          // 不自动跳转，让用户在下次操作时自然跳转
+          // 强制跳转到登录页
+          router.push('/user/user/login')
           break
         case 403:
           ElMessage.error({ message: '拒绝访问', duration: 1500 })

@@ -97,7 +97,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { createSecondHandItem, updateSecondHandItem } from '@/api/secondHand'
+import { createSecondHandItem, getSecondHandItemDetail, changeSecondHandItem } from '@/api/secondHand'
 
 const router = useRouter()
 const route = useRoute()
@@ -179,9 +179,12 @@ const submitForm = async () => {
     }
     
     if (isEditMode.value) {
-      await updateSecondHandItem(route.params.id, submitData)
+      // 编辑模式：使用changeSecondHandItem API
+      submitData.id = route.params.id
+      await changeSecondHandItem(submitData)
       ElMessage.success('编辑成功')
     } else {
+      // 发布模式：使用createSecondHandItem API
       await createSecondHandItem(submitData)
       ElMessage.success('发布成功')
     }
@@ -207,26 +210,37 @@ const cancelEdit = () => {
 }
 
 // 加载数据
-const loadData = () => {
+const loadData = async () => {
   // 只有在编辑模式下才加载数据
   if (isEditMode.value) {
-    // 这里应该调用 API 获取数据
-    // 暂时使用模拟数据
-    formData.title = '大学英语四级词汇书'
-    formData.price = 25
-    formData.originalPrice = 50
-    formData.categoryId = 1
-    formData.condition = 2
-    formData.school = 'XX大学'
-    formData.location = '学校图书馆'
-    formData.description = '全新未使用的大学英语四级词汇书，包含光盘和练习册。'
-    // 模拟文件列表
-    fileList.value = [
-      {
-        name: 'book1.jpg',
-        url: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=english%20vocabulary%20book%20college%20student&image_size=square'
+    try {
+      console.log('加载二手商品详情，ID:', route.params.id)
+      const res = await getSecondHandItemDetail(route.params.id)
+      console.log('商品详情数据:', res)
+      
+      if (res.data) {
+        const data = res.data
+        formData.title = data.title || ''
+        formData.price = data.price || 0
+        formData.originalPrice = data.originalPrice || null
+        formData.categoryId = data.categoryId || null
+        formData.condition = data.condition || null
+        formData.school = data.school || 'XX学校'
+        formData.location = data.location || ''
+        formData.description = data.description || ''
+        
+        // 如果有图片，设置文件列表
+        if (data.images && data.images.length > 0) {
+          fileList.value = data.images.map((img, index) => ({
+            name: `image${index}.jpg`,
+            url: img
+          }))
+        }
       }
-    ]
+    } catch (error) {
+      console.error('加载商品详情失败:', error)
+      ElMessage.error('加载商品详情失败')
+    }
   }
 }
 

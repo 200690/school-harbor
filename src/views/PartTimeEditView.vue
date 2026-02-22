@@ -89,7 +89,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { publishPartTimeJob } from '@/api/partTime'
+import { publishPartTimeJob, getPartTimeJobDetail, changePartTimeJob } from '@/api/partTime'
 
 const router = useRouter()
 const route = useRoute()
@@ -176,8 +176,18 @@ const submitForm = async () => {
       contactPerson: formData.contactPerson,
       contactPhone: formData.contactPhone
     }
-    await publishPartTimeJob(requestData)
-    ElMessage.success('发布成功')
+    
+    if (isEditMode.value) {
+      // 编辑模式：使用changePartTimeJob API
+      requestData.id = route.params.id
+      await changePartTimeJob(requestData)
+      ElMessage.success('编辑成功')
+    } else {
+      // 发布模式：使用publishPartTimeJob API
+      await publishPartTimeJob(requestData)
+      ElMessage.success('发布成功')
+    }
+    
     router.push('/user/user/publish')
   } catch (error) {
     console.error('表单验证失败:', error)
@@ -197,19 +207,31 @@ const cancelEdit = () => {
 }
 
 // 加载数据
-const loadData = () => {
+const loadData = async () => {
   if (isEditMode.value) {
-    formData.title = '校园超市收银员兼职'
-    formData.employer = '校园超市'
-    formData.location = '校园超市'
-    formData.workTime = '周末 9:00-17:00'
-    formData.salaryUnit = '元/小时'
-    formData.salaryDesc = '15-20'
-    formData.type = 1
-    formData.description = '负责校园超市收银工作，要求工作认真负责，有良好的服务态度。'
-    formData.requirements = '1. 工作认真负责\n2. 有良好的服务态度\n3. 能够适应周末工作'
-    formData.contactPerson = '张经理'
-    formData.contactPhone = '13800138000'
+    try {
+      console.log('加载兼职详情，ID:', route.params.id)
+      const res = await getPartTimeJobDetail(route.params.id)
+      console.log('兼职详情数据:', res)
+      
+      if (res.data) {
+        const data = res.data
+        formData.title = data.title || ''
+        formData.employer = data.employer || ''
+        formData.location = data.location || ''
+        formData.workTime = data.workTime || ''
+        formData.salaryUnit = data.salaryUnit || ''
+        formData.salaryDesc = data.salaryDesc || ''
+        formData.type = data.type || null
+        formData.description = data.description || ''
+        formData.requirements = data.requirements || ''
+        formData.contactPerson = data.contactPerson || ''
+        formData.contactPhone = data.contactPhone || ''
+      }
+    } catch (error) {
+      console.error('加载兼职详情失败:', error)
+      ElMessage.error('加载兼职详情失败')
+    }
   }
 }
 
