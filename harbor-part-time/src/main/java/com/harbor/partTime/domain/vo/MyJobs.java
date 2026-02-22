@@ -1,18 +1,13 @@
 package com.harbor.partTime.domain.vo;
 
+import jakarta.validation.constraints.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * 兼职详情VO（继承基础VO，可添加额外信息）
+ * 获取我发布的兼职VO
  */
 @Data
-@Accessors(chain = true)
-public class PartTimeDetailVO {
+public class MyJobs {
     private Long id;
     private String title;
     private String employer;
@@ -25,4 +20,8 @@ public class PartTimeDetailVO {
     private String requirements;
     private String contactPerson;
     private String contactPhone;
+    private Integer viewCount;
+    private Integer applicantCount;
+
+    private String status;
 }

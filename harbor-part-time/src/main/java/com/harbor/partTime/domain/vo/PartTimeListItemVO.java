@@ -14,8 +14,10 @@ public class PartTimeListItemVO {
     private String employer;
     private String location;
     private String workTime;
+    private String salaryUnit;             // 简化薪资说明
     private String salaryDesc;             // 简化薪资说明
     private Integer type;
+    private String description;
     private LocalDateTime publishTime;
     private Integer viewCount;
     private Integer applicantCount;

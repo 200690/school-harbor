@@ -1,18 +1,22 @@
 package com.harbor.secondHand.controller;
 
+import cn.hutool.core.lang.Assert;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.result.Result;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
-import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
+import com.harbor.secondHand.domain.vo.MyItem;
 import com.harbor.secondHand.service.ISecondHandService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -57,4 +61,38 @@ public class ItemController {
         secondHandService.createItem(itemCreateDTO);
         return Result.success();
     }
+
+    @ApiOperation("获取个人发布的商品")
+    @GetMapping("/myItems/{id}")
+    public Result<List<MyItem>> getMyItems(@PathVariable Long id) {
+        log.info("获取个人发布的商品: {}", id);
+        List<MyItem> item = secondHandService.getMyItems(id);
+        return Result.success(item);
+    }
+
+    @ApiOperation("修改订单状态")
+    @PutMapping("/{id}/{status}")
+    public Result<Void> updateStatus(@PathVariable Long id, @PathVariable Integer status) {
+        log.info("修改订单状态: {}", id);
+        secondHandService.updateStatus(id, status);
+        return Result.success();
+    }
+
+    @ApiOperation("修改商品接口")
+    @PostMapping("/changeItem")
+    public Result<Void> changeItem(@RequestBody @Validated ItemCreateDTO item) {
+        log.info("修改商品接口: {}", item);
+        secondHandService.updateItem(item);
+        return Result.success();
+    }
+
+    @ApiOperation("删除商品接口")
+    @DeleteMapping("/deleteItem/{id}")
+    public Result<Void> deleteItem(@PathVariable Long id) {
+        log.info("删除商品接口: {}", id);
+        Assert.notNull(id, "商品不存在");
+        secondHandService.removeById(id);
+        return Result.success();
+    }
+
 }

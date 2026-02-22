@@ -8,6 +8,7 @@ import lombok.Data;
  */
 @Data
 public class PartTimeCreateDTO {
+    private Long id;
 
     @NotBlank(message = "兼职标题不能为空")
     @Size(max = 100, message = "兼职标题不能超过100个字符")

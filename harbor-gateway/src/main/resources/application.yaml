@@ -58,7 +58,7 @@ harbor:
     location: classpath:harbor.jks
     alias: harbor
     password: harbor
-    tokenTTL: 30m
+    tokenTTL: 3000m
   auth:
     excludePaths:
       - /api/part-time/list

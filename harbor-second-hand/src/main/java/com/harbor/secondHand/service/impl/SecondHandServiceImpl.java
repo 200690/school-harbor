@@ -1,6 +1,8 @@
 package com.harbor.secondHand.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.lang.Assert;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,6 +13,7 @@ import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
 import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
+import com.harbor.secondHand.domain.vo.MyItem;
 import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.service.IBrowseHistory;
 import com.harbor.secondHand.service.ISecondHandService;
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -111,6 +115,37 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         BeanUtil.copyProperties(itemCreateDTO, itemPO);
         itemPO.setSellerId(UserContext.getUser());
         this.save(itemPO);
+    }
+
+    @Override
+    public List<MyItem> getMyItems(Long id) {
+        Assert.notNull(id, "用户id不能为空");
+        return lambdaQuery().eq(ItemPO::getSellerId, id).list().stream().map(item ->
+            BeanUtil.copyProperties(item, MyItem.class)).toList();
+
+    }
+
+    @Override
+    public void updateStatus(Long id, Integer status) {
+        ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, id).one();
+        Assert.notNull(itemPO, "商品不存在");
+        if(itemPO.getStatus() == status){
+            return;
+        }
+        if(itemPO.getStatus() > 1){
+            throw new RuntimeException("商品状态错误");
+        }
+        itemPO.setStatus(status);
+        this.updateById(itemPO);
+    }
+
+    @Override
+    public void updateItem(ItemCreateDTO item) {
+        ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, item.getId()).one();
+        Assert.notNull(itemPO, "商品不存在");
+        BeanUtil.copyProperties(item, itemPO, CopyOptions.create().ignoreNullValue());
+        itemPO.setUpdateTime(LocalDateTime.now());
+        this.updateById(itemPO);
     }
 
     public void addViewCount(ItemPO itemPO){

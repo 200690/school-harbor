@@ -1,6 +1,7 @@
 package com.harbor.partTime.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -9,12 +10,18 @@ import com.harbor.common.utils.UserContext;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
 import com.harbor.partTime.domain.po.PartTimePO;
+import com.harbor.partTime.domain.vo.MyJobs;
+import com.harbor.partTime.domain.vo.PartTimeDetailVO;
 import com.harbor.partTime.domain.vo.PartTimeVO;
 import com.harbor.partTime.mapper.PartTimeMapper;
 import com.harbor.partTime.service.IPartTimeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -98,5 +105,47 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         partTimePO.setPublisherId(UserContext.getUser());
         BeanUtil.copyProperties(partTimeCreateDTO, partTimePO);
         this.save(partTimePO);
+    }
+
+    @Override
+    public List<MyJobs> getMyJobs(Long id) {
+        log.info("获取我发布的兼职列表");
+        if(id == null)
+            throw new RuntimeException("用户ID不能为空");
+        List<MyJobs> list = lambdaQuery().eq(PartTimePO::getPublisherId, id).list().stream().map(partTimePO ->
+            BeanUtil.copyProperties(partTimePO, MyJobs.class)).toList();
+        return list;
+    }
+
+    @Override
+    public void updateStatus(Long id, Integer status) {
+        PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, id).one();
+        Assert.notNull(partTimePO, "兼职不存在");
+        if(partTimePO.getStatus() == status){
+            return;
+        }
+        if(partTimePO.getStatus() > 1){
+            throw new RuntimeException("兼职状态异常");
+        }
+        partTimePO.setStatus(status);
+        this.updateById(partTimePO);
+    }
+
+    @Override
+    public void updateById(PartTimeCreateDTO partTimeDTO) {
+        PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, partTimeDTO.getId()).one();
+        Assert.notNull(partTimePO, "兼职不存在");
+        BeanUtil.copyProperties(partTimeDTO, partTimePO, CopyOptions.create().ignoreNullValue());
+        partTimePO.setUpdateTime(LocalDateTime.now());
+        this.updateById(partTimePO);
+    }
+
+    @Override
+    public PartTimeDetailVO getJobById(Long id) {
+        PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, id).one();
+        PartTimeDetailVO partTimeDetailVO = new PartTimeDetailVO();
+        Assert.notNull(partTimePO, "兼职不存在");
+        BeanUtil.copyProperties(partTimePO, partTimeDetailVO);
+        return partTimeDetailVO;
     }
 }

@@ -9,6 +9,8 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class ItemCreateDTO {
+    Long id;
+
     @NotBlank(message = "标题不能为空")
     String title;
 
@@ -30,4 +32,8 @@ public class ItemCreateDTO {
     String school;
 
     String location;
+
+    String coverImage;
+
+    String[] images;
 }

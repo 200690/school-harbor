@@ -7,6 +7,9 @@ import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
 import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
+import com.harbor.secondHand.domain.vo.MyItem;
+
+import java.util.List;
 
 public interface ISecondHandService extends IService<ItemPO> {
 
@@ -15,4 +18,10 @@ public interface ISecondHandService extends IService<ItemPO> {
     ItemDetailVO getItemById(Long id);
 
     void createItem(ItemCreateDTO itemCreateDTO);
+
+    List<MyItem> getMyItems(Long id);
+
+    void updateStatus(Long id, Integer status);
+
+    void updateItem(ItemCreateDTO item);
 }
