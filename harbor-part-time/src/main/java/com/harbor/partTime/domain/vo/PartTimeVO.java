@@ -57,13 +57,12 @@ public class PartTimeVO {
 
     private Integer applicantCount;              // 申请人数
 
-    private Integer creditScore;                 // 信誉分
-
-    // 扩展字段：用于加权排序
-    private Double weightedScore;                 // 加权得分（用于排序展示）
-
     // 扩展字段：当前用户是否已申请
     private Boolean hasApplied;                   // 是否已申请
+
+    private Boolean isFavorite;             // 当前用户是否收藏
+    private Boolean isApplied;              // 当前用户是否申请
+    private Boolean isPublisher;            // 当前用户是否发布者
 
     // 获取脱敏后的联系电话
     public String getDesensitizedPhone() {

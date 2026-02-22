@@ -107,6 +107,11 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         this.save(partTimePO);
     }
 
+    /**
+     * 获取我发布的兼职列表
+     * @param id
+     * @return
+     */
     @Override
     public List<MyJobs> getMyJobs(Long id) {
         log.info("获取我发布的兼职列表");
@@ -114,9 +119,15 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
             throw new RuntimeException("用户ID不能为空");
         List<MyJobs> list = lambdaQuery().eq(PartTimePO::getPublisherId, id).list().stream().map(partTimePO ->
             BeanUtil.copyProperties(partTimePO, MyJobs.class)).toList();
+
         return list;
     }
 
+    /**
+     * 修改兼职状态
+     * @param id
+     * @param status
+     */
     @Override
     public void updateStatus(Long id, Integer status) {
         PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, id).one();
@@ -131,6 +142,10 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         this.updateById(partTimePO);
     }
 
+    /**
+     * 修改兼职信息
+     * @param partTimeDTO
+     */
     @Override
     public void updateById(PartTimeCreateDTO partTimeDTO) {
         PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, partTimeDTO.getId()).one();
@@ -140,6 +155,11 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         this.updateById(partTimePO);
     }
 
+    /**
+     * 获取兼职详情
+     * @param id
+     * @return
+     */
     @Override
     public PartTimeDetailVO getJobById(Long id) {
         PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, id).one();
@@ -147,5 +167,11 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         Assert.notNull(partTimePO, "兼职不存在");
         BeanUtil.copyProperties(partTimePO, partTimeDetailVO);
         return partTimeDetailVO;
+    }
+
+    @Override
+    public List<PartTimePO> getJobsById(List<Long> ids){
+        Assert.notEmpty(ids, "ids不能为空");
+        return lambdaQuery().in(PartTimePO::getId, ids).list();
     }
 }

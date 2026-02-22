@@ -9,7 +9,7 @@
 		<version>1.0.0</version>
 	</parent>
 
-	<artifactId>harbor-pay-service</artifactId>
+	<artifactId>pay-service</artifactId>
 	<!--    <description>harbor-user</description>-->
 	<url/>
 	<licenses>

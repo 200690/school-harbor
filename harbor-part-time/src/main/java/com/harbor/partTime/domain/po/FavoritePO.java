@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("part_time_favorite")
-public class PartTimeFavoritePO {
+public class FavoritePO {
     @TableId(type = IdType.AUTO)
     private Long id;                       // 收藏ID
     private Long userId;                    // 用户ID

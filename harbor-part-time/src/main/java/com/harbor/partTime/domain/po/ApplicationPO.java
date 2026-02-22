@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("part_time_application")
-public class PartTimeApplicationPO {
+public class ApplicationPO {
     @TableId(type = IdType.AUTO)
     private Long id;                       // 申请记录ID
     private Long partTimeId;                // 兼职ID

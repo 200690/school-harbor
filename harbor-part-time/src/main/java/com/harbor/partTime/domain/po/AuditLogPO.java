@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("part_time_audit_log")
-public class PartTimeAuditLogPO {
+public class AuditLogPO {
     @TableId(type = IdType.AUTO)
     private Long id;                       // 审核记录ID
     private Long partTimeId;                // 兼职ID

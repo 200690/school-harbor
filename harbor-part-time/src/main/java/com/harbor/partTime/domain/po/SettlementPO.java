@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("part_time_settlement")
-public class PartTimeSettlementPO {
+public class SettlementPO {
     @TableId(type = IdType.AUTO)
     private Long id;                       // 结算记录ID
     private Long applicationId;              // 申请记录ID

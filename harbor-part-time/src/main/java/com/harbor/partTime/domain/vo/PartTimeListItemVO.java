@@ -24,4 +24,6 @@ public class PartTimeListItemVO {
     private Integer creditScore;
     private List<String> tags;              // 标签名称列表
     private Boolean isFavorite;             // 当前用户是否收藏
+    private Boolean isApplied;              // 当前用户是否申请
+    private Boolean isPublisher;            // 当前用户是否发布者
 }
