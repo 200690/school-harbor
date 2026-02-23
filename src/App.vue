@@ -34,43 +34,6 @@ export default {
     isNotFoundPage() {
       return this.$route.name === 'not-found'
     }
-  },
-  mounted() {
-    // 监听localStorage变化
-    window.addEventListener('storage', (event) => {
-      console.log('[App.vue] Storage事件:', event)
-      console.log('[App.vue] Key:', event.key)
-      console.log('[App.vue] OldValue:', event.oldValue)
-      console.log('[App.vue] NewValue:', event.newValue)
-      
-      if (event.key === 'token' && event.newValue === null) {
-        console.error('[App.vue] Token被清除！')
-        console.error('[App.vue] 清除时间:', new Date().toISOString())
-        console.error('[App.vue] 当前URL:', window.location.href)
-      }
-      
-      if (event.key === 'userInfo' && event.newValue === null) {
-        console.error('[App.vue] UserInfo被清除！')
-        console.error('[App.vue] 清除时间:', new Date().toISOString())
-        console.error('[App.vue] 当前URL:', window.location.href)
-      }
-    })
-    
-    // 定期检查token是否存在
-    setInterval(() => {
-      const token = localStorage.getItem('token')
-      const userInfo = localStorage.getItem('userInfo')
-      
-      if (!token && userInfo) {
-        console.error('[App.vue] 检测到token不存在但userInfo存在！')
-        console.error('[App.vue] 检查时间:', new Date().toISOString())
-      }
-      
-      if (token && !userInfo) {
-        console.error('[App.vue] 检测到token存在但userInfo不存在！')
-        console.error('[App.vue] 检查时间:', new Date().toISOString())
-      }
-    }, 30000) // 每30秒检查一次
   }
 }
 </script>
