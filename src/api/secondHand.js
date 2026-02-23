@@ -81,3 +81,31 @@ export function deleteSecondHandItem(id) {
     method: 'delete'
   })
 }
+
+export function getHotSecondHandItems() {
+  return request({
+    url: '/second-hand/hot',
+    method: 'get'
+  })
+}
+
+export function addSecondHandFavorite(id) {
+  return request({
+    url: `/second-hand/favorite/${id}`,
+    method: 'post'
+  })
+}
+
+export function removeSecondHandFavorite(id) {
+  return request({
+    url: `/second-hand/favorite/${id}`,
+    method: 'delete'
+  })
+}
+
+export function checkSecondHandFavorite(id) {
+  return request({
+    url: `/second-hand/favorite/${id}`,
+    method: 'get'
+  })
+}

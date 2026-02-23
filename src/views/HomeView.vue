@@ -113,103 +113,146 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'HomeView',
-  components: {
+<script setup>
+import { ref, onMounted } from 'vue'
+import { getPartTimeList } from '@/api/partTime'
+import { getSecondHandList } from '@/api/secondHand'
+
+const serviceIcons = ref({
+  partTime: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/校园兼职.png',
+  secondHand: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/二手交易.png',
+  internship: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/实习机会.png',
+  textbook: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/教材教辅.png',
+  electronics: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/电子产品.png',
+  life: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/生活用品.png'
+})
+
+const carouselItems = ref([
+  {
+    title: '寻找校园兼职，赚取零花钱',
+    description: '海量校园兼职机会，安全可靠，时间灵活',
+    link: '/part-time',
+    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/兼职横幅.png'
   },
-  data() {
-    return {
-      // 服务分类图标
-      serviceIcons: {
-        partTime: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/校园兼职.png',
-        secondHand: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/二手交易.png',
-        internship: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/实习机会.png',
-        textbook: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/教材教辅.png',
-        electronics: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/电子产品.png',
-        life: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/生活用品.png'
-      },
-      // 轮播图数据
-      carouselItems: [
-        {
-          title: '寻找校园兼职，赚取零花钱',
-          description: '海量校园兼职机会，安全可靠，时间灵活',
-          link: '/part-time',
-          image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/兼职横幅.png'
-        },
-        {
-          title: '二手交易，让闲置物品找到新主人',
-          description: '校园内的二手交易平台，方便快捷，性价比高',
-          link: '/second-hand',
-          image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/二手横幅.png'
-        },
-        {
-          title: '实习机会，为未来铺路',
-          description: '优质实习岗位，提升专业技能，积累工作经验',
-          link: '/part-time?type=internship',
-          image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/实习横幅.png'
+  {
+    title: '二手交易，让闲置物品找到新主人',
+    description: '校园内的二手交易平台，方便快捷，性价比高',
+    link: '/second-hand',
+    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/二手横幅.png'
+  },
+  {
+    title: '实习机会，为未来铺路',
+    description: '优质实习岗位，提升专业技能，积累工作经验',
+    link: '/part-time?type=internship',
+    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/实习横幅.png'
+  }
+])
+
+const recommendedJobs = ref([])
+const recommendedItems = ref([])
+
+const loadData = async () => {
+  try {
+    console.log('开始加载首页数据')
+    
+    // 分别处理每个请求，以便更好地捕获错误
+    try {
+      const jobsRes = await getPartTimeList({
+        page: 1,
+        size: 10,
+        keyword: '',
+        sortField: 'ViewCount',
+        sortOrder: 'desc'
+      })
+      console.log('兼职请求成功:', jobsRes)
+      
+      if (jobsRes.data && jobsRes.data.list) {
+        recommendedJobs.value = jobsRes.data.list.map(job => ({
+          id: job.id,
+          title: job.title,
+          employer: job.employer,
+          location: job.location,
+          workTime: job.workTime,
+          type: job.type === 1 ? '校内兼职' : job.type === 2 ? '校外兼职' : '实习',
+          salary: `${job.salaryDesc} ${job.salaryUnit}`
+        }))
+        console.log('兼职数据处理完成:', recommendedJobs.value)
+      } else if (jobsRes.data) {
+        // 检查是否直接返回数组
+        if (Array.isArray(jobsRes.data)) {
+          recommendedJobs.value = jobsRes.data.map(job => ({
+            id: job.id,
+            title: job.title,
+            employer: job.employer,
+            location: job.location,
+            workTime: job.workTime,
+            type: job.type === 1 ? '校内兼职' : job.type === 2 ? '校外兼职' : '实习',
+            salary: `${job.salaryDesc} ${job.salaryUnit}`
+          }))
+          console.log('兼职数据（数组格式）处理完成:', recommendedJobs.value)
+        } else {
+          console.log('兼职数据格式不符合预期:', jobsRes.data)
         }
-      ],
-      // 推荐兼职数据
-      recommendedJobs: [
-        {
-          id: 1,
-          title: '校园超市收银员',
-          employer: '校园超市',
-          location: '校内',
-          workTime: '周末 9:00-18:00',
-          type: '兼职',
-          salary: '15元/小时'
-        },
-        {
-          id: 2,
-          title: '图书馆整理员',
-          employer: '校图书馆',
-          location: '校内',
-          workTime: '周一至周五 18:00-21:00',
-          type: '兼职',
-          salary: '12元/小时'
-        },
-        {
-          id: 3,
-          title: '社团活动策划',
-          employer: '学生会',
-          location: '校内',
-          workTime: '弹性时间',
-          type: '兼职',
-          salary: '200元/次'
-        }
-      ],
-      // 推荐二手物品数据
-      recommendedItems: [
-        {
-          id: 1,
-          title: '大学英语四级词汇书',
-          description: '全新，未使用，附带光盘',
-          price: 20,
-          location: '东区宿舍',
-          image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=english%20vocabulary%20book%20for%20college%20students&image_size=square'
-        },
-        {
-          id: 2,
-          title: '笔记本电脑',
-          description: '联想小新Pro 13，九成新，配置良好',
-          price: 3500,
-          location: '西区宿舍',
-          image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=lenovo%20laptop%20computer%20for%20students&image_size=square'
-        },
-        {
-          id: 3,
-          title: '篮球',
-          description: '斯伯丁篮球，八成新，无损坏',
-          price: 80,
-          location: '南区宿舍',
-          image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=basketball%20for%20students&image_size=square'
-        }
-      ]
+      } else {
+        console.log('兼职响应数据为空:', jobsRes)
+      }
+    } catch (error) {
+      console.error('加载兼职数据失败:', error)
+      // 不抛出错误，继续加载二手数据
     }
+    
+    try {
+      const itemsRes = await getSecondHandList({
+        page: 1,
+        size: 10,
+        keyword: '',
+        status: 1,
+        sortField: 'ViewCount',
+        sortOrder: 'desc'
+      })
+      console.log('二手请求成功:', itemsRes)
+      
+      if (itemsRes.data && itemsRes.data.list) {
+        recommendedItems.value = itemsRes.data.list.map(item => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          price: item.price,
+          location: item.location,
+          image: item.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=default%20product%20image&image_size=square'
+        }))
+        console.log('二手数据处理完成:', recommendedItems.value)
+      } else if (itemsRes.data) {
+        // 检查是否直接返回数组
+        if (Array.isArray(itemsRes.data)) {
+          recommendedItems.value = itemsRes.data.map(item => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            price: item.price,
+            location: item.location,
+            image: item.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=default%20product%20image&image_size=square'
+          }))
+          console.log('二手数据（数组格式）处理完成:', recommendedItems.value)
+        } else {
+          console.log('二手数据格式不符合预期:', itemsRes.data)
+        }
+      } else {
+        console.log('二手响应数据为空:', itemsRes)
+      }
+    } catch (error) {
+      console.error('加载二手数据失败:', error)
+      // 不抛出错误，继续执行
+    }
+    
+  } catch (error) {
+    console.error('加载首页数据失败:', error)
   }
 }
+
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style scoped lang="scss">

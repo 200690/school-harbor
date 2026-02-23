@@ -59,6 +59,10 @@
           <el-button type="primary" size="large" class="apply-btn" @click="applyForJob">
             <i class="el-icon-check"></i> 立即申请
           </el-button>
+          <el-button size="large" class="favorite-btn" @click="toggleFavorite">
+            <i :class="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
+            {{ isFavorited ? '已收藏' : '收藏' }}
+          </el-button>
           <el-button size="large" class="share-btn" @click="shareJob">
             <i class="el-icon-share"></i> 分享职位
           </el-button>
@@ -92,7 +96,7 @@
 </template>
 
 <script>
-import { getPartTimeDetail, applyPartTimeJob } from '@/api/partTime'
+import { getPartTimeDetail, applyPartTimeJob, addPartTimeFavorite, removePartTimeFavorite, checkPartTimeFavorite } from '@/api/partTime'
 import { usePartTimeStore } from '@/stores/partTime'
 
 export default {
@@ -154,7 +158,8 @@ export default {
           description: '初中数学家教'
         }
       ],
-      loading: false
+      loading: false,
+      isFavorited: false
     }
   },
   computed: {
@@ -188,11 +193,39 @@ export default {
           console.log('获取到的兼职详情数据:', response.data)
           this.jobDetail = response.data
         }
+        
+        // 检查收藏状态
+        await this.checkFavoriteStatus()
       } catch (error) {
         console.error('获取兼职详情失败:', error)
         this.$message.error('获取兼职详情失败')
       } finally {
         this.loading = false
+      }
+    },
+    async checkFavoriteStatus() {
+      try {
+        const response = await checkPartTimeFavorite(this.jobId)
+        this.isFavorited = response.data || false
+      } catch (error) {
+        console.error('检查收藏状态失败:', error)
+        this.isFavorited = false
+      }
+    },
+    async toggleFavorite() {
+      try {
+        if (this.isFavorited) {
+          await removePartTimeFavorite(this.jobId)
+          this.$message.success('已取消收藏')
+          this.isFavorited = false
+        } else {
+          await addPartTimeFavorite(this.jobId)
+          this.$message.success('收藏成功')
+          this.isFavorited = true
+        }
+      } catch (error) {
+        console.error('收藏操作失败:', error)
+        this.$message.error('操作失败，请重试')
       }
     },
     async applyForJob() {

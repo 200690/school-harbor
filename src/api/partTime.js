@@ -10,7 +10,7 @@ export function getPartTimeList(params) {
 
 export function getPartTimeDetail(id) {
   return request({
-    url: `/part-time/item/${id}`,
+    url: `/part-time/job/${id}`,
     method: 'get'
   })
 }
@@ -40,7 +40,7 @@ export function deletePartTimeJob(id) {
 
 export function applyPartTimeJob(id) {
   return request({
-    url: `/part-time/${id}/apply`,
+    url: `/part-time/apply/${id}`,
     method: 'post'
   })
 }
@@ -50,6 +50,13 @@ export function getMyApplications(params) {
     url: '/part-time/my-applications',
     method: 'get',
     params
+  })
+}
+
+export function getMyApplicationsById(id) {
+  return request({
+    url: `/part-time/apply/my-applications/${id}`,
+    method: 'get'
   })
 }
 
@@ -87,5 +94,33 @@ export function changePartTimeJob(data) {
     url: '/part-time/changeJob',
     method: 'post',
     data
+  })
+}
+
+export function getRecommendedPartTimeJobs() {
+  return request({
+    url: '/part-time/recommended',
+    method: 'get'
+  })
+}
+
+export function addPartTimeFavorite(id) {
+  return request({
+    url: `/part-time/favorite/${id}`,
+    method: 'post'
+  })
+}
+
+export function removePartTimeFavorite(id) {
+  return request({
+    url: `/part-time/favorite/${id}`,
+    method: 'delete'
+  })
+}
+
+export function checkPartTimeFavorite(id) {
+  return request({
+    url: `/part-time/favorite/${id}`,
+    method: 'get'
   })
 }

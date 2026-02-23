@@ -35,21 +35,21 @@
               <el-tag :type="getStatusType(app.status)">{{ getStatusText(app.status) }}</el-tag>
               <span class="apply-time">{{ app.applyTime }}</span>
             </div>
-            <h3 class="job-title">{{ app.jobTitle }}</h3>
+            <h3 class="job-title">{{ app.partTimeTitle }}</h3>
             <div class="job-info">
               <span class="employer">{{ app.employer }}</span>
-              <span class="salary">{{ app.salary }}</span>
-              <span class="location"><i class="el-icon-location"></i> {{ app.location }}</span>
-              <span class="work-time">{{ app.workTime }}</span>
+              <span class="salary">{{ app.salaryDesc }}</span>
+              <span class="location"><i class="el-icon-location"></i> {{ app.partTimeLocation }}</span>
+              <span class="work-time" v-if="app.interviewTime">{{ app.interviewTime }}</span>
             </div>
             <div class="app-actions">
-              <el-button size="small" type="primary" @click="viewJobDetail(app.jobId)">
+              <el-button size="small" type="primary" @click="viewJobDetail(app.partTimeId)">
                 查看兼职详情
               </el-button>
-              <el-button v-if="app.status === 'pending'" size="small" type="warning" @click="cancelApplication(app.id)">
+              <el-button v-if="app.status === 0" size="small" type="warning" @click="cancelApplication(app.id)">
                 取消申请
               </el-button>
-              <el-button v-if="app.status === 'approved'" size="small" type="success" @click="contactEmployer()">
+              <el-button v-if="app.status === 1" size="small" type="success" @click="contactEmployer()">
                 联系雇主
               </el-button>
             </div>
@@ -76,8 +76,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElConfirm } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../stores/user'
+import { getMyApplicationsById } from '@/api/partTime'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -93,20 +94,32 @@ const filteredApplications = computed(() => {
   if (activeStatus.value === 'all') {
     return applications.value
   }
-  return applications.value.filter(app => app.status === activeStatus.value)
+  
+  // 状态映射：字符串状态到数字状态
+  const statusMap = {
+    'pending': 0,      // 待审核
+    'approved': 1,     // 已通过
+    'rejected': 2,     // 已拒绝
+    'canceled': 3      // 已取消
+  }
+  
+  const targetStatus = statusMap[activeStatus.value]
+  return applications.value.filter(app => app.status === targetStatus)
 })
 
 // 根据状态获取标签类型
 const getStatusType = (status) => {
   switch (status) {
-    case 'pending':
+    case 0:
       return 'info'
-    case 'approved':
+    case 1:
       return 'success'
-    case 'rejected':
+    case 2:
       return 'danger'
-    case 'canceled':
+    case 3:
       return 'warning'
+    case 4:
+      return 'default'
     default:
       return 'default'
   }
@@ -115,14 +128,16 @@ const getStatusType = (status) => {
 // 根据状态获取文本
 const getStatusText = (status) => {
   switch (status) {
-    case 'pending':
+    case 0:
       return '待审核'
-    case 'approved':
+    case 1:
       return '已通过'
-    case 'rejected':
+    case 2:
       return '已拒绝'
-    case 'canceled':
+    case 3:
       return '已取消'
+    case 4:
+      return '已完成'
     default:
       return '未知状态'
   }
@@ -135,14 +150,14 @@ const viewJobDetail = (jobId) => {
 
 // 取消申请
 const cancelApplication = (appId) => {
-  ElConfirm('确定要取消这条申请吗？', '取消申请', {
+  ElMessageBox.confirm('确定要取消这条申请吗？', '取消申请', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
     const app = applications.value.find(a => a.id === appId)
     if (app) {
-      app.status = 'canceled'
+      app.status = 3
       ElMessage.success('申请已取消')
     }
   }).catch(() => {
@@ -166,10 +181,34 @@ const handleCurrentChange = (current) => {
   currentPage.value = current
 }
 
-onMounted(async () => {
-  // 从 store 获取用户申请记录
-  await userStore.getUserApplications()
-  applications.value = userStore.userApplications
+// 获取我的申请
+const fetchMyApplications = async () => {
+  try {
+    const userId = userStore.userInfo?.id
+    if (!userId) {
+      ElMessage.error('请先登录')
+      router.push('/user/user/login')
+      return
+    }
+    
+    console.log('获取我的申请，用户ID:', userId)
+    const response = await getMyApplicationsById(userId)
+    console.log('申请数据:', response)
+    
+    if (response.data) {
+      applications.value = response.data
+    } else {
+      applications.value = []
+    }
+  } catch (error) {
+    console.error('获取申请记录失败:', error)
+    ElMessage.error('获取申请记录失败')
+    applications.value = []
+  }
+}
+
+onMounted(() => {
+  fetchMyApplications()
 })
 </script>
 

@@ -140,7 +140,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useSecondHandStore } from '../stores/secondHand'
 import { useUserStore } from '../stores/user'
-import { getSecondHandDetail } from '@/api/secondHand'
+import { getSecondHandDetail, checkSecondHandFavorite } from '@/api/secondHand'
 
 const route = useRoute()
 const router = useRouter()
@@ -150,20 +150,23 @@ const userStore = useUserStore()
 const itemId = ref(route.params.id || 1)
 const itemDetail = ref(null)
 const recommendedItems = ref([])
+const isFavorited = ref(false)
 
 // 计算是否已收藏
 const isFavorite = computed(() => {
-  return secondHandStore.isFavorite(Number(itemId.value))
+  return isFavorited.value
 })
 
 // 切换收藏状态
 const toggleFavorite = async () => {
-  if (isFavorite.value) {
+  if (isFavorited.value) {
     await secondHandStore.removeFavorite(Number(itemId.value))
     ElMessage.success('已取消收藏')
+    isFavorited.value = false
   } else {
     await secondHandStore.addFavorite(itemDetail.value)
     ElMessage.success('收藏成功')
+    isFavorited.value = true
   }
 }
 
@@ -190,9 +193,23 @@ const fetchItemDetail = async () => {
     itemDetail.value = response.data
     // 设置推荐商品为相关商品
     recommendedItems.value = response.data.relatedItems || []
+    
+    // 检查收藏状态
+    await checkFavoriteStatus()
   } catch (error) {
     console.error('获取商品详情失败:', error)
     ElMessage.error('获取商品详情失败')
+  }
+}
+
+// 检查收藏状态
+const checkFavoriteStatus = async () => {
+  try {
+    const response = await checkSecondHandFavorite(itemId.value)
+    isFavorited.value = response.data || false
+  } catch (error) {
+    console.error('检查收藏状态失败:', error)
+    isFavorited.value = false
   }
 }
 

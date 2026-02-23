@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getSecondHandList, getSecondHandDetail, createSecondHandItem, updateSecondHandItem, deleteSecondHandItem, buySecondHandItem, getMyItems } from '@/api/secondHand'
+import { getSecondHandList, getSecondHandDetail, createSecondHandItem, updateSecondHandItem, deleteSecondHandItem, buySecondHandItem, getMyItems, addSecondHandFavorite, removeSecondHandFavorite } from '@/api/secondHand'
 
 export const useSecondHandStore = defineStore('secondHand', {
   state: () => ({
@@ -315,41 +315,31 @@ export const useSecondHandStore = defineStore('secondHand', {
       }
     },
 
-    // 模拟添加收藏
+    // 添加收藏
     async addFavorite(item) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const newFavorite = {
-            id: Date.now(),
-            itemId: item.id,
-            itemTitle: item.title,
-            itemPrice: item.price,
-            itemImage: item.image,
-            favoriteTime: new Date().toISOString().split('T')[0]
-          }
-          this.favorites.push(newFavorite)
-          resolve({ data: { success: true, message: '收藏成功' } })
-        }, 300)
-      })
+      await addSecondHandFavorite(item.id)
+      const newFavorite = {
+        id: Date.now(),
+        itemId: item.id,
+        itemTitle: item.title,
+        itemPrice: item.price,
+        itemImage: item.image,
+        favoriteTime: new Date().toISOString().split('T')[0]
+      }
+      this.favorites.push(newFavorite)
+      return { data: { success: true, message: '收藏成功' } }
     },
 
-    // 模拟取消收藏
+    // 取消收藏
     async removeFavorite(itemId) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          this.favorites = this.favorites.filter(fav => fav.itemId !== parseInt(itemId))
-          resolve({ data: { success: true, message: '取消收藏成功' } })
-        }, 300)
-      })
+      await removeSecondHandFavorite(itemId)
+      this.favorites = this.favorites.filter(fav => fav.itemId !== parseInt(itemId))
+      return { data: { success: true, message: '取消收藏成功' } }
     },
 
-    // 模拟获取收藏列表
+    // 获取收藏列表
     async getFavorites() {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({ data: this.favorites })
-        }, 300)
-      })
+      return { data: this.favorites }
     },
 
     resetItemList() {
