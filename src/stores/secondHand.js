@@ -399,6 +399,17 @@ export const useSecondHandStore = defineStore('secondHand', {
 
     resetItemDetail() {
       this.itemDetail = null
+    },
+
+    clearCache() {
+      this.itemList = []
+      this.itemDetail = null
+      this.myItems = []
+      this.favorites = []
+      this.total = 0
+      this.currentPage = 1
+      this.pageSize = 10
+      console.log('[SecondHandStore] 已清除所有缓存')
     }
   }
 })

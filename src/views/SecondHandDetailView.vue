@@ -1,6 +1,44 @@
 <template>
-  <div class="second-hand-detail">
-    <div class="main-content container">
+  <div class="second-hand-detail" :class="{ 'banned-mode': isPublisherBanned }">
+    <!-- 服务提供者被封禁提示 - 全屏显示 -->
+    <div v-if="isPublisherBanned" class="banned-notice">
+      <div class="banned-content">
+        <div class="error-code">403</div>
+        <div class="error-icon">
+          <i class="el-icon-warning-outline"></i>
+        </div>
+        <h2 class="error-title">服务提供者已封禁</h2>
+        <p class="error-description">
+          抱歉，该服务提供者已被封禁。<br>
+          无法查看相关信息，请返回首页继续浏览。
+        </p>
+        <div class="error-actions">
+          <button @click="goHome" class="btn btn-primary">
+            <i class="el-icon-house"></i> 返回首页
+          </button>
+          <button @click="goBack" class="btn btn-secondary">
+            <i class="el-icon-back"></i> 返回上一页
+          </button>
+        </div>
+        <div class="quick-links">
+          <p>您可能在找：</p>
+          <div class="links">
+            <router-link to="/part-time" class="link-item">
+              <i class="el-icon-s-finance"></i> 校园兼职
+            </router-link>
+            <router-link to="/second-hand" class="link-item">
+              <i class="el-icon-s-goods"></i> 二手交易
+            </router-link>
+            <router-link to="/user/user/center" class="link-item">
+              <i class="el-icon-user"></i> 个人中心
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 正常内容 -->
+    <div v-else class="main-content container">
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <!-- 根据导航来源显示不同的面包屑 -->
@@ -144,7 +182,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useSecondHandStore } from '../stores/secondHand'
@@ -161,6 +199,8 @@ const itemDetail = ref(null)
 const recommendedItems = ref([])
 const isFavorited = ref(false)
 const isFromMyPublish = ref(false)
+const isPublisherBanned = ref(false)
+const bannedMessage = ref('')
 
 // 计算是否已收藏
 const isFavorite = computed(() => {
@@ -198,25 +238,83 @@ const buyItem = async () => {
 const fetchItemDetail = async () => {
   try {
     console.log('正在获取商品详情，ID:', itemId.value)
-    const response = await getSecondHandDetail(itemId.value)
-    console.log('后端返回的商品详情:', response.data)
-    itemDetail.value = response.data
-    // 设置推荐商品为相关商品
-    recommendedItems.value = response.data.relatedItems || []
-    
-    // 检查是否从"我的发布"或"首页"页面导航过来
-    // 如果是从这些页面来的，不需要检查收藏状态
-    const fromMyPublish = route.query.from === 'myPublish'
-    const fromHome = route.query.from === 'home'
-    isFromMyPublish.value = fromMyPublish
-    
-    if (!fromMyPublish && !fromHome) {
-      // 检查收藏状态
-      await checkFavoriteStatus()
+    try {
+      const response = await getSecondHandDetail(itemId.value)
+      console.log('后端返回的商品详情:', response.data)
+      itemDetail.value = response.data
+      // 设置推荐商品为相关商品
+      recommendedItems.value = response.data.relatedItems || []
+      isPublisherBanned.value = false
+      
+      // 检查是否从"我的发布"或"首页"页面导航过来
+      // 如果是从这些页面来的，不需要检查收藏状态
+      const fromMyPublish = route.query.from === 'myPublish'
+      const fromHome = route.query.from === 'home'
+      isFromMyPublish.value = fromMyPublish
+      
+      if (!fromMyPublish && !fromHome) {
+        // 检查收藏状态
+        await checkFavoriteStatus()
+      }
+    } catch (error) {
+      console.error('获取商品详情失败:', error)
+      console.log('错误详情:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status
+      })
+      
+      // 检查是否是服务提供者被封禁的错误（HTTP 403 或 消息包含"用户状态异常"）
+      const isBanned = error.response?.status === 403 || 
+                      (error.message && error.message.includes('用户状态异常'))
+      
+      if (isBanned) {
+        console.log('服务提供者被封禁')
+        isPublisherBanned.value = true
+        console.log('isPublisherBanned 设置为:', isPublisherBanned.value)
+        bannedMessage.value = '用户状态异常'
+        // 清空itemDetail数据，确保不显示任何内容
+        itemDetail.value = null
+        console.log('itemDetail 已清空')
+        // 触发事件通知App.vue隐藏导航栏和页脚
+        window.dispatchEvent(new CustomEvent('publisher-banned'))
+        // 使用 nextTick 确保 DOM 更新
+        nextTick(() => {
+          console.log('DOM 已更新，isPublisherBanned:', isPublisherBanned.value)
+        })
+      } else {
+        ElMessage.error('获取商品详情失败')
+      }
     }
   } catch (error) {
     console.error('获取商品详情失败:', error)
-    ElMessage.error('获取商品详情失败')
+    console.log('错误详情:', {
+      message: error.message,
+      response: error.response,
+      status: error.response?.status
+    })
+    
+    // 检查是否是服务提供者被封禁的错误（HTTP 403 或 消息包含"用户状态异常"）
+    const isBanned = error.response?.status === 403 || 
+                    (error.message && error.message.includes('用户状态异常'))
+    
+    if (isBanned) {
+      console.log('服务提供者被封禁')
+      isPublisherBanned.value = true
+      console.log('isPublisherBanned 设置为:', isPublisherBanned.value)
+      bannedMessage.value = '用户状态异常'
+      // 清空itemDetail数据，确保不显示任何内容
+      itemDetail.value = null
+      console.log('itemDetail 已清空')
+      // 触发事件通知App.vue隐藏导航栏和页脚
+      window.dispatchEvent(new CustomEvent('publisher-banned'))
+      // 使用 nextTick 确保 DOM 更新
+      nextTick(() => {
+        console.log('DOM 已更新，isPublisherBanned:', isPublisherBanned.value)
+      })
+    } else {
+      ElMessage.error('获取商品详情失败')
+    }
   }
 }
 
@@ -249,17 +347,234 @@ const getConditionText = (condition) => {
   return conditionMap[condition] || '未知'
 }
 
+// 返回上一页
+const goBack = () => {
+  router.back()
+}
+
+// 返回首页
+const goHome = () => {
+  router.push('/')
+}
+
+// 处理用户被封禁事件
+const handleUserBanned = () => {
+  console.log('收到用户被封禁事件')
+  isPublisherBanned.value = true
+  bannedMessage.value = '用户状态异常'
+  // 清空itemDetail数据，确保不显示任何内容
+  itemDetail.value = null
+  // 触发事件通知App.vue隐藏导航栏和页脚
+  window.dispatchEvent(new CustomEvent('publisher-banned'))
+}
+
 onMounted(async () => {
   await fetchItemDetail()
   // 获取收藏列表
   await secondHandStore.getFavorites()
+  // 监听用户被封禁事件
+  window.addEventListener('user-banned', handleUserBanned)
+  // 监听清除缓存事件
+  window.addEventListener('clear-cache', handleClearCache)
 })
+
+// 组件卸载时移除事件监听
+onBeforeUnmount(() => {
+  window.removeEventListener('user-banned', handleUserBanned)
+  window.removeEventListener('clear-cache', handleClearCache)
+})
+
+// 处理清除缓存事件
+const handleClearCache = () => {
+  console.log('收到清除缓存事件')
+  isPublisherBanned.value = false
+  itemDetail.value = null
+  secondHandStore.clearCache()
+}
 </script>
 
 <style scoped lang="scss">
 .second-hand-detail {
   min-height: 100vh;
   padding: 80px 0 20px;
+}
+
+.second-hand-detail.banned-mode {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.banned-notice {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banned-content {
+  text-align: center;
+  color: #fff;
+  max-width: 600px;
+}
+
+.error-code {
+  font-size: 120px;
+  font-weight: bold;
+  line-height: 1;
+  margin-bottom: 20px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.error-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.error-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.error-description {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  opacity: 0.9;
+}
+
+.error-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 20px;
+  font-size: 16px;
+  text-decoration: none;
+  transition: all 0.3s;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: #fff;
+  color: #667eea;
+  
+  &:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.btn-secondary {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.quick-links {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  
+  p {
+    font-size: 14px;
+    margin-bottom: 16px;
+    opacity: 0.9;
+  }
+}
+
+.links {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.link-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+@media (max-width: 768px) {
+  .error-icon {
+    font-size: 40px;
+  }
+  
+  .error-title {
+    font-size: 24px;
+  }
+  
+  .error-description {
+    font-size: 14px;
+  }
+  
+  .error-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .links {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .link-item {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .breadcrumb {

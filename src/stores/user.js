@@ -140,7 +140,7 @@ export const useUserStore = defineStore('user', {
   getters: {
     userId: (state) => state.userInfo?.id || null,
     username: (state) => state.userInfo?.username || '',
-    avatar: (state) => state.userInfo?.avatar || '',
+    avatar: (state) => state.userInfo?.img || '',
     phone: (state) => state.userInfo?.phone || '',
     email: (state) => state.userInfo?.email || '',
     unreadMessageCount: (state) => state.userMessages.filter(msg => !msg.read).length

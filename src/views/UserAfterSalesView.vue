@@ -211,7 +211,7 @@ const sendMessage = () => {
     sender: userStore.userInfo.username || '我',
     content: messageInput.value.trim(),
     time: new Date().toLocaleString('zh-CN'),
-    avatar: userStore.userInfo.avatar || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20friendly%20student&image_size=square',
+    avatar: userStore.userInfo.img || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20friendly%20student&image_size=square',
     isMine: true
   }
   

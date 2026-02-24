@@ -1,6 +1,44 @@
 <template>
-  <div class="part-time-detail">
-    <div class="main-content container">
+  <div class="part-time-detail" :class="{ 'banned-mode': isPublisherBanned }">
+    <!-- 服务提供者被封禁提示 - 全屏显示 -->
+    <div v-if="isPublisherBanned" class="banned-notice">
+      <div class="banned-content">
+        <div class="error-code">403</div>
+        <div class="error-icon">
+          <i class="el-icon-warning-outline"></i>
+        </div>
+        <h2 class="error-title">服务提供者已封禁</h2>
+        <p class="error-description">
+          抱歉，该服务提供者已被封禁。<br>
+          无法查看相关信息，请返回首页继续浏览。
+        </p>
+        <div class="error-actions">
+          <button @click="goHome" class="btn btn-primary">
+            <i class="el-icon-house"></i> 返回首页
+          </button>
+          <button @click="goBack" class="btn btn-secondary">
+            <i class="el-icon-back"></i> 返回上一页
+          </button>
+        </div>
+        <div class="quick-links">
+          <p>您可能在找：</p>
+          <div class="links">
+            <router-link to="/part-time" class="link-item">
+              <i class="el-icon-s-finance"></i> 校园兼职
+            </router-link>
+            <router-link to="/second-hand" class="link-item">
+              <i class="el-icon-s-goods"></i> 二手交易
+            </router-link>
+            <router-link to="/user/user/center" class="link-item">
+              <i class="el-icon-user"></i> 个人中心
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 正常内容 -->
+    <div v-else class="main-content container">
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <!-- 根据导航来源显示不同的面包屑 -->
@@ -35,8 +73,17 @@
             <span class="meta-item"><i class="el-icon-money"></i> {{ jobDetail.salaryDesc }}</span>
           </div>
           <div class="job-tags">
-            <span class="tag tag-primary">{{ jobDetail.typeName }}</span>
-            <span class="tag tag-success">状态: {{ jobDetail.statusName }}</span>
+            <!-- 发布者信息 -->
+            <div class="publisher-info-mini">
+              <el-avatar :size="30" :src="jobDetail.img || jobDetail.avatar" class="publisher-avatar-mini">
+                {{ jobDetail.username ? jobDetail.username.charAt(0) : '用' }}
+              </el-avatar>
+              <span class="publisher-name">{{ jobDetail.username }}</span>
+            </div>
+            
+            <!-- 兼职类型标签 -->
+            <span class="tag tag-primary">{{ getTypeName(jobDetail.type) }}</span>
+            <span class="tag tag-success">状态: {{ jobDetail.statusName || jobDetail.status }}</span>
             <span class="tag tag-warning">信誉分: {{ jobDetail.creditScore }}</span>
             <span class="tag tag-info">浏览: {{ jobDetail.viewCount }}</span>
             <span class="tag tag-info">申请: {{ jobDetail.applicantCount }}</span>
@@ -96,9 +143,9 @@
               <i class="el-icon-check"></i> {{ jobDetail.applicable ? '立即申请' : '已申请' }}
             </el-button>
             <el-button type="primary" size="large" class="favorite-btn" @click="toggleFavorite">
-            <i :class="jobDetail.isFavorite ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
-            {{ jobDetail.isFavorite ? '已收藏' : '收藏' }}
-          </el-button>
+              <i :class="jobDetail.isFavorite ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
+              {{ jobDetail.isFavorite ? '已收藏' : '收藏' }}
+            </el-button>
             <el-button size="large" class="share-btn" @click="shareJob">
               <i class="el-icon-share"></i> 分享职位
             </el-button>
@@ -142,65 +189,39 @@ export default {
     return {
       jobId: null,
       jobDetail: {
-        id: 1,
-        title: '校园超市收银员',
-        employer: '校园超市',
-        location: '校内',
-        workTime: '周末 9:00-18:00',
-        salaryDesc: '15元/小时',
-        salaryUnit: '元/小时',
-        type: 1,
-        typeName: '校内兼职',
-        description: '负责超市收银工作',
-        requirements: '责任心强',
-        contactPerson: '张经理',
-        contactPhone: '138****8888',
-        publisherId: 1,
-        status: 1,
-        statusName: '招聘中',
-        publishTime: '2026-02-20 23:59:52',
-        viewCount: 120,
-        applicantCount: 5,
-        creditScore: 85,
+        id: null,
+        title: '',
+        employer: '',
+        location: '',
+        workTime: '',
+        salaryDesc: '',
+        salaryUnit: '',
+        type: null,
+        typeName: '',
+        description: '',
+        requirements: '',
+        contactPerson: '',
+        contactPhone: '',
+        publisherId: null,
+        status: null,
+        statusName: '',
+        publishTime: '',
+        viewCount: 0,
+        applicantCount: 0,
+        creditScore: 0,
+        username: '',
+        img: '',
+        avatar: '',
         isFavorite: false,
         applicable: true,
         isPublisher: false
       },
-      recommendedJobs: [
-        {
-          id: 2,
-          title: '图书馆整理员',
-          employer: '校图书馆',
-          location: '校内',
-          workTime: '周一至周五 18:00-21:00',
-          salaryDesc: '12元/小时',
-          type: '校内兼职',
-          description: '负责图书整理、上架等工作'
-        },
-        {
-          id: 3,
-          title: '社团活动策划',
-          employer: '学生会',
-          location: '校内',
-          workTime: '弹性时间',
-          salaryDesc: '200元/次',
-          type: '校内兼职',
-          description: '协助策划和组织社团活动'
-        },
-        {
-          id: 4,
-          title: '家教',
-          employer: '个人',
-          location: '校外',
-          workTime: '周末 2小时',
-          salaryDesc: '50元/小时',
-          type: '校外兼职',
-          description: '初中数学家教'
-        }
-      ],
+      recommendedJobs: [],
       loading: false,
       isFromMyPublish: false,
-      isFromMyApplications: false
+      isFromMyApplications: false,
+      isPublisherBanned: false,
+      bannedMessage: ''
     }
   },
   computed: {
@@ -211,6 +232,15 @@ export default {
   created() {
     this.jobId = this.$route.params.id
     this.fetchJobDetail()
+    // 监听用户被封禁事件
+    window.addEventListener('user-banned', this.handleUserBanned)
+    // 监听清除缓存事件
+    window.addEventListener('clear-cache', this.handleClearCache)
+  },
+  beforeUnmount() {
+    // 移除事件监听
+    window.removeEventListener('user-banned', this.handleUserBanned)
+    window.removeEventListener('clear-cache', this.handleClearCache)
   },
   watch: {
     '$route.params.id'(newId) {
@@ -229,25 +259,132 @@ export default {
         // 检查是否从"我的申请"页面导航过来
         this.isFromMyApplications = this.$route.query.from === 'myApplications'
         
-        const cachedJob = this.partTimeStore.getJobById(this.jobId)
-        if (cachedJob) {
-          console.log('从缓存中获取到兼职数据:', cachedJob)
-          this.jobDetail = cachedJob
-        } else {
-          console.log('缓存中未找到，从后端获取兼职详情')
+        // 不使用缓存，每次都从后端获取最新数据，确保能检测到服务提供者封禁状态
+        console.log('从后端获取兼职详情（不使用缓存）')
+        try {
           const response = await getPartTimeDetail(this.jobId)
           console.log('获取到的兼职详情数据:', response.data)
           this.jobDetail = response.data
+          this.isPublisherBanned = false
+        } catch (error) {
+          console.error('获取兼职详情失败:', error)
+          console.log('错误详情:', {
+            message: error.message,
+            response: error.response,
+            status: error.response?.status
+          })
+          
+          // 检查是否是服务提供者被封禁的错误（HTTP 403 或 消息包含"用户状态异常"）
+          const isBanned = error.response?.status === 403 || 
+                          (error.message && error.message.includes('用户状态异常'))
+          
+          if (isBanned) {
+            console.log('服务提供者被封禁')
+            this.isPublisherBanned = true
+            console.log('isPublisherBanned 设置为:', this.isPublisherBanned)
+            this.bannedMessage = '用户状态异常'
+            // 清空jobDetail数据，确保不显示任何内容
+            this.jobDetail = {
+              id: null,
+              title: '',
+              employer: '',
+              location: '',
+              workTime: '',
+              salaryDesc: '',
+              salaryUnit: '',
+              type: null,
+              typeName: '',
+              description: '',
+              requirements: '',
+              contactPerson: '',
+              contactPhone: '',
+              publisherId: null,
+              status: null,
+              statusName: '',
+              publishTime: '',
+              viewCount: 0,
+              applicantCount: 0,
+              creditScore: 0,
+              username: '',
+              img: '',
+              avatar: '',
+              isFavorite: false,
+              applicable: true,
+              isPublisher: false
+            }
+            console.log('jobDetail 已清空')
+            // 触发事件通知App.vue隐藏导航栏和页脚
+            window.dispatchEvent(new CustomEvent('publisher-banned'))
+            // 使用 nextTick 确保 DOM 更新
+            this.$nextTick(() => {
+              console.log('DOM 已更新，isPublisherBanned:', this.isPublisherBanned)
+            })
+          } else {
+            this.$message.error('获取兼职详情失败')
+          }
         }
         
         console.log('当前职位状态:', {
           isFavorite: this.jobDetail.isFavorite,
           applicable: this.jobDetail.applicable,
-          isPublisher: this.jobDetail.isPublisher
+          isPublisher: this.jobDetail.isPublisher,
+          isPublisherBanned: this.isPublisherBanned
         })
       } catch (error) {
         console.error('获取兼职详情失败:', error)
-        this.$message.error('获取兼职详情失败')
+        console.log('错误详情:', {
+          message: error.message,
+          response: error.response,
+          status: error.response?.status
+        })
+        
+        // 检查是否是服务提供者被封禁的错误（HTTP 403 或 消息包含"用户状态异常"）
+        const isBanned = error.response?.status === 403 || 
+                        (error.message && error.message.includes('用户状态异常'))
+        
+        if (isBanned) {
+          console.log('服务提供者被封禁')
+          this.isPublisherBanned = true
+          this.bannedMessage = '用户状态异常'
+          // 清空jobDetail数据，确保不显示任何内容
+          this.jobDetail = {
+            id: null,
+            title: '',
+            employer: '',
+            location: '',
+            workTime: '',
+            salaryDesc: '',
+            salaryUnit: '',
+            type: null,
+            typeName: '',
+            description: '',
+            requirements: '',
+            contactPerson: '',
+            contactPhone: '',
+            publisherId: null,
+            status: null,
+            statusName: '',
+            publishTime: '',
+            viewCount: 0,
+            applicantCount: 0,
+            creditScore: 0,
+            username: '',
+            img: '',
+            avatar: '',
+            isFavorite: false,
+            applicable: true,
+            isPublisher: false
+          }
+          console.log('jobDetail 已清空')
+          // 触发事件通知App.vue隐藏导航栏和页脚
+          window.dispatchEvent(new CustomEvent('publisher-banned'))
+          // 使用 nextTick 确保 DOM 更新
+          this.$nextTick(() => {
+            console.log('DOM 已更新，isPublisherBanned:', this.isPublisherBanned)
+          })
+        } else {
+          this.$message.error('获取兼职详情失败')
+        }
       } finally {
         this.loading = false
       }
@@ -281,6 +418,90 @@ export default {
     },
     shareJob() {
       this.$message.info('分享功能开发中...')
+    },
+    handleUserBanned() {
+      console.log('收到用户被封禁事件')
+      this.isPublisherBanned = true
+      this.bannedMessage = '用户状态异常'
+      // 清空jobDetail数据，确保不显示任何内容
+      this.jobDetail = {
+        id: null,
+        title: '',
+        employer: '',
+        location: '',
+        workTime: '',
+        salaryDesc: '',
+        salaryUnit: '',
+        type: null,
+        typeName: '',
+        description: '',
+        requirements: '',
+        contactPerson: '',
+        contactPhone: '',
+        publisherId: null,
+        status: null,
+        statusName: '',
+        publishTime: '',
+        viewCount: 0,
+        applicantCount: 0,
+        creditScore: 0,
+        username: '',
+        img: '',
+        avatar: '',
+        isFavorite: false,
+        applicable: true,
+        isPublisher: false
+      }
+      // 触发事件通知App.vue隐藏导航栏和页脚
+      window.dispatchEvent(new CustomEvent('publisher-banned'))
+    },
+    handleClearCache() {
+      console.log('收到清除缓存事件')
+      this.isPublisherBanned = false
+      this.jobDetail = {
+        id: null,
+        title: '',
+        employer: '',
+        location: '',
+        workTime: '',
+        salaryDesc: '',
+        salaryUnit: '',
+        type: null,
+        typeName: '',
+        description: '',
+        requirements: '',
+        contactPerson: '',
+        contactPhone: '',
+        publisherId: null,
+        status: null,
+        statusName: '',
+        publishTime: '',
+        viewCount: 0,
+        applicantCount: 0,
+        creditScore: 0,
+        username: '',
+        img: '',
+        avatar: '',
+        isFavorite: false,
+        applicable: true,
+        isPublisher: false
+      }
+      this.partTimeStore.clearCache()
+    },
+    getTypeName(type) {
+      // 类型映射：1-校内, 2-校外, 3-实习
+      const typeMap = {
+        1: '校内',
+        2: '校外',
+        3: '实习'
+      }
+      return typeMap[type] || '其他'
+    },
+    goBack() {
+      this.$router.back()
+    },
+    goHome() {
+      this.$router.push('/')
     }
   }
 }
@@ -290,6 +511,184 @@ export default {
 .part-time-detail {
   min-height: 100vh;
   padding: 80px 0 20px;
+}
+
+.part-time-detail.banned-mode {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.banned-notice {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banned-content {
+  text-align: center;
+  color: #fff;
+  max-width: 600px;
+}
+
+.error-code {
+  font-size: 120px;
+  font-weight: bold;
+  line-height: 1;
+  margin-bottom: 20px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.error-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.error-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.error-description {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  opacity: 0.9;
+}
+
+.error-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 20px;
+  font-size: 16px;
+  text-decoration: none;
+  transition: all 0.3s;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: #fff;
+  color: #667eea;
+  
+  &:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.btn-secondary {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.quick-links {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  
+  p {
+    font-size: 14px;
+    margin-bottom: 16px;
+    opacity: 0.9;
+  }
+}
+
+.links {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.link-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+@media (max-width: 768px) {
+  .error-icon {
+    font-size: 40px;
+  }
+  
+  .error-title {
+    font-size: 24px;
+  }
+  
+  .error-description {
+    font-size: 14px;
+  }
+  
+  .error-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .links {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .link-item {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .breadcrumb {
@@ -335,6 +734,28 @@ export default {
 
 .job-tags {
   margin-top: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* 迷你发布者信息 */
+.publisher-info-mini {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 15px;
+}
+
+.publisher-avatar-mini {
+  border: 1px solid #e0e0e0;
+}
+
+.publisher-name {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
 }
 
 .tag {
@@ -513,6 +934,17 @@ export default {
   
   .job-list {
     grid-template-columns: 1fr;
+  }
+  
+  .job-tags {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .publisher-info-mini {
+    margin-right: 0;
+    margin-bottom: 5px;
   }
 }
 </style>

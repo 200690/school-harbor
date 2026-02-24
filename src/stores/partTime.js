@@ -114,6 +114,16 @@ export const usePartTimeStore = defineStore('partTime', {
 
     resetJobDetail() {
       this.jobDetail = null
+    },
+
+    clearCache() {
+      this.jobList = []
+      this.jobDetail = null
+      this.myApplications = []
+      this.total = 0
+      this.currentPage = 1
+      this.pageSize = 10
+      console.log('[PartTimeStore] 已清除所有缓存')
     }
   }
 })

@@ -12,7 +12,7 @@
       <div class="user-info-card card">
         <div class="user-info-header">
           <div class="user-avatar">
-            <img v-if="userInfo.avatar" :src="userInfo.avatar" :alt="userInfo.username" />
+            <img v-if="userInfo.img" :src="userInfo.img" :alt="userInfo.username" />
             <div v-else class="default-avatar">
               <i class="el-icon-user"></i>
             </div>

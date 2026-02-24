@@ -43,11 +43,10 @@ request.interceptors.response.use(
     const res = response.data
 
     if (res.code !== 1) {
-      ElMessage.error({ message: res.msg || '请求失败', duration: 1500 })
-
       if (res.code === 401) {
         console.error('[Token清除] 响应码401 - token过期')
         console.error('[Token清除] 响应数据:', res)
+        ElMessage.error({ message: res.msg || '请求失败', duration: 1500 })
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
         // 触发自定义事件通知组件更新登录状态
@@ -64,6 +63,14 @@ request.interceptors.response.use(
           currentPath !== '/second-hand') {
           router.push('/user/user/login')
         }
+      } else if (res.code === 0 && res.msg === '用户状态异常') {
+        console.error('[用户状态异常] 用户已被封禁')
+        // 不显示错误消息，让组件自己处理
+        // 不清除token，因为可能是服务提供者被封禁，而不是当前用户
+        // 触发自定义事件通知组件用户被封禁
+        window.dispatchEvent(new CustomEvent('user-banned'))
+      } else {
+        ElMessage.error({ message: res.msg || '请求失败', duration: 1500 })
       }
 
       return Promise.reject(new Error(res.msg || '请求失败'))

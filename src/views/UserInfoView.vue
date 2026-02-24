@@ -163,6 +163,7 @@ const submitForm = async () => {
         // 准备更新数据
         const updateData = {
           id: parseInt(userId),
+          username: form.username,
           img: form.avatar,
           gender: form.gender === '男' ? 1 : form.gender === '女' ? 0 : 2,
           signature: form.bio,
