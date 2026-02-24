@@ -32,9 +32,9 @@ public class AuthGlobalFilter implements GlobalFilter , Ordered {
 //         1. 从exchange中获取当前的HTTP请求对象
         ServerHttpRequest request = exchange.getRequest();
 //         2. 获取请求的路径（比如 /api/auth/login 或 /api/orders/list）
-        if(isExclude(request.getPath().toString())){
-            return chain.filter(exchange);
-        }
+//        if(isExclude(request.getPath().toString())){
+//            return chain.filter(exchange);
+//        }
 //        获取token
         String token = null;
         List<String> headers = request.getHeaders().get("Authorization");

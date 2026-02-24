@@ -2,6 +2,7 @@ package com.harbor.partTime.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
@@ -9,9 +10,10 @@ import java.time.LocalDateTime;
 /**
  * 兼职视图对象
  */
+@EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
 @Data
-public class PartTimeVO {
+public class PartTimeVO extends BaseJobStatusVO{
 
     private Long id;                          // 兼职ID
 
@@ -60,9 +62,6 @@ public class PartTimeVO {
     // 扩展字段：当前用户是否已申请
     private Boolean hasApplied;                   // 是否已申请
 
-    private Boolean isFavorite;             // 当前用户是否收藏
-    private Boolean isApplied;              // 当前用户是否申请
-    private Boolean isPublisher;            // 当前用户是否发布者
 
     // 获取脱敏后的联系电话
     public String getDesensitizedPhone() {

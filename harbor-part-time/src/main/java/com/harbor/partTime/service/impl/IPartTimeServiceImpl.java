@@ -28,6 +28,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -100,9 +101,15 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
 
         // 4. 执行分页查询
         Page<PartTimePO> partTimePage = this.page(page, wrapper);
-
+//        填入BaseJobStatusVO
+        List<PartTimeVO> voList = partTimePage.getRecords().stream().map(partTimePO -> {
+            PartTimeVO partTimeVO = new PartTimeVO();
+            BeanUtil.copyProperties(partTimePO, partTimeVO, CopyOptions.create().ignoreNullValue());
+            this.setBaseJobStatusVO(partTimeVO, partTimeVO.getId(), partTimePO);
+            return partTimeVO;
+        }).toList();
         // 5. 转换为VO并返回
-        return PageDTO.of(partTimePage, PartTimeVO.class);
+        return new PageDTO<>(partTimePage.getTotal(), partTimePage.getPages(), voList);
     }
     /**
      * 发布兼职
@@ -189,7 +196,7 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
     }
 
     public <T extends BaseJobStatusVO> void setBaseJobStatusVO(T vo, Long partTimeId, PartTimePO po){
-        vo.setIsPublisher(po.getPublisherId().equals(UserContext.getUser()));
+        vo.setIsPublisher(Objects.equals(po.getPublisherId(), UserContext.getUser()));
         if (vo.getIsPublisher() == true) {
             vo.setApplicable(false);
         }else{
