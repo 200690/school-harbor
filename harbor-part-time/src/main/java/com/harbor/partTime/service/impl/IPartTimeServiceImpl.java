@@ -178,14 +178,16 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
      */
     @Override
     public PartTimeDetailVO getJobById(Long partTimeId) {
+//        浏览量++
         Assert.notNull(partTimeId, "兼职ID不能为空");
         PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, partTimeId).one();
+        partTimePO.setViewCount(partTimePO.getViewCount() + 1);
+        this.updateById(partTimePO);
+//        封装BaseJobStatusVO;
         PartTimeDetailVO partTimeDetailVO = new PartTimeDetailVO();
         Assert.notNull(partTimePO, "兼职不存在");
         BeanUtil.copyProperties(partTimePO, partTimeDetailVO);
-//        封装BaseJobStatusVO;
         this.setBaseJobStatusVO(partTimeDetailVO, partTimeId, partTimePO);
-        log.info("获取兼职详情: {}", partTimeDetailVO);
         return partTimeDetailVO;
     }
 

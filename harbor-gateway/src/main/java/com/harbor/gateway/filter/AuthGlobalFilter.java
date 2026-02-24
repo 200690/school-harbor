@@ -31,10 +31,7 @@ public class AuthGlobalFilter implements GlobalFilter , Ordered {
         log.info("进入全局过滤器");
 //         1. 从exchange中获取当前的HTTP请求对象
         ServerHttpRequest request = exchange.getRequest();
-//         2. 获取请求的路径（比如 /api/auth/login 或 /api/orders/list）
-//        if(isExclude(request.getPath().toString())){
-//            return chain.filter(exchange);
-//        }
+
 //        获取token
         String token = null;
         List<String> headers = request.getHeaders().get("Authorization");
@@ -47,6 +44,10 @@ public class AuthGlobalFilter implements GlobalFilter , Ordered {
         try {
             userId = jwtTool.parseToken(token);
         } catch (UnauthorizedException e) {
+            //         2. 获取请求的路径（比如 /api/auth/login 或 /api/orders/list）
+            if(isExclude(request.getPath().toString())){
+                return chain.filter(exchange);
+            }
             ServerHttpResponse response = exchange.getResponse();
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return response.setComplete();
@@ -56,6 +57,7 @@ public class AuthGlobalFilter implements GlobalFilter , Ordered {
         ServerWebExchange swe = exchange.mutate().request(builder -> builder.header("user-info", userInfo))
                 .build();
         log.info("userId: {}", userId);
+
         return chain.filter(swe);
     }
 

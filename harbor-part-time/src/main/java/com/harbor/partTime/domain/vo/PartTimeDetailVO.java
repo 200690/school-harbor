@@ -25,4 +25,6 @@ public class PartTimeDetailVO extends BaseJobStatusVO{
     private String contactPerson;       // 联系人
     private String contactPhone;        // 联系电话
     private Integer status;
+    private Integer viewCount;
+    private Integer applicantCount;
 }
