@@ -2,7 +2,7 @@ package com.harbor.secondHand.user.controller.user;
 
 import com.harbor.common.result.Result;
 import com.harbor.secondHand.user.domain.dto.LoginFormDTO;
-import com.harbor.secondHand.user.domain.dto.UserInfoDTO;
+import com.harbor.utils.dto.UserInfoDTO;
 import com.harbor.secondHand.user.domain.dto.UserRegisterDTO;
 import com.harbor.secondHand.user.domain.vo.UserVO;
 import com.harbor.secondHand.user.service.IUserService;
@@ -37,7 +37,7 @@ public class UserController {
 
     @ApiOperation("查询用户信息接口")
     @GetMapping("info/{id}")
-    public Result<UserVO> info(@PathVariable Long id){
+    public Result<UserInfoDTO> info(@PathVariable Long id){
         log.info("开始查询用户信息");
         return Result.success(userService.getUserInfo(id));
     }

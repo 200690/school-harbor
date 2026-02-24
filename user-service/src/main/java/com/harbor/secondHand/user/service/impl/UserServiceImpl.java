@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.exception.ForbiddenException;
 import com.harbor.secondHand.user.config.JwtProperties;
 import com.harbor.secondHand.user.domain.dto.LoginFormDTO;
-import com.harbor.secondHand.user.domain.dto.UserInfoDTO;
+import com.harbor.utils.dto.UserInfoDTO;
 import com.harbor.secondHand.user.domain.dto.UserRegisterDTO;
 import com.harbor.secondHand.user.domain.po.User;
 import com.harbor.secondHand.user.domain.vo.UserLoginVO;
@@ -93,12 +93,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 用户信息
      */
     @Override
-    public UserVO getUserInfo(Long id) {
+    public UserInfoDTO getUserInfo(Long id) {
         User user = checkUserById(id);
-        UserVO userVO = new UserVO();
-        BeanUtil.copyProperties(user, userVO);
-        log.info("user内容为：{};userVO内容为：{}",user,userVO);
-        return userVO;
+        UserInfoDTO userInfoDTO = new UserInfoDTO();
+        BeanUtil.copyProperties(user, userInfoDTO);
+        log.info("user内容为：{};userVO内容为：{}",user,userInfoDTO);
+        return userInfoDTO;
     }
 
     /**

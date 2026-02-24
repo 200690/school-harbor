@@ -27,4 +27,6 @@ public class PartTimeDetailVO extends BaseJobStatusVO{
     private Integer status;
     private Integer viewCount;
     private Integer applicantCount;
+    private String username;
+    private String img;
 }

@@ -1,3 +1,4 @@
 com.harbor.common.config.MybatisPlusConfig
 com.harbor.common.config.MvcConfig
 com.harbor.common.config.JsonConfig
+com.harbor.common.config.CommonAutoConfiguration

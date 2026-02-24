@@ -1,4 +1,4 @@
-package com.harbor.secondHand.user.domain.dto;
+package com.harbor.utils.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +13,12 @@ public class UserInfoDTO {
     @NotNull(message = "用户ID不能为空")
     private Long id;
 
+    @NotNull(message = "用户名不能为空")
+    private String username;
+
+    @NotNull(message = "手机号不能为空")
+    private String phone;
+
     private String img;
 
     private int gender;
@@ -21,4 +27,6 @@ public class UserInfoDTO {
 
     @Email(message = "邮箱格式不正确")
     private String email;
+
+    private String createTime;
 }

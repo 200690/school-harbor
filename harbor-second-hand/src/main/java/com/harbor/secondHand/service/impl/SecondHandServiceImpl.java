@@ -18,6 +18,7 @@ import com.harbor.secondHand.domain.vo.MyItem;
 import com.harbor.secondHand.mapper.BrowseHistory;
 import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.service.ISecondHandService;
+import com.harbor.utils.client.UserClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,19 +34,22 @@ import java.util.Objects;
 public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO> implements ISecondHandService {
     private final BrowseHistory browerHistory;
 
+    private final UserClient userClient;
+
     @Override
     public PageDTO<ItemListItemVO> querySecondHandItemList(ItemQueryConditionDTO itemQueryConditionDTO) {
         Page<ItemPO> page = new Page<>(itemQueryConditionDTO.getPage(), itemQueryConditionDTO.getSize());
 //        构建条件
         LambdaQueryWrapper<ItemPO> queryWrapper = new LambdaQueryWrapper<>();
-        if(itemQueryConditionDTO.getKeyword() != null){
-            queryWrapper.like(ItemPO::getTitle, itemQueryConditionDTO.getKeyword())
+        if (itemQueryConditionDTO.getKeyword() != null) {
+            queryWrapper.and(w -> w.like(ItemPO::getTitle, itemQueryConditionDTO.getKeyword())
                     .or()
-                    .like(ItemPO::getDescription, itemQueryConditionDTO.getKeyword());
+                    .like(ItemPO::getDescription, itemQueryConditionDTO.getKeyword()));
         }
         queryWrapper.eq(ItemPO::getStatus, 1);
         if(itemQueryConditionDTO.getCategoryId() != null){
             queryWrapper.eq(ItemPO::getCategoryId, itemQueryConditionDTO.getCategoryId());
+            log.info("categoryId: {}", itemQueryConditionDTO.getCategoryId());
         }
         if(itemQueryConditionDTO.getMinPrice() != null){
             queryWrapper.ge(ItemPO::getPrice, itemQueryConditionDTO.getMinPrice());
@@ -85,6 +89,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         }
 
         Page<ItemPO> secondHandItemPage = this.page(page, queryWrapper);
+        log.info("查询结果：{}", secondHandItemPage);
         return PageDTO.of(secondHandItemPage, ItemListItemVO.class);
     }
 
@@ -111,6 +116,10 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         itemDetailVO.setRelatedItems(itemDetailVO.convertToVO(list));
         BeanUtil.copyProperties(item, itemDetailVO);
 
+//        卖家属性拷贝
+        userClient.info(itemDetailVO.getSellerId());
+        itemDetailVO.setSellerName(userClient.info(itemDetailVO.getSellerId()).getData().getUsername());
+        itemDetailVO.setSellerAvatar(userClient.info(itemDetailVO.getSellerId()).getData().getImg());
         return itemDetailVO;
     }
 

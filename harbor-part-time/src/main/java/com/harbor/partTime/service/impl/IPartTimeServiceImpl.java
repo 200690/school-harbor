@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.result.Result;
 import com.harbor.common.utils.UserContext;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
@@ -20,6 +21,8 @@ import com.harbor.partTime.mapper.ApplicationMapper;
 import com.harbor.partTime.mapper.FavoriteMapper;
 import com.harbor.partTime.mapper.PartTimeMapper;
 import com.harbor.partTime.service.IPartTimeService;
+import com.harbor.utils.client.UserClient;
+import com.harbor.utils.dto.UserInfoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO> implements IPartTimeService {
     private final ApplicationMapper applicationMapper;
+
+    private final UserClient userClient;
 
     private final FavoriteMapper favoriteMapper;
     public PageDTO<PartTimeVO> queryPartTimeList(PartTimeQueryDTO dto) {
@@ -188,6 +193,11 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         Assert.notNull(partTimePO, "兼职不存在");
         BeanUtil.copyProperties(partTimePO, partTimeDetailVO);
         this.setBaseJobStatusVO(partTimeDetailVO, partTimeId, partTimePO);
+//        封装user部分
+        log.info("获取用户信息,{}",partTimePO.getPublisherId());
+        Result<UserInfoDTO> userInfoDTOResult = userClient.info(partTimePO.getPublisherId());
+        partTimeDetailVO.setUsername(userInfoDTOResult.getData().getUsername());
+        partTimeDetailVO.setImg(userInfoDTOResult.getData().getImg());
         return partTimeDetailVO;
     }
 

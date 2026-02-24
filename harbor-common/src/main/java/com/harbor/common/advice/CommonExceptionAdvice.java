@@ -1,10 +1,13 @@
 package com.harbor.common.advice;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.harbor.common.exception.BadRequestException;
 import com.harbor.common.exception.CommonException;
 import com.harbor.common.exception.DbException;
 import com.harbor.common.result.Result;
 import com.harbor.common.utils.WebUtils;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.ObjectError;
@@ -58,11 +61,35 @@ public class CommonExceptionAdvice {
 
     @ExceptionHandler(Exception.class)
     public Object handleRuntimeException(Exception e) {
+        if (e instanceof FeignException) {
+            FeignException fe = (FeignException) e;
+            String responseBody = fe.contentUTF8();
+            String errorMsg = "服务调用失败";
+            int statusCode = fe.status(); // HTTP 状态码，如 403
+
+            try {
+                ObjectMapper mapper = new ObjectMapper(); // 如果已有注入的 ObjectMapper，建议使用注入的
+                JsonNode root = mapper.readTree(responseBody);
+                if (root.has("msg")) {
+                    errorMsg = root.get("msg").asText(); // 提取原始 msg
+                }
+                // 可选：从响应体中提取 code 覆盖 statusCode
+                // if (root.has("code")) {
+                //     statusCode = root.get("code").asInt();
+                // }
+            } catch (Exception ex) {
+                log.warn("解析 Feign 异常响应体失败，原始响应体: {}", responseBody, ex);
+                errorMsg = "服务调用失败: " + fe.getMessage(); // 回退
+            }
+
+            return processResponse(new CommonException(errorMsg, statusCode));
+        }
+
         log.error("其他异常 uri : {} -> ", WebUtils.getRequest().getRequestURI(), e);
         return processResponse(new CommonException("服务器内部异常", 500));
     }
 
     private ResponseEntity<Result<Void>> processResponse(CommonException e){
-        return ResponseEntity.status(e.getCode()).body(Result.error(String.valueOf(e)));
+        return ResponseEntity.status(e.getCode()).body(Result.error(e.getMessage()));
     }
 }
