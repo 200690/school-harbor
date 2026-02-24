@@ -9,5 +9,4 @@ import java.util.List;
 public interface IApplicationService extends IService<ApplicationPO> {
 
     List<ApplicationRecordVO> getMyApplications(Long id);
-
 }

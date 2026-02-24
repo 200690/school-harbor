@@ -1,14 +1,16 @@
 package com.harbor.partTime.domain.vo;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Accessors(chain = true)
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class PartTimeListItemVO {
+public class PartTimeListItemVO extends BaseJobStatusVO{
     private Long id;
     private String title;
     private String employer;
@@ -23,7 +25,4 @@ public class PartTimeListItemVO {
     private Integer applicantCount;
     private Integer creditScore;
     private List<String> tags;              // 标签名称列表
-    private Boolean isFavorite;             // 当前用户是否收藏
-    private Boolean isApplied;              // 当前用户是否申请
-    private Boolean isPublisher;            // 当前用户是否发布者
 }

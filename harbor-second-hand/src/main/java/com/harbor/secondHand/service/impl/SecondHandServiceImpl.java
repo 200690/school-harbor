@@ -10,12 +10,13 @@ import com.harbor.common.domain.PageDTO;
 import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
+import com.harbor.secondHand.domain.po.BrowseHistoryPO;
 import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
 import com.harbor.secondHand.domain.vo.MyItem;
+import com.harbor.secondHand.mapper.BrowseHistory;
 import com.harbor.secondHand.mapper.SecondHandMapper;
-import com.harbor.secondHand.service.IBrowseHistory;
 import com.harbor.secondHand.service.ISecondHandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +25,13 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO> implements ISecondHandService {
-
-    private final IBrowseHistory browseHistory;
+    private final BrowseHistory browerHistory;
 
     @Override
     public PageDTO<ItemListItemVO> querySecondHandItemList(ItemQueryConditionDTO itemQueryConditionDTO) {
@@ -99,7 +100,11 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         }
 //        浏览量+1，添加到浏览历史
         this.addViewCount(item);
-        browseHistory.addHistory(item.getId());
+        BrowseHistoryPO browseHistoryPO = new BrowseHistoryPO();
+        browseHistoryPO.setItemId(id)
+                .setUserId(UserContext.getUser());
+        browerHistory.insert(browseHistoryPO);
+
 //        属性拷贝
         List<ItemPO> list = lambdaQuery().eq(ItemPO::getCategoryId, item.getCategoryId()).orderByDesc(ItemPO::getPublishTime).last("LIMIT 4").list();
         ItemDetailVO itemDetailVO = new ItemDetailVO();
@@ -129,7 +134,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
     public void updateStatus(Long id, Integer status) {
         ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, id).one();
         Assert.notNull(itemPO, "商品不存在");
-        if(itemPO.getStatus() == status){
+        if(Objects.equals(itemPO.getStatus(), status)){
             return;
         }
         if(itemPO.getStatus() > 1){

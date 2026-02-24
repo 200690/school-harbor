@@ -4,15 +4,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 /**
  * 兼职详情VO（继承基础VO，可添加额外信息）
  */
 @Data
 @Accessors(chain = true)
-public class PartTimeDetailVO {
+@EqualsAndHashCode(callSuper = true)
+public class PartTimeDetailVO extends BaseJobStatusVO{
     private Long id;
     private String title;
     private String employer;

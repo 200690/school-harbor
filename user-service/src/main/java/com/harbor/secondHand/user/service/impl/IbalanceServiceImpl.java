@@ -5,7 +5,7 @@ import com.harbor.secondHand.user.domain.dto.RechargeDTO;
 import com.harbor.secondHand.user.domain.po.User;
 import com.harbor.secondHand.user.domain.po.UserBalance;
 import com.harbor.secondHand.user.mapper.BalanceMapper;
-import com.harbor.secondHand.user.service.IUserService;
+import com.harbor.secondHand.user.mapper.UserMapper;
 import com.harbor.secondHand.user.service.IbalanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ import java.util.Objects;
 @Slf4j
 public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance> implements IbalanceService {
 
-    private final IUserService userService;
+    private final UserMapper userMapper;
 
     /**
      * 用户充值
@@ -33,7 +33,7 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
     @Transactional(rollbackFor = Exception.class)
     public void recharge(RechargeDTO rechargeDTO) {
 //        判断用户状态
-        User user = userService.getById(rechargeDTO.getUserId());
+        User user = userMapper.selectById(rechargeDTO.getUserId());
         log.info("开始充值,user：{}", user);
         Assert.notNull(user, "用户不存在");
         Assert.isTrue(Objects.equals(user.getStatus(), 1), "用户状态异常");

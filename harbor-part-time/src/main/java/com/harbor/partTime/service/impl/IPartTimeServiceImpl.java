@@ -9,12 +9,18 @@ import com.harbor.common.domain.PageDTO;
 import com.harbor.common.utils.UserContext;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
+import com.harbor.partTime.domain.po.ApplicationPO;
+import com.harbor.partTime.domain.po.FavoritePO;
 import com.harbor.partTime.domain.po.PartTimePO;
+import com.harbor.partTime.domain.vo.BaseJobStatusVO;
 import com.harbor.partTime.domain.vo.MyJobs;
 import com.harbor.partTime.domain.vo.PartTimeDetailVO;
 import com.harbor.partTime.domain.vo.PartTimeVO;
+import com.harbor.partTime.mapper.ApplicationMapper;
+import com.harbor.partTime.mapper.FavoriteMapper;
 import com.harbor.partTime.mapper.PartTimeMapper;
 import com.harbor.partTime.service.IPartTimeService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -25,8 +31,11 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO> implements IPartTimeService {
+    private final ApplicationMapper applicationMapper;
 
+    private final FavoriteMapper favoriteMapper;
     public PageDTO<PartTimeVO> queryPartTimeList(PartTimeQueryDTO dto) {
         // 1. 构建分页参数
         Page<PartTimePO> page = new Page<>(dto.getPage(), dto.getSize());
@@ -157,15 +166,19 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
 
     /**
      * 获取兼职详情
-     * @param id
+     * @param partTimeId
      * @return
      */
     @Override
-    public PartTimeDetailVO getJobById(Long id) {
-        PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, id).one();
+    public PartTimeDetailVO getJobById(Long partTimeId) {
+        Assert.notNull(partTimeId, "兼职ID不能为空");
+        PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, partTimeId).one();
         PartTimeDetailVO partTimeDetailVO = new PartTimeDetailVO();
         Assert.notNull(partTimePO, "兼职不存在");
         BeanUtil.copyProperties(partTimePO, partTimeDetailVO);
+//        封装BaseJobStatusVO;
+        this.setBaseJobStatusVO(partTimeDetailVO, partTimeId, partTimePO);
+        log.info("获取兼职详情: {}", partTimeDetailVO);
         return partTimeDetailVO;
     }
 
@@ -173,5 +186,17 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
     public List<PartTimePO> getJobsById(List<Long> ids){
         Assert.notEmpty(ids, "ids不能为空");
         return lambdaQuery().in(PartTimePO::getId, ids).list();
+    }
+
+    public <T extends BaseJobStatusVO> void setBaseJobStatusVO(T vo, Long partTimeId, PartTimePO po){
+        vo.setIsPublisher(po.getPublisherId().equals(UserContext.getUser()));
+        if (vo.getIsPublisher() == true) {
+            vo.setApplicable(false);
+        }else{
+            ApplicationPO one = applicationMapper.selectOne(new LambdaQueryWrapper<ApplicationPO>().eq(ApplicationPO::getPartTimeId, partTimeId).eq(ApplicationPO::getUserId, UserContext.getUser()));
+            vo.setApplicable(one ==  null);
+        }
+        FavoritePO favoritePO = favoriteMapper.selectOne(new LambdaQueryWrapper<FavoritePO>().eq(FavoritePO::getPartTimeId, partTimeId).eq(FavoritePO::getUserId, UserContext.getUser()));
+        vo.setIsFavorite(favoritePO != null);
     }
 }

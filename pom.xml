@@ -23,7 +23,6 @@
         <module>harbor-second-hand</module>
         <module>harbor-utils</module>
         <module>pay-service</module>
-        <module>trade-service</module>
         <module>user-service</module>
     </modules>
 
