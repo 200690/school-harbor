@@ -108,7 +108,7 @@
       
       <!-- 发布二手物品按钮 -->
       <div class="publish-btn-container">
-        <router-link to="/user/user/publish?type=second-hand" class="btn btn-primary publish-btn">
+        <router-link to="/second-hand/edit/new" class="btn btn-primary publish-btn">
           <i class="el-icon-plus"></i> 发布二手物品
         </router-link>
       </div>
@@ -135,21 +135,61 @@ export default {
       pageSize: 10,
       totalItems: 0,
       items: [],
-      loading: false
+      loading: false,
+      isRequesting: false // 添加请求锁，防止重复请求
     }
   },
   mounted() {
+    // 手动刷新页面时，清除缓存并重新获取数据
+    this.clearCache()
+    
+    // 从路由查询参数中获取 category 参数
+    if (this.$route.query.category) {
+      const categoryParam = this.$route.query.category
+      // 映射 category 参数到对应的 filterCategory 值
+      const categoryMap = {
+        'textbook': '1', // 教材教辅
+        'electronics': '2', // 电子产品
+        'life': '3' // 生活用品
+      }
+      if (categoryMap[categoryParam]) {
+        this.filterCategory = categoryMap[categoryParam]
+      }
+    }
+    
     this.fetchSecondHandList()
   },
   methods: {
+    // 清除与二手交易列表相关的所有缓存
+    clearCache() {
+      console.log('清除二手交易列表缓存')
+      // 遍历localStorage中的所有键，删除所有以secondHandList_开头的键
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('secondHandList_')) {
+          localStorage.removeItem(key)
+          // 同时删除对应的时间戳键
+          const timeKey = `${key}_time`
+          localStorage.removeItem(timeKey)
+          i-- // 因为删除了一个键，所以索引需要减1
+        }
+      }
+    },
     async fetchSecondHandList() {
+      // 如果已经有请求在执行，直接返回
+      if (this.isRequesting) {
+        console.log('已有请求在执行，跳过重复请求')
+        return
+      }
+      
       this.loading = true
+      this.isRequesting = true // 设置请求锁
       try {
         const params = {
           page: this.pageNum,
           size: this.pageSize,
           keyword: this.searchKeyword,
-          categoryIds: this.filterCategory ? parseInt(this.filterCategory) : null,
+          categoryId: this.filterCategory ? parseInt(this.filterCategory) : null,
           condition: this.filterCondition ? parseInt(this.filterCondition) : null,
           status: 1,
           sortField: this.sortField,
@@ -183,6 +223,7 @@ export default {
         this.$message.error('获取二手物品列表失败')
       } finally {
         this.loading = false
+        this.isRequesting = false // 释放请求锁
       }
     },
     handleSearch() {

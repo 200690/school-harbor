@@ -125,11 +125,45 @@ export const useSecondHandStore = defineStore('secondHand', {
     async getItemListAction(params) {
       this.loading = true
       try {
+        // 生成缓存键
+        const cacheKey = `secondHandList_${JSON.stringify(params)}`
+        const cacheTimeKey = `${cacheKey}_time`
+        
+        // 检查本地缓存
+        const cachedData = localStorage.getItem(cacheKey)
+        const cachedTime = localStorage.getItem(cacheTimeKey)
+        const now = Date.now()
+        const cacheExpiry = 3 * 60 * 1000 // 3分钟缓存
+        
+        if (cachedData && cachedTime && (now - parseInt(cachedTime)) < cacheExpiry) {
+          console.log('从缓存中获取二手交易列表数据')
+          const parsedData = JSON.parse(cachedData)
+          this.itemList = parsedData.list || []
+          this.total = parsedData.total || 0
+          this.currentPage = parsedData.currentPage || 1
+          this.pageSize = parsedData.pageSize || 10
+          this.loading = false
+          return { data: parsedData }
+        }
+        
+        // 从API获取数据
         const res = await getSecondHandList(params)
         this.itemList = res.data.list || []
         this.total = res.data.total || 0
         this.currentPage = res.data.currentPage || 1
         this.pageSize = res.data.pageSize || 10
+        
+        // 存入本地缓存
+        const cacheData = {
+          list: this.itemList,
+          total: this.total,
+          currentPage: this.currentPage,
+          pageSize: this.pageSize
+        }
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData))
+        localStorage.setItem(cacheTimeKey, now.toString())
+        console.log('二手交易列表数据已存入缓存')
+        
         return res
       } catch (error) {
         // 模拟获取商品列表成功
@@ -154,6 +188,21 @@ export const useSecondHandStore = defineStore('secondHand', {
           this.total = filteredList.length
           this.currentPage = params?.page || 1
           this.pageSize = params?.pageSize || 10
+          
+          // 存入本地缓存
+          const cacheKey = `secondHandList_${JSON.stringify(params)}`
+          const cacheTimeKey = `${cacheKey}_time`
+          const now = Date.now()
+          const cacheData = {
+            list: this.itemList,
+            total: this.total,
+            currentPage: this.currentPage,
+            pageSize: this.pageSize
+          }
+          localStorage.setItem(cacheKey, JSON.stringify(cacheData))
+          localStorage.setItem(cacheTimeKey, now.toString())
+          console.log('二手交易列表模拟数据已存入缓存')
+          
           this.loading = false
         }, 300)
         

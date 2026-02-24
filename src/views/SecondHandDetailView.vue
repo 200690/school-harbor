@@ -3,9 +3,18 @@
     <div class="main-content container">
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
-        <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item><router-link to="/second-hand">二手交易</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item>商品详情</el-breadcrumb-item>
+        <!-- 根据导航来源显示不同的面包屑 -->
+        <template v-if="isFromMyPublish">
+          <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/publish">我的发布</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item>商品详情</el-breadcrumb-item>
+        </template>
+        <template v-else>
+          <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/second-hand">二手交易</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item>商品详情</el-breadcrumb-item>
+        </template>
       </el-breadcrumb>
 
       <!-- 商品详情 -->
@@ -151,6 +160,7 @@ const itemId = ref(route.params.id || 1)
 const itemDetail = ref(null)
 const recommendedItems = ref([])
 const isFavorited = ref(false)
+const isFromMyPublish = ref(false)
 
 // 计算是否已收藏
 const isFavorite = computed(() => {
@@ -194,8 +204,16 @@ const fetchItemDetail = async () => {
     // 设置推荐商品为相关商品
     recommendedItems.value = response.data.relatedItems || []
     
-    // 检查收藏状态
-    await checkFavoriteStatus()
+    // 检查是否从"我的发布"或"首页"页面导航过来
+    // 如果是从这些页面来的，不需要检查收藏状态
+    const fromMyPublish = route.query.from === 'myPublish'
+    const fromHome = route.query.from === 'home'
+    isFromMyPublish.value = fromMyPublish
+    
+    if (!fromMyPublish && !fromHome) {
+      // 检查收藏状态
+      await checkFavoriteStatus()
+    }
   } catch (error) {
     console.error('获取商品详情失败:', error)
     ElMessage.error('获取商品详情失败')

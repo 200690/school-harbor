@@ -6,13 +6,13 @@ import router from '@/router'
 const originalSetItem = localStorage.setItem
 const originalRemoveItem = localStorage.removeItem
 
-localStorage.setItem = function(key, value) {
+localStorage.setItem = function (key, value) {
   console.log(`[localStorage] SET ${key} = ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}`)
   console.trace('localStorage.setItem 调用栈')
   return originalSetItem.call(this, key, value)
 }
 
-localStorage.removeItem = function(key) {
+localStorage.removeItem = function (key) {
   console.log(`[localStorage] REMOVE ${key}`)
   console.trace('localStorage.removeItem 调用栈')
   return originalRemoveItem.call(this, key)
@@ -52,8 +52,18 @@ request.interceptors.response.use(
         localStorage.removeItem('userInfo')
         // 触发自定义事件通知组件更新登录状态
         window.dispatchEvent(new CustomEvent('token-expired'))
-        // 强制跳转到登录页
-        router.push('/user/user/login')
+
+        // 获取当前路径
+        const currentPath = router.currentRoute.value.path
+
+        // 非登录注册页面且不是首页、兼职、二手交易页面时，强制跳转到登录页
+        if (!currentPath.startsWith('/user/user/login') &&
+          !currentPath.startsWith('/user/user/register') &&
+          currentPath !== '/index' &&
+          currentPath !== '/part-time' &&
+          currentPath !== '/second-hand') {
+          router.push('/user/user/login')
+        }
       }
 
       return Promise.reject(new Error(res.msg || '请求失败'))
@@ -69,7 +79,7 @@ request.interceptors.response.use(
         case 400:
           ElMessage.error({ message: '请求参数错误', duration: 1500 })
           break
-        case 401:
+        case 401: {
           console.error('[Token清除] HTTP状态码401 - 未授权')
           console.error('[Token清除] 错误响应:', error.response)
           ElMessage.error({ message: '登录已过期，请重新登录', duration: 1500 })
@@ -77,9 +87,20 @@ request.interceptors.response.use(
           localStorage.removeItem('userInfo')
           // 触发自定义事件通知组件更新登录状态
           window.dispatchEvent(new CustomEvent('token-expired'))
-          // 强制跳转到登录页
-          router.push('/user/user/login')
+          
+          // 获取当前路径
+          const currentPath = router.currentRoute.value.path
+          
+          // 非登录注册页面且不是首页、兼职、二手交易页面时，强制跳转到登录页
+          if (!currentPath.startsWith('/user/user/login') && 
+              !currentPath.startsWith('/user/user/register') &&
+              currentPath !== '/index' &&
+              currentPath !== '/part-time' &&
+              currentPath !== '/second-hand') {
+            router.push('/user/user/login')
+          }
           break
+        }
         case 403:
           ElMessage.error({ message: '拒绝访问', duration: 1500 })
           break

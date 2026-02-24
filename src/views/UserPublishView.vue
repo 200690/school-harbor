@@ -195,9 +195,11 @@ const navigateToPublish = (type) => {
 // 查看详情
 const viewDetail = (post) => {
   if (post.type === 'second-hand') {
-    router.push(`/second-hand/detail/${post.id}`)
+    // 使用URL查询参数传递导航来源信息
+    router.push(`/second-hand/detail/${post.id}?from=myPublish`)
   } else {
-    router.push(`/item/${post.id}`)
+    // 使用URL查询参数传递导航来源信息
+    router.push(`/item/${post.id}?from=myPublish`)
   }
 }
 

@@ -105,7 +105,7 @@
                 <span class="location"><i class="el-icon-s-position"></i> {{ item.location }}</span>
               </div>
             </div>
-            <router-link :to="`/second-hand/detail/${item.id}`" class="btn btn-primary">查看详情</router-link>
+            <router-link :to="`/second-hand/detail/${item.id}?from=home`" class="btn btn-primary">查看详情</router-link>
           </div>
         </div>
       </div>
@@ -155,32 +155,35 @@ const loadData = async () => {
   try {
     console.log('开始加载首页数据')
     
-    // 分别处理每个请求，以便更好地捕获错误
+    const cacheExpiry = 3 * 60 * 1000 // 3分钟缓存
+    const now = Date.now()
+    
+    // 处理推荐兼职数据
     try {
-      const jobsRes = await getPartTimeList({
-        page: 1,
-        size: 10,
-        keyword: '',
-        sortField: 'ViewCount',
-        sortOrder: 'desc'
-      })
-      console.log('兼职请求成功:', jobsRes)
+      // 生成缓存键
+      const jobsCacheKey = 'homeRecommendedJobs'
+      const jobsCacheTimeKey = 'homeRecommendedJobs_time'
       
-      if (jobsRes.data && jobsRes.data.list) {
-        recommendedJobs.value = jobsRes.data.list.map(job => ({
-          id: job.id,
-          title: job.title,
-          employer: job.employer,
-          location: job.location,
-          workTime: job.workTime,
-          type: job.type === 1 ? '校内兼职' : job.type === 2 ? '校外兼职' : '实习',
-          salary: `${job.salaryDesc} ${job.salaryUnit}`
-        }))
-        console.log('兼职数据处理完成:', recommendedJobs.value)
-      } else if (jobsRes.data) {
-        // 检查是否直接返回数组
-        if (Array.isArray(jobsRes.data)) {
-          recommendedJobs.value = jobsRes.data.map(job => ({
+      // 检查本地缓存
+      const cachedJobs = localStorage.getItem(jobsCacheKey)
+      const cachedJobsTime = localStorage.getItem(jobsCacheTimeKey)
+      
+      if (cachedJobs && cachedJobsTime && (now - parseInt(cachedJobsTime)) < cacheExpiry) {
+        console.log('从缓存中获取推荐兼职数据')
+        recommendedJobs.value = JSON.parse(cachedJobs)
+      } else {
+        // 从API获取数据
+        const jobsRes = await getPartTimeList({
+          page: 1,
+          size: 10,
+          keyword: '',
+          sortField: 'ViewCount',
+          sortOrder: 'desc'
+        })
+        console.log('兼职请求成功:', jobsRes)
+        
+        if (jobsRes.data && jobsRes.data.list) {
+          recommendedJobs.value = jobsRes.data.list.map(job => ({
             id: job.id,
             title: job.title,
             employer: job.employer,
@@ -189,43 +192,69 @@ const loadData = async () => {
             type: job.type === 1 ? '校内兼职' : job.type === 2 ? '校外兼职' : '实习',
             salary: `${job.salaryDesc} ${job.salaryUnit}`
           }))
-          console.log('兼职数据（数组格式）处理完成:', recommendedJobs.value)
+          console.log('兼职数据处理完成:', recommendedJobs.value)
+          
+          // 存入本地缓存
+          localStorage.setItem(jobsCacheKey, JSON.stringify(recommendedJobs.value))
+          localStorage.setItem(jobsCacheTimeKey, now.toString())
+          console.log('推荐兼职数据已存入缓存')
+        } else if (jobsRes.data) {
+          // 检查是否直接返回数组
+          if (Array.isArray(jobsRes.data)) {
+            recommendedJobs.value = jobsRes.data.map(job => ({
+              id: job.id,
+              title: job.title,
+              employer: job.employer,
+              location: job.location,
+              workTime: job.workTime,
+              type: job.type === 1 ? '校内兼职' : job.type === 2 ? '校外兼职' : '实习',
+              salary: `${job.salaryDesc} ${job.salaryUnit}`
+            }))
+            console.log('兼职数据（数组格式）处理完成:', recommendedJobs.value)
+            
+            // 存入本地缓存
+            localStorage.setItem(jobsCacheKey, JSON.stringify(recommendedJobs.value))
+            localStorage.setItem(jobsCacheTimeKey, now.toString())
+            console.log('推荐兼职数据已存入缓存')
+          } else {
+            console.log('兼职数据格式不符合预期:', jobsRes.data)
+          }
         } else {
-          console.log('兼职数据格式不符合预期:', jobsRes.data)
+          console.log('兼职响应数据为空:', jobsRes)
         }
-      } else {
-        console.log('兼职响应数据为空:', jobsRes)
       }
     } catch (error) {
       console.error('加载兼职数据失败:', error)
       // 不抛出错误，继续加载二手数据
     }
     
+    // 处理推荐二手物品数据
     try {
-      const itemsRes = await getSecondHandList({
-        page: 1,
-        size: 10,
-        keyword: '',
-        status: 1,
-        sortField: 'ViewCount',
-        sortOrder: 'desc'
-      })
-      console.log('二手请求成功:', itemsRes)
+      // 生成缓存键
+      const itemsCacheKey = 'homeRecommendedItems'
+      const itemsCacheTimeKey = 'homeRecommendedItems_time'
       
-      if (itemsRes.data && itemsRes.data.list) {
-        recommendedItems.value = itemsRes.data.list.map(item => ({
-          id: item.id,
-          title: item.title,
-          description: item.description,
-          price: item.price,
-          location: item.location,
-          image: item.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=default%20product%20image&image_size=square'
-        }))
-        console.log('二手数据处理完成:', recommendedItems.value)
-      } else if (itemsRes.data) {
-        // 检查是否直接返回数组
-        if (Array.isArray(itemsRes.data)) {
-          recommendedItems.value = itemsRes.data.map(item => ({
+      // 检查本地缓存
+      const cachedItems = localStorage.getItem(itemsCacheKey)
+      const cachedItemsTime = localStorage.getItem(itemsCacheTimeKey)
+      
+      if (cachedItems && cachedItemsTime && (now - parseInt(cachedItemsTime)) < cacheExpiry) {
+        console.log('从缓存中获取推荐二手物品数据')
+        recommendedItems.value = JSON.parse(cachedItems)
+      } else {
+        // 从API获取数据
+        const itemsRes = await getSecondHandList({
+          page: 1,
+          size: 10,
+          keyword: '',
+          status: 1,
+          sortField: 'ViewCount',
+          sortOrder: 'desc'
+        })
+        console.log('二手请求成功:', itemsRes)
+        
+        if (itemsRes.data && itemsRes.data.list) {
+          recommendedItems.value = itemsRes.data.list.map(item => ({
             id: item.id,
             title: item.title,
             description: item.description,
@@ -233,12 +262,35 @@ const loadData = async () => {
             location: item.location,
             image: item.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=default%20product%20image&image_size=square'
           }))
-          console.log('二手数据（数组格式）处理完成:', recommendedItems.value)
+          console.log('二手数据处理完成:', recommendedItems.value)
+          
+          // 存入本地缓存
+          localStorage.setItem(itemsCacheKey, JSON.stringify(recommendedItems.value))
+          localStorage.setItem(itemsCacheTimeKey, now.toString())
+          console.log('推荐二手物品数据已存入缓存')
+        } else if (itemsRes.data) {
+          // 检查是否直接返回数组
+          if (Array.isArray(itemsRes.data)) {
+            recommendedItems.value = itemsRes.data.map(item => ({
+              id: item.id,
+              title: item.title,
+              description: item.description,
+              price: item.price,
+              location: item.location,
+              image: item.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=default%20product%20image&image_size=square'
+            }))
+            console.log('二手数据（数组格式）处理完成:', recommendedItems.value)
+            
+            // 存入本地缓存
+            localStorage.setItem(itemsCacheKey, JSON.stringify(recommendedItems.value))
+            localStorage.setItem(itemsCacheTimeKey, now.toString())
+            console.log('推荐二手物品数据已存入缓存')
+          } else {
+            console.log('二手数据格式不符合预期:', itemsRes.data)
+          }
         } else {
-          console.log('二手数据格式不符合预期:', itemsRes.data)
+          console.log('二手响应数据为空:', itemsRes)
         }
-      } else {
-        console.log('二手响应数据为空:', itemsRes)
       }
     } catch (error) {
       console.error('加载二手数据失败:', error)

@@ -145,7 +145,7 @@ const getStatusText = (status) => {
 
 // 查看兼职详情
 const viewJobDetail = (jobId) => {
-  router.push(`/item/${jobId}`)
+  router.push(`/item/${jobId}?from=myApplications`)
 }
 
 // 取消申请

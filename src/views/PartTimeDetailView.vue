@@ -3,9 +3,24 @@
     <div class="main-content container">
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
-        <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item><router-link to="/part-time">校园兼职</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item>兼职详情</el-breadcrumb-item>
+        <!-- 根据导航来源显示不同的面包屑 -->
+        <template v-if="isFromMyPublish">
+          <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/publish">我的发布</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item>兼职详情</el-breadcrumb-item>
+        </template>
+        <template v-else-if="isFromMyApplications">
+          <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/applications">我的申请</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item>兼职详情</el-breadcrumb-item>
+        </template>
+        <template v-else>
+          <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/part-time">校园兼职</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item>兼职详情</el-breadcrumb-item>
+        </template>
       </el-breadcrumb>
 
       <!-- 兼职详情卡片 -->
@@ -56,16 +71,38 @@
 
         <!-- 操作按钮 -->
         <div class="job-actions">
-          <el-button type="primary" size="large" class="apply-btn" @click="applyForJob">
-            <i class="el-icon-check"></i> 立即申请
+          <!-- 发布者操作 -->
+          <template v-if="jobDetail.isPublisher">
+            <el-button type="primary" size="large" class="apply-btn">
+              <i class="el-icon-edit"></i> 编辑职位
+            </el-button>
+            <el-button size="large" class="favorite-btn">
+              <i class="el-icon-s-operation"></i> 管理申请
+            </el-button>
+            <el-button size="large" class="share-btn" @click="shareJob">
+              <i class="el-icon-share"></i> 分享职位
+            </el-button>
+          </template>
+          
+          <!-- 普通用户操作 -->
+          <template v-else>
+            <el-button 
+              type="primary" 
+              size="large" 
+              class="apply-btn" 
+              @click="applyForJob"
+              :disabled="!jobDetail.applicable"
+            >
+              <i class="el-icon-check"></i> {{ jobDetail.applicable ? '立即申请' : '已申请' }}
+            </el-button>
+            <el-button type="primary" size="large" class="favorite-btn" @click="toggleFavorite">
+            <i :class="jobDetail.isFavorite ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
+            {{ jobDetail.isFavorite ? '已收藏' : '收藏' }}
           </el-button>
-          <el-button size="large" class="favorite-btn" @click="toggleFavorite">
-            <i :class="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
-            {{ isFavorited ? '已收藏' : '收藏' }}
-          </el-button>
-          <el-button size="large" class="share-btn" @click="shareJob">
-            <i class="el-icon-share"></i> 分享职位
-          </el-button>
+            <el-button size="large" class="share-btn" @click="shareJob">
+              <i class="el-icon-share"></i> 分享职位
+            </el-button>
+          </template>
         </div>
       </div>
 
@@ -96,7 +133,7 @@
 </template>
 
 <script>
-import { getPartTimeDetail, applyPartTimeJob, addPartTimeFavorite, removePartTimeFavorite, checkPartTimeFavorite } from '@/api/partTime'
+import { getPartTimeDetail, applyPartTimeJob, addPartTimeFavorite, removePartTimeFavorite } from '@/api/partTime'
 import { usePartTimeStore } from '@/stores/partTime'
 
 export default {
@@ -124,7 +161,10 @@ export default {
         publishTime: '2026-02-20 23:59:52',
         viewCount: 120,
         applicantCount: 5,
-        creditScore: 85
+        creditScore: 85,
+        isFavorite: false,
+        applicable: true,
+        isPublisher: false
       },
       recommendedJobs: [
         {
@@ -159,7 +199,8 @@ export default {
         }
       ],
       loading: false,
-      isFavorited: false
+      isFromMyPublish: false,
+      isFromMyApplications: false
     }
   },
   computed: {
@@ -183,6 +224,11 @@ export default {
       try {
         console.log('正在获取兼职详情，ID:', this.jobId)
         
+        // 检查是否从"我的发布"页面导航过来
+        this.isFromMyPublish = this.$route.query.from === 'myPublish'
+        // 检查是否从"我的申请"页面导航过来
+        this.isFromMyApplications = this.$route.query.from === 'myApplications'
+        
         const cachedJob = this.partTimeStore.getJobById(this.jobId)
         if (cachedJob) {
           console.log('从缓存中获取到兼职数据:', cachedJob)
@@ -194,8 +240,11 @@ export default {
           this.jobDetail = response.data
         }
         
-        // 检查收藏状态
-        await this.checkFavoriteStatus()
+        console.log('当前职位状态:', {
+          isFavorite: this.jobDetail.isFavorite,
+          applicable: this.jobDetail.applicable,
+          isPublisher: this.jobDetail.isPublisher
+        })
       } catch (error) {
         console.error('获取兼职详情失败:', error)
         this.$message.error('获取兼职详情失败')
@@ -203,25 +252,16 @@ export default {
         this.loading = false
       }
     },
-    async checkFavoriteStatus() {
-      try {
-        const response = await checkPartTimeFavorite(this.jobId)
-        this.isFavorited = response.data || false
-      } catch (error) {
-        console.error('检查收藏状态失败:', error)
-        this.isFavorited = false
-      }
-    },
     async toggleFavorite() {
       try {
-        if (this.isFavorited) {
+        if (this.jobDetail.isFavorite) {
           await removePartTimeFavorite(this.jobId)
           this.$message.success('已取消收藏')
-          this.isFavorited = false
+          this.jobDetail.isFavorite = false
         } else {
           await addPartTimeFavorite(this.jobId)
           this.$message.success('收藏成功')
-          this.isFavorited = true
+          this.jobDetail.isFavorite = true
         }
       } catch (error) {
         console.error('收藏操作失败:', error)
@@ -232,6 +272,8 @@ export default {
       try {
         await applyPartTimeJob(this.jobId)
         this.$message.success('申请成功！请等待雇主联系')
+        // 更新申请状态，禁用申请按钮
+        this.jobDetail.applicable = false
       } catch (error) {
         console.error('申请兼职失败:', error)
         this.$message.error('申请兼职失败')

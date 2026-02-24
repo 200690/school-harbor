@@ -76,7 +76,29 @@
           </div>
           <div class="job-actions">
             <router-link :to="`/item/${job.id}`" class="btn btn-primary">查看详情</router-link>
-            <button class="btn btn-success" @click="applyJob(job.id)">立即申请</button>
+            
+            <!-- 发布者操作 -->
+            <template v-if="job.isPublisher">
+              <button class="btn btn-warning">管理申请</button>
+            </template>
+            
+            <!-- 普通用户操作 -->
+            <template v-else>
+              <button 
+                class="btn btn-success" 
+                @click="applyJob(job.id)"
+                :disabled="!job.applicable"
+              >
+                {{ job.applicable ? '立即申请' : '已申请' }}
+              </button>
+              <button 
+                class="btn btn-secondary" 
+                @click="toggleFavorite(job)"
+              >
+                <i :class="job.isFavorite ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
+                {{ job.isFavorite ? '已收藏' : '收藏' }}
+              </button>
+            </template>
           </div>
         </div>
       </div>
@@ -97,7 +119,7 @@
       
       <!-- 发布兼职按钮 -->
       <div class="publish-btn-container">
-        <router-link to="/user/user/publish?type=part-time" class="btn btn-primary publish-btn">
+        <router-link to="/item/edit/new" class="btn btn-primary publish-btn">
           <i class="el-icon-plus"></i> 发布兼职
         </router-link>
       </div>
@@ -106,7 +128,7 @@
 </template>
 
 <script>
-import { applyPartTimeJob } from '@/api/partTime'
+import { applyPartTimeJob, addPartTimeFavorite, removePartTimeFavorite } from '@/api/partTime'
 import { usePartTimeStore } from '@/stores/partTime'
 
 export default {
@@ -137,9 +159,36 @@ export default {
     }
   },
   mounted() {
+    // 手动刷新页面时，清除缓存并重新获取数据
+    this.clearCache()
+    
+    // 从路由查询参数中获取 type 参数
+    if (this.$route.query.type) {
+      const typeParam = this.$route.query.type
+      // 将 internship 转换为对应的 filterType 值 3（实习）
+      if (typeParam === 'internship') {
+        this.filterType = '3'
+      }
+    }
+    
     this.fetchPartTimeList()
   },
   methods: {
+    // 清除与兼职列表相关的所有缓存
+    clearCache() {
+      console.log('清除兼职列表缓存')
+      // 遍历localStorage中的所有键，删除所有以partTimeList_开头的键
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('partTimeList_')) {
+          localStorage.removeItem(key)
+          // 同时删除对应的时间戳键
+          const timeKey = `${key}_time`
+          localStorage.removeItem(timeKey)
+          i-- // 因为删除了一个键，所以索引需要减1
+        }
+      }
+    },
     async fetchPartTimeList() {
       this.loading = true
       try {
@@ -182,9 +231,30 @@ export default {
       try {
         await applyPartTimeJob(jobId)
         this.$message.success('申请成功，请等待审核')
+        // 更新申请状态
+        const job = this.jobs.find(j => j.id === jobId)
+        if (job) {
+          job.applicable = false
+        }
       } catch (error) {
         console.error('申请兼职失败:', error)
         this.$message.error('申请兼职失败')
+      }
+    },
+    async toggleFavorite(job) {
+      try {
+        if (job.isFavorite) {
+          await removePartTimeFavorite(job.id)
+          this.$message.success('已取消收藏')
+          job.isFavorite = false
+        } else {
+          await addPartTimeFavorite(job.id)
+          this.$message.success('收藏成功')
+          job.isFavorite = true
+        }
+      } catch (error) {
+        console.error('收藏操作失败:', error)
+        this.$message.error('操作失败，请重试')
       }
     },
     handleSizeChange(size) {
@@ -396,7 +466,25 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 120px;
+  min-width: 140px;
+}
+
+.job-actions .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+  text-decoration: none;
+  z-index: 1;
+  position: relative;
 }
 
 /* 分页样式 */
@@ -419,6 +507,39 @@ export default {
   gap: 8px;
   padding: 10px 24px;
   font-size: 16px;
+}
+
+/* 按钮样式 */
+.btn-success {
+  background-color: #67C23A;
+  color: #fff;
+  
+  &:hover:not(:disabled) {
+    background-color: #85ce61;
+  }
+  
+  &:disabled {
+    background-color: #c0c4cc;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  background-color: #409EFF;
+  color: #fff;
+  
+  &:hover {
+    background-color: #66B1FF;
+  }
+}
+
+.btn-warning {
+  background-color: #E6A23C;
+  color: #fff;
+  
+  &:hover {
+    background-color: #ebb563;
+  }
 }
 
 /* 响应式设计 */
