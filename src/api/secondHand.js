@@ -46,10 +46,11 @@ export function getMyItems(params) {
   })
 }
 
-export function getMySecondHandItems(id) {
+export function getMySecondHandItems(data) {
   return request({
-    url: `/second-hand/myItems/${id}`,
-    method: 'get'
+    url: '/second-hand/myItems',
+    method: 'post',
+    data
   })
 }
 
@@ -107,5 +108,35 @@ export function checkSecondHandFavorite(id) {
   return request({
     url: `/second-hand/favorite/${id}`,
     method: 'get'
+  })
+}
+
+export function getMySecondHandFavorites(data) {
+  return request({
+    url: '/second-hand/favorite/MyFavorites',
+    method: 'post',
+    data
+  })
+}
+
+export function getMyOrders(data) {
+  return request({
+    url: '/second-hand/order/myOrders',
+    method: 'post',
+    data
+  })
+}
+
+export function confirmReceipt(id) {
+  return request({
+    url: `/second-hand/order/confirmReceipt/${id}`,
+    method: 'post'
+  })
+}
+
+export function cancelOrder(id) {
+  return request({
+    url: `/second-hand/order/cancelOrder/${id}`,
+    method: 'post'
   })
 }

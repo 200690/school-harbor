@@ -72,6 +72,18 @@
                 </div>
               </div>
             </div>
+            <!-- 分页 -->
+            <div v-if="allPosts.length > 0" class="pagination">
+              <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[5, 10, 20]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="allPosts.length"
+              />
+            </div>
           </el-tab-pane>
           <el-tab-pane label="二手交易" name="second-hand">
             <!-- 二手交易发布 -->
@@ -111,6 +123,18 @@
                   </div>
                 </div>
               </div>
+            </div>
+            <!-- 分页 -->
+            <div v-if="secondHandPosts.length > 0" class="pagination">
+              <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[5, 10, 20]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="secondHandPosts.length"
+              />
             </div>
           </el-tab-pane>
           <el-tab-pane label="兼职" name="part-time">
@@ -152,6 +176,18 @@
                 </div>
               </div>
             </div>
+            <!-- 分页 -->
+            <div v-if="partTimePosts.length > 0" class="pagination">
+              <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[5, 10, 20]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="partTimePosts.length"
+              />
+            </div>
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -169,6 +205,8 @@ import { getMyPartTimeJobs, updatePartTimeStatus, deletePartTimeJob } from '@/ap
 const router = useRouter()
 const route = useRoute()
 const activeTab = ref('all')
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 // 获取用户发布的所有内容
 const allPosts = ref([])
@@ -276,6 +314,16 @@ const deletePost = async (post) => {
   })
 }
 
+// 分页处理
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
+}
+
+const handleCurrentChange = (current) => {
+  currentPage.value = current
+}
+
 onMounted(async () => {
   try {
     console.log('开始获取发布记录...')
@@ -300,23 +348,35 @@ onMounted(async () => {
     let partTimeItems = []
     
     try {
-      const secondHandResponse = await getMySecondHandItems(userId)
-      secondHandItems = secondHandResponse.data || []
+      const secondHandResponse = await getMySecondHandItems({
+        id: userId,
+        pageNum: currentPage.value,
+        pageSize: pageSize.value
+      })
+      // 确保secondHandItems是一个数组
+      secondHandItems = secondHandResponse.data?.list || []
       console.log('二手商品响应:', secondHandResponse)
       console.log('二手商品数据:', secondHandItems)
     } catch (error) {
       console.error('获取二手商品失败:', error)
       ElMessage.warning('获取二手商品失败，仅显示兼职数据')
+      secondHandItems = []
     }
     
     try {
-      const partTimeResponse = await getMyPartTimeJobs(userId)
-      partTimeItems = partTimeResponse.data || []
+      const partTimeResponse = await getMyPartTimeJobs({
+        id: userId,
+        pageNum: currentPage.value,
+        pageSize: pageSize.value
+      })
+      // 确保partTimeItems是一个数组
+      partTimeItems = partTimeResponse.data?.list || []
       console.log('兼职响应:', partTimeResponse)
       console.log('兼职数据:', partTimeItems)
     } catch (error) {
       console.error('获取兼职失败:', error)
       ElMessage.warning('获取兼职失败，仅显示二手商品数据')
+      partTimeItems = []
     }
     
     console.log('最终数据 - 二手商品:', secondHandItems)
@@ -512,6 +572,12 @@ onMounted(async () => {
   justify-content: flex-end;
 }
 
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
@@ -540,6 +606,10 @@ onMounted(async () => {
   
   .item-actions {
     flex-wrap: wrap;
+  }
+  
+  .pagination {
+    margin-top: 20px;
   }
 }
 </style>

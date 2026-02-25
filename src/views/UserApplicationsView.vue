@@ -200,10 +200,16 @@ const fetchMyApplications = async () => {
     }
     
     console.log('获取我的申请，用户ID:', userId)
-    const response = await getMyApplicationsById(userId)
+    const response = await getMyApplicationsById({
+      id: userId,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value
+    })
     console.log('申请数据:', response)
     
-    if (response.data) {
+    if (response.data && response.data.list) {
+      applications.value = response.data.list
+    } else if (response.data) {
       applications.value = response.data
     } else {
       applications.value = []

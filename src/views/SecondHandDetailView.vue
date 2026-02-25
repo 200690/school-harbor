@@ -48,6 +48,12 @@
           <el-breadcrumb-item><router-link to="/user/user/publish">我的发布</router-link></el-breadcrumb-item>
           <el-breadcrumb-item>商品详情</el-breadcrumb-item>
         </template>
+        <template v-else-if="isFromFavorites">
+          <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/favorites">我的收藏</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item>商品详情</el-breadcrumb-item>
+        </template>
         <template v-else>
           <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
           <el-breadcrumb-item><router-link to="/second-hand">二手交易</router-link></el-breadcrumb-item>
@@ -199,6 +205,7 @@ const itemDetail = ref(null)
 const recommendedItems = ref([])
 const isFavorited = ref(false)
 const isFromMyPublish = ref(false)
+const isFromFavorites = ref(false)
 const isPublisherBanned = ref(false)
 const bannedMessage = ref('')
 
@@ -246,13 +253,16 @@ const fetchItemDetail = async () => {
       recommendedItems.value = response.data.relatedItems || []
       isPublisherBanned.value = false
       
-      // 检查是否从"我的发布"或"首页"页面导航过来
+      // 检查是否从"我的发布"、"首页"、"收藏"或"列表"页面导航过来
       // 如果是从这些页面来的，不需要检查收藏状态
       const fromMyPublish = route.query.from === 'myPublish'
       const fromHome = route.query.from === 'home'
+      const fromFavorites = route.query.from === 'favorites'
+      const fromList = route.query.from === 'list'
       isFromMyPublish.value = fromMyPublish
+      isFromFavorites.value = fromFavorites
       
-      if (!fromMyPublish && !fromHome) {
+      if (!fromMyPublish && !fromHome && !fromFavorites && !fromList) {
         // 检查收藏状态
         await checkFavoriteStatus()
       }

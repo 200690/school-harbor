@@ -53,10 +53,11 @@ export function getMyApplications(params) {
   })
 }
 
-export function getMyApplicationsById(id) {
+export function getMyApplicationsById(data) {
   return request({
-    url: `/part-time/apply/my-applications/${id}`,
-    method: 'get'
+    url: '/part-time/apply/my-applications',
+    method: 'post',
+    data
   })
 }
 
@@ -68,10 +69,11 @@ export function publishPartTimeJob(data) {
   })
 }
 
-export function getMyPartTimeJobs(id) {
+export function getMyPartTimeJobs(data) {
   return request({
-    url: `/part-time/myJobs/${id}`,
-    method: 'get'
+    url: '/part-time/myJobs',
+    method: 'post',
+    data
   })
 }
 
@@ -122,6 +124,14 @@ export function checkPartTimeFavorite(id) {
   return request({
     url: `/part-time/favorite/${id}`,
     method: 'get'
+  })
+}
+
+export function getMyPartTimeFavorites(data) {
+  return request({
+    url: '/part-time/favorite/MyFavorites',
+    method: 'post',
+    data
   })
 }
 

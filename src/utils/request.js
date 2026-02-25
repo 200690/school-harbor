@@ -82,14 +82,15 @@ request.interceptors.response.use(
     console.error('响应错误:', error)
 
     if (error.response) {
+      const res = error.response.data
       switch (error.response.status) {
         case 400:
-          ElMessage.error({ message: '请求参数错误', duration: 1500 })
+          ElMessage.error({ message: res.msg || '请求参数错误', duration: 1500 })
           break
         case 401: {
           console.error('[Token清除] HTTP状态码401 - 未授权')
           console.error('[Token清除] 错误响应:', error.response)
-          ElMessage.error({ message: '登录已过期，请重新登录', duration: 1500 })
+          ElMessage.error({ message: res.msg || '登录已过期，请重新登录', duration: 1500 })
           localStorage.removeItem('token')
           localStorage.removeItem('userInfo')
           // 触发自定义事件通知组件更新登录状态

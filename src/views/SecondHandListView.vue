@@ -86,7 +86,7 @@
             </div>
           </div>
           <div class="item-actions">
-            <router-link :to="`/second-hand/detail/${item.id}`" class="btn btn-primary">查看详情</router-link>
+            <router-link :to="`/second-hand/detail/${item.id}?from=list`" class="btn btn-primary">查看详情</router-link>
             <button class="btn btn-success" @click="contactSeller(item.id)">联系卖家</button>
           </div>
         </div>

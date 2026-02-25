@@ -21,43 +21,6 @@
       <!-- 收藏分类 -->
       <div class="favorite-tabs">
         <el-tabs v-model="activeTab">
-          <el-tab-pane label="全部" name="all">
-            <!-- 全部收藏 -->
-            <div class="favorite-list">
-              <div v-if="allFavorites.length === 0" class="empty-state">
-                <el-empty description="暂无收藏记录" />
-              </div>
-              <div v-else class="favorite-grid">
-                <div v-for="fav in allFavorites" :key="fav.id" class="favorite-item">
-                  <div class="item-image">
-                    <img :src="fav.image" :alt="fav.title" />
-                    <div class="favorite-badge" @click.stop="removeFavorite(fav.id)">
-                      <i class="el-icon-star-on"></i>
-                    </div>
-                  </div>
-                  <div class="item-info">
-                    <h3 class="item-title">{{ fav.title }}</h3>
-                    <div class="item-details">
-                      <span v-if="fav.type === 'second-hand'" class="item-price">¥{{ fav.price }}</span>
-                      <span v-else class="item-salary">{{ fav.salary }}</span>
-                      <span class="item-location"><i class="el-icon-location"></i> {{ fav.location }}</span>
-                    </div>
-                    <div class="item-meta">
-                      <span class="fav-time">{{ fav.favoriteTime }}</span>
-                      <el-tag :type="fav.type === 'second-hand' ? 'info' : 'success'" size="small">
-                        {{ fav.type === 'second-hand' ? '二手交易' : '兼职' }}
-                      </el-tag>
-                    </div>
-                  </div>
-                  <div class="item-actions">
-                    <el-button size="small" type="primary" @click="viewDetail(fav)">
-                      查看详情
-                    </el-button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
           <el-tab-pane label="二手交易" name="second-hand">
             <!-- 二手交易收藏 -->
             <div class="favorite-list">
@@ -91,6 +54,18 @@
                 </div>
               </div>
             </div>
+            <!-- 分页 -->
+            <div v-if="secondHandFavorites.length > 0" class="pagination">
+              <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[5, 10, 20]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="secondHandFavorites.length"
+              />
+            </div>
           </el-tab-pane>
           <el-tab-pane label="兼职" name="part-time">
             <!-- 兼职收藏 -->
@@ -99,12 +74,9 @@
                 <el-empty description="暂无兼职收藏" />
               </div>
               <div v-else class="favorite-grid">
-                <div v-for="fav in partTimeFavorites" :key="fav.id" class="favorite-item">
-                  <div class="item-image">
-                    <img :src="fav.image" :alt="fav.title" />
-                    <div class="favorite-badge" @click.stop="removeFavorite(fav.id)">
-                      <i class="el-icon-star-on"></i>
-                    </div>
+                <div v-for="fav in partTimeFavorites" :key="fav.id" class="favorite-item part-time-item">
+                  <div class="favorite-badge part-time-badge" @click.stop="removeFavorite(fav.id)">
+                    <i class="el-icon-star-on"></i>
                   </div>
                   <div class="item-info">
                     <h3 class="item-title">{{ fav.title }}</h3>
@@ -125,6 +97,18 @@
                 </div>
               </div>
             </div>
+            <!-- 分页 -->
+            <div v-if="partTimeFavorites.length > 0" class="pagination">
+              <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[5, 10, 20]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="partTimeFavorites.length"
+              />
+            </div>
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -136,11 +120,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElConfirm } from 'element-plus'
-import { useUserStore } from '../stores/user'
+import { getMySecondHandFavorites } from '@/api/secondHand'
+import { getMyPartTimeFavorites } from '@/api/partTime'
 
 const router = useRouter()
-const userStore = useUserStore()
-const activeTab = ref('all')
+const activeTab = ref('second-hand')
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 // 获取所有收藏
 const allFavorites = ref([])
@@ -158,9 +144,9 @@ const partTimeFavorites = computed(() => {
 // 查看详情
 const viewDetail = (fav) => {
   if (fav.type === 'second-hand') {
-    router.push(`/second-hand/detail/${fav.itemId}`)
+    router.push(`/second-hand/detail/${fav.itemId}?from=favorites`)
   } else {
-    router.push(`/item/${fav.itemId}`)
+    router.push(`/item/${fav.itemId}?from=favorites`)
   }
 }
 
@@ -192,10 +178,105 @@ const clearAllFavorites = () => {
   })
 }
 
-onMounted(async () => {
-  // 从 store 获取用户收藏
-  await userStore.getUserFavorites()
-  allFavorites.value = userStore.userFavorites
+// 分页处理
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
+  fetchFavorites()
+}
+
+const handleCurrentChange = (current) => {
+  currentPage.value = current
+  fetchFavorites()
+}
+
+// 获取收藏数据
+const fetchFavorites = async () => {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    const userId = userInfo.userId || userInfo.id
+    
+    if (!userId) {
+      ElMessage.error('用户信息不完整，无法获取收藏记录')
+      return
+    }
+    
+    // 并行请求二手商品和兼职收藏数据
+    let secondHandItems = []
+    let partTimeItems = []
+    
+    try {
+      const secondHandResponse = await getMySecondHandFavorites({
+        id: userId,
+        pageNum: currentPage.value,
+        pageSize: pageSize.value
+      })
+      // 确保secondHandItems是一个数组
+      secondHandItems = secondHandResponse.data?.list || []
+      console.log('二手商品收藏响应:', secondHandResponse)
+      console.log('二手商品收藏数据:', secondHandItems)
+    } catch (error) {
+      console.error('获取二手商品收藏失败:', error)
+      ElMessage.warning('获取二手商品收藏失败，仅显示兼职收藏数据')
+      secondHandItems = []
+    }
+    
+    try {
+      const partTimeResponse = await getMyPartTimeFavorites({
+        id: userId,
+        pageNum: currentPage.value,
+        pageSize: pageSize.value
+      })
+      // 确保partTimeItems是一个数组
+      partTimeItems = partTimeResponse.data?.list || []
+      console.log('兼职收藏响应:', partTimeResponse)
+      console.log('兼职收藏数据:', partTimeItems)
+    } catch (error) {
+      console.error('获取兼职收藏失败:', error)
+      ElMessage.warning('获取兼职收藏失败，仅显示二手商品收藏数据')
+      partTimeItems = []
+    }
+    
+    console.log('最终数据 - 二手商品收藏:', secondHandItems)
+    console.log('最终数据 - 兼职收藏:', partTimeItems)
+    
+    // 转换数据格式并合并
+    allFavorites.value = [
+      ...secondHandItems.map((item, index) => ({
+        id: item.id || `sh-${index}`,
+        type: 'second-hand',
+        itemId: item.itemId || item.id,
+        title: item.itemTitle || item.title,
+        price: item.itemPrice || item.price,
+        location: item.itemLocation || item.location,
+        image: item.itemCoverImage ? item.itemCoverImage.trim().replace(/`/g, '') : item.image,
+        favoriteTime: item.favoriteTime || item.createTime,
+        condition: item.condition
+      })),
+      ...partTimeItems.map((item, index) => ({
+        id: item.id || `pt-${index}`,
+        type: 'part-time',
+        itemId: item.partTimeId || item.itemId || item.id,
+        title: item.title,
+        salary: item.salaryDesc || item.salary,
+        location: item.location,
+        image: item.image,
+        favoriteTime: item.favoriteTime || item.createTime,
+        workTime: item.workTime
+      }))
+    ]
+    
+    console.log('转换后的数据:', allFavorites.value)
+    console.log('转换后的数据长度:', allFavorites.value.length)
+  } catch (error) {
+    console.error('获取收藏记录失败:', error)
+    ElMessage.error('获取收藏记录失败，请稍后重试')
+    allFavorites.value = []
+  }
+}
+
+onMounted(() => {
+  fetchFavorites()
 })
 </script>
 
@@ -358,6 +439,29 @@ onMounted(async () => {
   justify-content: center;
 }
 
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 兼职项目样式调整 */
+.part-time-item {
+  position: relative;
+  padding-top: 40px; /* 为收藏按钮留出空间 */
+}
+
+.part-time-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.part-time-item .item-info {
+  flex: 1;
+}
+
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
@@ -387,6 +491,19 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
+  }
+  
+  .pagination {
+    margin-top: 20px;
+  }
+  
+  .part-time-item {
+    padding-top: 30px;
+  }
+  
+  .part-time-badge {
+    top: 5px;
+    right: 5px;
   }
 }
 </style>
