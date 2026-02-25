@@ -2,6 +2,7 @@ package com.harbor.secondHand.controller;
 
 import cn.hutool.core.lang.Assert;
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
@@ -15,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -33,7 +32,7 @@ public class ItemController {
      */
     @GetMapping("/list")
     public Result<PageDTO> list(ItemQueryConditionDTO itemQueryConditionDTO) {
-        log.info("获取二手商品列表接口: {}", itemQueryConditionDTO);
+        log.info("获取二手商品列表接口");
         PageDTO<ItemListItemVO> pageDTO  = secondHandService.querySecondHandItemList(itemQueryConditionDTO);
         return Result.success(pageDTO);
     }
@@ -63,10 +62,10 @@ public class ItemController {
     }
 
     @ApiOperation("获取个人发布的商品")
-    @GetMapping("/myItems/{id}")
-    public Result<List<MyItem>> getMyItems(@PathVariable Long id) {
-        log.info("获取个人发布的商品: {}", id);
-        List<MyItem> item = secondHandService.getMyItems(id);
+    @PostMapping("/myItems")
+    public Result<PageDTO<MyItem>> getMyItems(@RequestBody PageQuery pageQuery) {
+        log.info("获取个人发布的商品: {}", pageQuery);
+        PageDTO<MyItem> item = secondHandService.getMyItems(pageQuery);
         return Result.success(item);
     }
 

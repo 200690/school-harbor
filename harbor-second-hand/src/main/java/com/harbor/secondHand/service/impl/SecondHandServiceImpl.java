@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.domain.PageQuery;
 import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
@@ -15,7 +16,7 @@ import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
 import com.harbor.secondHand.domain.vo.MyItem;
-import com.harbor.secondHand.mapper.BrowseHistory;
+import com.harbor.secondHand.mapper.BrowseHistoryMapper;
 import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.service.ISecondHandService;
 import com.harbor.utils.client.UserClient;
@@ -27,12 +28,13 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO> implements ISecondHandService {
-    private final BrowseHistory browerHistory;
+    private final BrowseHistoryMapper browerHistory;
 
     private final UserClient userClient;
 
@@ -89,7 +91,6 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         }
 
         Page<ItemPO> secondHandItemPage = this.page(page, queryWrapper);
-        log.info("查询结果：{}", secondHandItemPage);
         return PageDTO.of(secondHandItemPage, ItemListItemVO.class);
     }
 
@@ -103,7 +104,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         if(item == null){
             throw new RuntimeException("商品不存在");
         }
-//        浏览量+1，添加到浏览历史
+//        浏览量+1，添加到浏览历史TODO
         this.addViewCount(item);
         BrowseHistoryPO browseHistoryPO = new BrowseHistoryPO();
         browseHistoryPO.setItemId(id)
@@ -132,11 +133,22 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
     }
 
     @Override
-    public List<MyItem> getMyItems(Long id) {
-        Assert.notNull(id, "用户id不能为空");
-        return lambdaQuery().eq(ItemPO::getSellerId, id).list().stream().map(item ->
-            BeanUtil.copyProperties(item, MyItem.class)).toList();
+    public PageDTO<MyItem> getMyItems(PageQuery pageQuery) {
+        // 创建分页对象
+        Page<ItemPO> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
 
+        // 执行分页查询
+        Page<ItemPO> itemPOPage = lambdaQuery()
+                .eq(ItemPO::getSellerId, pageQuery.getId())
+                .page(page);
+
+        // 转换数据
+        List<MyItem> myItemList = itemPOPage.getRecords().stream()
+                .map(item -> BeanUtil.copyProperties(item, MyItem.class))
+                .collect(Collectors.toList());
+
+        // 封装为PageDTO
+        return new PageDTO<>(itemPOPage.getPages(), itemPOPage.getTotal(), myItemList);
     }
 
     @Override

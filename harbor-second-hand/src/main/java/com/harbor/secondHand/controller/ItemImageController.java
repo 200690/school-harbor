@@ -2,6 +2,6 @@ package com.harbor.secondHand.controller;
 
 import io.swagger.annotations.Api;
 
-@Api("商品点赞接口")
-public class Favorite {
+@Api(tags = "商品图片接口")
+public class ItemImageController {
 }

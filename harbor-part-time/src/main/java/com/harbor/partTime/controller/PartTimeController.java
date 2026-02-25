@@ -1,10 +1,10 @@
 package com.harbor.partTime.controller;
 
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
-import com.harbor.partTime.domain.po.PartTimePO;
 import com.harbor.partTime.domain.vo.MyJobs;
 import com.harbor.partTime.domain.vo.PartTimeDetailVO;
 import com.harbor.partTime.domain.vo.PartTimeVO;
@@ -13,11 +13,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @ApiOperation("兼职相关接口")
 @Api(tags = "兼职管理")
@@ -46,9 +43,9 @@ public class PartTimeController {
     }
 
     @ApiOperation("获取我发布的兼职详情接口")
-    @GetMapping("/myJobs/{id}")
-    public Result<List<MyJobs>> getMyJobs(@PathVariable Long id){
-        return Result.success(partTimeService.getMyJobs(id));
+    @PostMapping("/myJobs")
+    public Result<PageDTO<MyJobs>> getMyJobs(@RequestBody PageQuery pageQuery){
+        return Result.success(partTimeService.getMyJobs(pageQuery));
     }
 
     @ApiOperation("修改兼职状态接口")

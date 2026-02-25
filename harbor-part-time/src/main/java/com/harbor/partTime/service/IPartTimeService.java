@@ -2,6 +2,7 @@ package com.harbor.partTime.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.domain.PageQuery;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
 import com.harbor.partTime.domain.po.PartTimePO;
@@ -17,7 +18,7 @@ public interface IPartTimeService extends IService<PartTimePO> {
 
     void newJob(PartTimeCreateDTO partTimeCreateDTO);
 
-    List<MyJobs> getMyJobs(Long id);
+    PageDTO<MyJobs> getMyJobs(PageQuery id);
 
     void updateStatus(Long id, Integer status);
 
@@ -25,5 +26,5 @@ public interface IPartTimeService extends IService<PartTimePO> {
 
     PartTimeDetailVO getJobById(Long id);
 
-    public List<PartTimePO> getJobsById(List<Long> ids);
+    List<PartTimePO> getJobsById(List<Long> ids);
 }

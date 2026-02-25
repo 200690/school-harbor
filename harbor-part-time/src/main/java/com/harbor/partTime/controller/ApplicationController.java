@@ -1,5 +1,7 @@
 package com.harbor.partTime.controller;
 
+import com.harbor.common.domain.PageDTO;
+import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
 import com.harbor.partTime.domain.vo.ApplicationRecordVO;
 import com.harbor.partTime.service.IApplicationService;
@@ -8,8 +10,6 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @Slf4j
@@ -34,9 +34,9 @@ public class ApplicationController {
     }
 
     @ApiOperation("获取我的申请列表")
-    @GetMapping("my-applications/{id}")
-    public Result<List<ApplicationRecordVO>> getMyApplications(@PathVariable Long id) {
-        return Result.success(applicationService.getMyApplications(id));
+    @PostMapping("my-applications")
+    public Result<PageDTO<ApplicationRecordVO>> getMyApplications(@RequestBody PageQuery pageQuery) {
+        return Result.success(applicationService.getMyApplications(pageQuery));
     }
 
 

@@ -1,11 +1,13 @@
 package com.harbor.secondHand.domain.vo;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
+@Accessors(chain = true)
 public class FavoriteVO {
     private Long id;
     private Long userId;
@@ -16,5 +18,5 @@ public class FavoriteVO {
     private BigDecimal itemPrice;
     private String itemCoverImage;
     private String itemSchool;
-    private Integer itemStatus;
+    private String itemLocation;
 }

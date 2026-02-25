@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
 import com.harbor.common.utils.UserContext;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
@@ -110,6 +111,7 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         List<PartTimeVO> voList = partTimePage.getRecords().stream().map(partTimePO -> {
             PartTimeVO partTimeVO = new PartTimeVO();
             BeanUtil.copyProperties(partTimePO, partTimeVO, CopyOptions.create().ignoreNullValue());
+
             this.setBaseJobStatusVO(partTimeVO, partTimeVO.getId(), partTimePO);
             return partTimeVO;
         }).toList();
@@ -130,18 +132,34 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
 
     /**
      * 获取我发布的兼职列表
-     * @param id
+     *
+     * @param pageQuery
      * @return
      */
-    @Override
-    public List<MyJobs> getMyJobs(Long id) {
+    public PageDTO<MyJobs> getMyJobs(PageQuery pageQuery) {
         log.info("获取我发布的兼职列表");
-        if(id == null)
-            throw new RuntimeException("用户ID不能为空");
-        List<MyJobs> list = lambdaQuery().eq(PartTimePO::getPublisherId, id).list().stream().map(partTimePO ->
-            BeanUtil.copyProperties(partTimePO, MyJobs.class)).toList();
 
-        return list;
+        if(pageQuery.getId() == null) {
+            throw new RuntimeException("用户ID不能为空");
+        }
+
+        // 1. 创建分页对象（当前页，每页大小）
+        Page<PartTimePO> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
+
+        // 2. 执行分页查询
+        Page<PartTimePO> pageResult = lambdaQuery()
+                .eq(PartTimePO::getPublisherId, pageQuery.getId())
+                .orderByDesc(PartTimePO::getPublishTime)  // 按发布时间倒序排序
+                .page(page);
+
+        // 3. 转换数据
+        List<MyJobs> records = pageResult.getRecords().stream()
+                .map(partTimePO -> BeanUtil.copyProperties(partTimePO, MyJobs.class))
+                .toList();
+
+        // 4. 封装返回结果
+
+        return new PageDTO<>( pageResult.getTotal(), pageResult.getPages(), records );
     }
 
     /**

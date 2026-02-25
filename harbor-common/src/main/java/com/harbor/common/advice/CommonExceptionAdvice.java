@@ -9,6 +9,7 @@ import com.harbor.common.result.Result;
 import com.harbor.common.utils.WebUtils;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,6 +60,16 @@ public class CommonExceptionAdvice {
         return processResponse(new BadRequestException("请求参数处理异常"));
     }
 
+    // 处理 IllegalArgumentException（包含 Assert 抛出的异常）
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Object handleIllegalArgumentException(IllegalArgumentException e) {
+        log.error("参数校验异常 -> {}", e.getMessage());
+        log.debug("", e);
+        // 返回 400 状态码，并携带异常消息
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Result.error(400, e.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public Object handleRuntimeException(Exception e) {
         if (e instanceof FeignException) {
@@ -85,11 +96,13 @@ public class CommonExceptionAdvice {
             return processResponse(new CommonException(errorMsg, statusCode));
         }
 
+
+
         log.error("其他异常 uri : {} -> ", WebUtils.getRequest().getRequestURI(), e);
         return processResponse(new CommonException("服务器内部异常", 500));
     }
 
     private ResponseEntity<Result<Void>> processResponse(CommonException e){
-        return ResponseEntity.status(e.getCode()).body(Result.error(e.getMessage()));
+        return ResponseEntity.status(e.getCode()).body(Result.error(400, e.getMessage()));
     }
 }
