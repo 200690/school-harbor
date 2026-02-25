@@ -78,7 +78,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../stores/user'
-import { getMyApplicationsById } from '@/api/partTime'
+import { getMyApplicationsById, cancelPartTimeApplication } from '@/api/partTime'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -157,8 +157,16 @@ const cancelApplication = (appId) => {
   }).then(() => {
     const app = applications.value.find(a => a.id === appId)
     if (app) {
-      app.status = 3
-      ElMessage.success('申请已取消')
+      // 调用取消申请API
+      cancelPartTimeApplication(app.partTimeId).then(() => {
+        // API调用成功，更新本地状态
+        app.status = 3
+        ElMessage.success('申请已取消')
+      }).catch((error) => {
+        // API调用失败
+        console.error('取消申请失败:', error)
+        ElMessage.error('取消申请失败，请稍后重试')
+      })
     }
   }).catch(() => {
     // 取消操作

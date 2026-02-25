@@ -124,3 +124,10 @@ export function checkPartTimeFavorite(id) {
     method: 'get'
   })
 }
+
+export function cancelPartTimeApplication(partTimeId) {
+  return request({
+    url: `/part-time/apply/cancel/${partTimeId}`,
+    method: 'post'
+  })
+}
