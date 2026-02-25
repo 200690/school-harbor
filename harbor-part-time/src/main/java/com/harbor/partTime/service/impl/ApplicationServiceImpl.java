@@ -12,6 +12,7 @@ import com.harbor.partTime.service.IApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.List;
@@ -58,5 +59,19 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             item.setSalaryDesc(partTimePO.getSalaryDesc());
         });
         return recordVOList;
+    }
+
+    @Override
+    @Transactional
+    public void cancelApply(Long partTimeId) {
+//        申请表设置已取消
+        ApplicationPO one = lambdaQuery().eq(ApplicationPO::getPartTimeId, partTimeId).in(ApplicationPO::getStatus, (Object) new int[]{1, 0}).one();
+        Assert.notNull(one, "该兼职申请无法取消");
+        one.setStatus(3);
+        this.updateById(one);
+//        兼职表申请人--
+        PartTimePO partTimePO = partTimeMapper.selectById(partTimeId);
+        partTimePO.setApplicantCount(partTimePO.getApplicantCount() - 1);
+        partTimeMapper.updateById(partTimePO);
     }
 }

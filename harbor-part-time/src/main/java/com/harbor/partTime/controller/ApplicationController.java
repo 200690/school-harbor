@@ -26,11 +26,18 @@ public class ApplicationController {
         return Result.success();
     }
 
-//    @ApiOperation("取消申请")
+    @ApiOperation("取消申请")
+    @PostMapping("cancel/{partTimeId}")
+    public Result cancelApply(@PathVariable Long partTimeId) {
+        applicationService.cancelApply(partTimeId);
+        return Result.success();
+    }
 
     @ApiOperation("获取我的申请列表")
     @GetMapping("my-applications/{id}")
     public Result<List<ApplicationRecordVO>> getMyApplications(@PathVariable Long id) {
         return Result.success(applicationService.getMyApplications(id));
     }
+
+
 }
