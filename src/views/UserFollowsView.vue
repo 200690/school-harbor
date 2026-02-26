@@ -31,11 +31,11 @@
               </p>
             </div>
             <div class="user-actions">
-              <router-link :to="`/user/profile/${follow.userId}`" class="btn btn-primary">
+              <router-link :to="`/user/profile/${follow.followId}`" class="btn btn-primary">
                 查看主页
               </router-link>
-              <button class="btn btn-danger" @click="unfollowUser(follow.userId)">
-                取消关注
+              <button class="btn" :class="follow.status === 1 ? 'btn-danger' : 'btn-secondary'" @click="unfollowUser(follow.followId)">
+                {{ follow.status === 1 ? '取消关注' : '互相关注' }}
               </button>
             </div>
           </div>
@@ -61,16 +61,18 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getMyFollows, unfollowUser as unfollowUserApi } from '@/api/user'
+import { useUserStore } from '@/stores/user'
 
 const currentPage = ref(1)
 const pageSize = ref(10)
 const userFollows = ref([])
 const totalFollows = ref(0)
+const userStore = useUserStore()
 
 // 取消关注
-const unfollowUser = async (userId) => {
+const unfollowUser = async (followId) => {
   try {
-    await unfollowUserApi(userId)
+    await unfollowUserApi(followId)
     await fetchFollows()
     ElMessage.success('取消关注成功')
   } catch (error) {
@@ -94,8 +96,7 @@ const handleCurrentChange = (current) => {
 // 获取关注列表
 const fetchFollows = async () => {
   try {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    const userId = userInfo.userId || userInfo.id
+    const userId = userStore.userId
     
     if (!userId) {
       ElMessage.error('用户信息不完整，无法获取关注列表')

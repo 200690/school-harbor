@@ -4,6 +4,8 @@
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
+        <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
+        <el-breadcrumb-item><router-link to="/user/user/follows">我的关注</router-link></el-breadcrumb-item>
         <el-breadcrumb-item>{{ userProfile.username }}的主页</el-breadcrumb-item>
       </el-breadcrumb>
 
