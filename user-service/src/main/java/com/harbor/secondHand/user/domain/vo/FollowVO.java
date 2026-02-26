@@ -20,6 +20,12 @@ public class FollowVO {
     private Long userId;
 
     /**
+     * 关注状态
+     * 0-未关注 1-已关注 2-互关
+     */
+    private Integer status;
+
+    /**
      * 用户名
      */
     private String username;

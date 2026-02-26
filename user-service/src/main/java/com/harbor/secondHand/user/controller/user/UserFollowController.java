@@ -8,10 +8,7 @@ import com.harbor.secondHand.user.service.IUserFollowService;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @ApiOperation("用户关注接口")
@@ -26,5 +23,13 @@ public class UserFollowController {
     public Result<PageDTO> getMyFollow(@RequestBody PageQuery pageQuery){
         log.info("获取用户关注列表");
         return Result.success(userFollowService.getMyFollow(pageQuery));
+    }
+
+    @PostMapping("unfollow/{id}")
+    @ApiOperation("取消关注")
+    public Result<Void> unfollow(@PathVariable Long id){
+        log.info("取消关注");
+        userFollowService.unfollow(id);
+        return Result.success();
     }
 }
