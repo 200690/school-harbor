@@ -24,7 +24,9 @@
           v-model="searchKeyword"
           @keyup.enter="handleSearch"
         />
-        <el-button :icon="Search" class="search-btn" circle @click="handleSearch" />
+        <el-button class="search-btn" circle @click="handleSearch">
+          <el-icon><Search /></el-icon>
+        </el-button>
       </div>
       
       <!-- 用户操作 -->
@@ -33,7 +35,7 @@
         <router-link to="/user/user/register" class="user-btn user-btn-primary">注册</router-link>
       </div>
       <div class="user-actions" v-else>
-        <el-button type="text" class="user-btn" @click="handleLogout">注销</el-button>
+        <el-button link class="user-btn" @click="handleLogout">注销</el-button>
       </div>
       
       <!-- 汉堡菜单按钮 - 移动端 -->
@@ -67,7 +69,7 @@
             <router-link to="/user/user/register" class="mobile-nav-item mobile-nav-item-primary" @click="closeMobileMenu">注册</router-link>
           </template>
           <template v-else>
-            <el-button type="text" class="mobile-nav-item" @click="handleLogout">注销</el-button>
+            <el-button link class="mobile-nav-item" @click="handleLogout">注销</el-button>
           </template>
         </div>
       </div>
@@ -77,16 +79,20 @@
 
 <script>
 import { Search } from '@element-plus/icons-vue'
+import { ElIcon } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
 export default {
   name: 'AppNavbar',
+  components: {
+    ElIcon,
+    Search
+  },
   data() {
     return {
       searchKeyword: '',
       mobileSearchKeyword: '',
-      isMobileMenuOpen: false,
-      Search
+      isMobileMenuOpen: false
     }
   },
   computed: {

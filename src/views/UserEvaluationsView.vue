@@ -224,24 +224,13 @@ const handleTabClick = (tab) => {
 // 获取评价列表
 const fetchEvaluations = async () => {
   try {
-    console.log('开始获取评价列表...')
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    console.log('用户信息:', userInfo)
     const userId = userInfo.userId || userInfo.id
-    console.log('用户ID:', userId)
     
     if (!userId) {
-      console.error('用户信息不完整，无法获取评价列表')
       ElMessage.error('用户信息不完整，无法获取评价列表')
       return
     }
-    
-    console.log('请求参数:', {
-      id: userId,
-      pageNum: currentPage.value,
-      pageSize: pageSize.value,
-      type: activeTab.value === 'all' ? '' : activeTab.value
-    })
     
     const response = await getMyEvaluations({
       id: userId,
@@ -250,13 +239,10 @@ const fetchEvaluations = async () => {
       type: activeTab.value === 'all' ? '' : activeTab.value
     })
     
-    console.log('API响应:', response)
     allEvaluations.value = response.data?.list || []
     totalEvaluations.value = parseInt(response.data?.total) || 0
     totalReceivedEvaluations.value = parseInt(response.data?.receivedTotal) || 0
     totalGivenEvaluations.value = parseInt(response.data?.givenTotal) || 0
-    console.log('评价列表数据:', allEvaluations.value)
-    console.log('评价列表总数:', totalEvaluations.value)
   } catch (error) {
     console.error('获取评价列表失败:', error)
     ElMessage.error('获取评价列表失败，请稍后重试')

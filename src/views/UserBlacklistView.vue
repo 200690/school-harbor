@@ -172,23 +172,13 @@ const handleTabClick = (tab) => {
 // 获取用户黑名单
 const fetchUserBlacklist = async () => {
   try {
-    console.log('开始获取用户黑名单...')
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    console.log('用户信息:', userInfo)
     const userId = userInfo.userId || userInfo.id
-    console.log('用户ID:', userId)
     
     if (!userId) {
-      console.error('用户信息不完整，无法获取黑名单列表')
       ElMessage.error('用户信息不完整，无法获取黑名单列表')
       return
     }
-    
-    console.log('请求参数:', {
-      id: userId,
-      pageNum: userCurrentPage.value,
-      pageSize: userPageSize.value
-    })
     
     const response = await getUserBlacklist({
       id: userId,
@@ -196,11 +186,8 @@ const fetchUserBlacklist = async () => {
       pageSize: userPageSize.value
     })
     
-    console.log('API响应:', response)
     userBlacklist.value = response.data?.list || []
     totalUserBlacklist.value = parseInt(response.data?.total) || 0
-    console.log('用户黑名单数据:', userBlacklist.value)
-    console.log('用户黑名单总数:', totalUserBlacklist.value)
   } catch (error) {
     console.error('获取用户黑名单失败:', error)
     ElMessage.error('获取用户黑名单失败，请稍后重试')
@@ -210,23 +197,13 @@ const fetchUserBlacklist = async () => {
 // 获取商品黑名单
 const fetchItemBlacklist = async () => {
   try {
-    console.log('开始获取商品黑名单...')
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    console.log('用户信息:', userInfo)
     const userId = userInfo.userId || userInfo.id
-    console.log('用户ID:', userId)
     
     if (!userId) {
-      console.error('用户信息不完整，无法获取黑名单列表')
       ElMessage.error('用户信息不完整，无法获取黑名单列表')
       return
     }
-    
-    console.log('请求参数:', {
-      id: userId,
-      pageNum: itemCurrentPage.value,
-      pageSize: itemPageSize.value
-    })
     
     const response = await getItemBlacklist({
       id: userId,
@@ -234,11 +211,8 @@ const fetchItemBlacklist = async () => {
       pageSize: itemPageSize.value
     })
     
-    console.log('API响应:', response)
     itemBlacklist.value = response.data?.list || []
     totalItemBlacklist.value = parseInt(response.data?.total) || 0
-    console.log('商品黑名单数据:', itemBlacklist.value)
-    console.log('商品黑名单总数:', totalItemBlacklist.value)
   } catch (error) {
     console.error('获取商品黑名单失败:', error)
     ElMessage.error('获取商品黑名单失败，请稍后重试')

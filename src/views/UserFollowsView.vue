@@ -94,23 +94,13 @@ const handleCurrentChange = (current) => {
 // 获取关注列表
 const fetchFollows = async () => {
   try {
-    console.log('开始获取关注列表...')
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    console.log('用户信息:', userInfo)
     const userId = userInfo.userId || userInfo.id
-    console.log('用户ID:', userId)
     
     if (!userId) {
-      console.error('用户信息不完整，无法获取关注列表')
       ElMessage.error('用户信息不完整，无法获取关注列表')
       return
     }
-    
-    console.log('请求参数:', {
-      id: userId,
-      pageNum: currentPage.value,
-      pageSize: pageSize.value
-    })
     
     const response = await getMyFollows({
       id: userId,
@@ -118,11 +108,8 @@ const fetchFollows = async () => {
       pageSize: pageSize.value
     })
     
-    console.log('API响应:', response)
     userFollows.value = response.data?.list || []
     totalFollows.value = parseInt(response.data?.total) || 0
-    console.log('关注列表数据:', userFollows.value)
-    console.log('关注列表总数:', totalFollows.value)
   } catch (error) {
     console.error('获取关注列表失败:', error)
     ElMessage.error('获取关注列表失败，请稍后重试')
