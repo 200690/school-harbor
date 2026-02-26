@@ -39,6 +39,7 @@ public class UserController {
     @GetMapping("info/{id}")
     public Result<UserInfoDTO> info(@PathVariable Long id){
         log.info("开始查询用户信息");
+        //TODO获取用户发布的兼职和二手交易
         return Result.success(userService.getUserInfo(id));
     }
 
