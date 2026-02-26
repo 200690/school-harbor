@@ -8,4 +8,6 @@ import com.harbor.partTime.domain.vo.FavoriteVO;
 
 public interface IFavoriteService extends IService<FavoritePO> {
     PageDTO<FavoriteVO> getMyFavorites(PageQuery pageQuery);
+
+    void removeFavorite(Long partTimeId);
 }

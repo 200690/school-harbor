@@ -9,10 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Api("商品收藏接口")
 @RequestMapping("/second-hand/favorite")
@@ -30,4 +27,14 @@ public class FavoriteController {
         return Result.success(pageDTO);
     }
 
+//    @PostMapping("addFavorite")
+//    @ApiOperation("添加收藏")
+
+    @ApiOperation("移除收藏")
+    @DeleteMapping("removeFavorite/{id}")
+    public Result removeFavorite(@PathVariable Long id) {
+        log.info("移除收藏: {}", id);
+        favoriteService.removeFavorite(id);
+        return Result.success();
+    }
 }

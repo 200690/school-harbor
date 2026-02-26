@@ -13,6 +13,8 @@ import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.service.IFavorite;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import java.util.List;
 
@@ -43,5 +45,18 @@ public class FavoriteImpl extends ServiceImpl<FavoriteMapper, FavoritePO> implem
             return favoriteVO;
         }).toList();
         return new PageDTO<>( favoritePOS.getTotal(), favoritePOS.getPages(), favoriteVOS );
+    }
+
+    @Override
+    @Transactional
+    public void removeFavorite(Long itemId) {
+        lambdaUpdate()
+                .eq(FavoritePO::getItemId, itemId)
+                .remove();
+        ItemPO itemPO = secondHandMapper.selectById(itemId);
+        Assert.notNull(itemPO, "兼职任务没找到");
+        if(itemPO.getFavoriteCount() > 0)
+            itemPO.setFavoriteCount(itemPO.getFavoriteCount() - 1);
+        secondHandMapper.updateById(itemPO);
     }
 }

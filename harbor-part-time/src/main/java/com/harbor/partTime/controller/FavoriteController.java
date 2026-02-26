@@ -26,4 +26,12 @@ public class FavoriteController {
         PageDTO<FavoriteVO> pageDTO = favoriteService.getMyFavorites(pageQuery);
         return Result.success(pageDTO);
     }
+
+    @DeleteMapping("removeFavorite/{id}")
+    @ApiOperation("移除收藏")
+    public Result<Void> removeFavorite(@PathVariable Long id) {
+        log.info("移除收藏: {}", id);
+        favoriteService.removeFavorite(id);
+        return Result.success();
+    }
 }

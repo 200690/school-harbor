@@ -97,7 +97,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = checkUserById(id);
         UserInfoDTO userInfoDTO = new UserInfoDTO();
         BeanUtil.copyProperties(user, userInfoDTO);
-        log.info("user内容为：{};userVO内容为：{}",user,userInfoDTO);
         return userInfoDTO;
     }
 

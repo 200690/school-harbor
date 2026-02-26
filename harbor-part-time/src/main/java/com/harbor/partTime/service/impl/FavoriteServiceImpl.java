@@ -16,6 +16,7 @@ import com.harbor.partTime.service.IFavoriteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -50,5 +51,12 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, FavoritePO>
         }).toList();
 
         return new PageDTO<>( favoriteVOPage.getTotal(), favoriteVOPage.getPages(), favoriteVOS);
+    }
+
+    @Override
+    public void removeFavorite(Long partTimeId) {
+        lambdaUpdate()
+                .eq(FavoritePO::getPartTimeId, partTimeId)
+                .remove();
     }
 }

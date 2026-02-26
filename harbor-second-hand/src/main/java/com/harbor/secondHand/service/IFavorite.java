@@ -8,4 +8,6 @@ import com.harbor.secondHand.domain.vo.FavoriteVO;
 
 public interface IFavorite extends IService<FavoritePO> {
     PageDTO<FavoriteVO> getMyFavorites(PageQuery pageQuery);
+
+    void removeFavorite(Long itemId);
 }
