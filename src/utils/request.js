@@ -3,6 +3,8 @@ import { ElMessage } from 'element-plus'
 import router from '@/router'
 
 // 监听localStorage变化，追踪token清除原因
+// 暂时注释掉这些代码，避免MessageChannel错误
+/*
 const originalSetItem = localStorage.setItem
 const originalRemoveItem = localStorage.removeItem
 
@@ -17,6 +19,7 @@ localStorage.removeItem = function (key) {
   console.trace('localStorage.removeItem 调用栈')
   return originalRemoveItem.call(this, key)
 }
+*/
 
 const request = axios.create({
   baseURL: '/api',
