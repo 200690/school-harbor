@@ -119,9 +119,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElConfirm } from 'element-plus'
-import { getMySecondHandFavorites } from '@/api/secondHand'
-import { getMyPartTimeFavorites } from '@/api/partTime'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getMySecondHandFavorites, removeSecondHandFavorite } from '@/api/secondHand'
+import { getMyPartTimeFavorites, removePartTimeFavorite } from '@/api/partTime'
 
 const router = useRouter()
 const activeTab = ref('second-hand')
@@ -152,13 +152,33 @@ const viewDetail = (fav) => {
 
 // 移除收藏
 const removeFavorite = (favId) => {
-  ElConfirm('确定要移除这个收藏吗？', '移除收藏', {
+  ElMessageBox.confirm('确定要移除这个收藏吗？', '移除收藏', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    allFavorites.value = allFavorites.value.filter(fav => fav.id !== favId)
-    ElMessage.success('已移除收藏')
+  }).then(async () => {
+    try {
+      // 查找要移除的收藏项
+      const favItem = allFavorites.value.find(fav => fav.id === favId)
+      if (!favItem) {
+        ElMessage.error('收藏项不存在')
+        return
+      }
+      
+      // 根据收藏类型调用对应的API
+      if (favItem.type === 'second-hand') {
+        await removeSecondHandFavorite(favItem.itemId)
+      } else if (favItem.type === 'part-time') {
+        await removePartTimeFavorite(favItem.itemId)
+      }
+      
+      // 重新获取收藏数据
+      await fetchFavorites()
+      ElMessage.success('已移除收藏')
+    } catch (error) {
+      console.error('移除收藏失败:', error)
+      ElMessage.error('移除收藏失败，请稍后重试')
+    }
   }).catch(() => {
     // 取消操作
   })
@@ -166,7 +186,7 @@ const removeFavorite = (favId) => {
 
 // 清空收藏
 const clearAllFavorites = () => {
-  ElConfirm('确定要清空所有收藏吗？', '清空收藏', {
+  ElMessageBox.confirm('确定要清空所有收藏吗？', '清空收藏', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'danger'

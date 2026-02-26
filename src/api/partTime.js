@@ -115,7 +115,7 @@ export function addPartTimeFavorite(id) {
 
 export function removePartTimeFavorite(id) {
   return request({
-    url: `/part-time/favorite/${id}`,
+    url: `/part-time/favorite/removeFavorite/${id}`,
     method: 'delete'
   })
 }

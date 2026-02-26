@@ -99,7 +99,7 @@ export function addSecondHandFavorite(id) {
 
 export function removeSecondHandFavorite(id) {
   return request({
-    url: `/second-hand/favorite/${id}`,
+    url: `/second-hand/favorite/removeFavorite/${id}`,
     method: 'delete'
   })
 }
