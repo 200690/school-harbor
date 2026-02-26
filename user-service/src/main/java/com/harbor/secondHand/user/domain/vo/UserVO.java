@@ -40,7 +40,7 @@ public class UserVO {
     /**
      * 性别
      */
-    private String gender;
+    private Integer gender;
 
     /**
      * 个性签名

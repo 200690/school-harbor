@@ -83,7 +83,6 @@ public class User implements Serializable {
     @TableField("is_delete")
     private Integer isDelete;
 
-    //TODO 需要配置自动填充器才可以使用
     /**
      * 创建时间
      */
