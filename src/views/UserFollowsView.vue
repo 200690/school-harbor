@@ -19,13 +19,16 @@
           <el-empty description="暂无关注的用户" />
         </div>
         <div v-else class="follow-items">
-          <div v-for="follow in userFollows" :key="follow.id" class="follow-item">
+          <div v-for="follow in userFollows" :key="follow.followId" class="follow-item">
             <div class="user-avatar">
-              <img :src="follow.avatar" :alt="follow.username" />
+              <img :src="follow.avatar.replace(/`/g, '')" :alt="follow.username" />
             </div>
             <div class="user-info">
               <h3 class="user-name">{{ follow.username }}</h3>
-              <p class="follow-time">关注时间：{{ follow.followTime }}</p>
+              <p class="user-signature">{{ follow.signature || '暂无签名' }}</p>
+              <p class="user-gender">
+                {{ follow.gender === 1 ? '男' : '女' }}
+              </p>
             </div>
             <div class="user-actions">
               <router-link :to="`/user/profile/${follow.userId}`" class="btn btn-primary">
@@ -36,6 +39,18 @@
               </button>
             </div>
           </div>
+          <!-- 分页 -->
+          <div class="pagination">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="currentPage"
+              :page-sizes="[5, 10, 20]"
+              :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="totalFollows"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -45,26 +60,77 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useUserStore } from '../stores/user'
+import { getMyFollows, unfollowUser as unfollowUserApi } from '@/api/user'
 
-const userStore = useUserStore()
+const currentPage = ref(1)
+const pageSize = ref(10)
 const userFollows = ref([])
+const totalFollows = ref(0)
 
 // 取消关注
 const unfollowUser = async (userId) => {
   try {
-    await userStore.unfollowUser(userId)
-    userFollows.value = userStore.userFollows
+    await unfollowUserApi(userId)
+    await fetchFollows()
     ElMessage.success('取消关注成功')
   } catch (error) {
+    console.error('取消关注失败:', error)
     ElMessage.error('取消关注失败')
   }
 }
 
+// 分页处理
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
+  fetchFollows()
+}
+
+const handleCurrentChange = (current) => {
+  currentPage.value = current
+  fetchFollows()
+}
+
+// 获取关注列表
+const fetchFollows = async () => {
+  try {
+    console.log('开始获取关注列表...')
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    console.log('用户信息:', userInfo)
+    const userId = userInfo.userId || userInfo.id
+    console.log('用户ID:', userId)
+    
+    if (!userId) {
+      console.error('用户信息不完整，无法获取关注列表')
+      ElMessage.error('用户信息不完整，无法获取关注列表')
+      return
+    }
+    
+    console.log('请求参数:', {
+      id: userId,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value
+    })
+    
+    const response = await getMyFollows({
+      id: userId,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value
+    })
+    
+    console.log('API响应:', response)
+    userFollows.value = response.data?.list || []
+    totalFollows.value = parseInt(response.data?.total) || 0
+    console.log('关注列表数据:', userFollows.value)
+    console.log('关注列表总数:', totalFollows.value)
+  } catch (error) {
+    console.error('获取关注列表失败:', error)
+    ElMessage.error('获取关注列表失败，请稍后重试')
+  }
+}
+
 onMounted(async () => {
-  // 获取关注列表
-  await userStore.getUserFollows()
-  userFollows.value = userStore.userFollows
+  await fetchFollows()
 })
 </script>
 
@@ -147,7 +213,14 @@ onMounted(async () => {
   margin-bottom: 4px;
 }
 
-.follow-time {
+.user-signature {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.user-gender {
   font-size: 12px;
   color: #999;
 }
@@ -176,5 +249,15 @@ onMounted(async () => {
     width: 100%;
     justify-content: space-between;
   }
+  
+  .pagination {
+    margin-top: 20px;
+  }
+}
+
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
 }
 </style>

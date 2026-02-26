@@ -11,11 +11,6 @@
       <!-- 页面标题和操作 -->
       <div class="page-header">
         <h2 class="page-title">我的收藏</h2>
-        <div class="page-actions">
-          <el-button type="danger" @click="clearAllFavorites">
-            <i class="el-icon-delete"></i> 清空收藏
-          </el-button>
-        </div>
       </div>
 
       <!-- 收藏分类 -->
@@ -184,19 +179,7 @@ const removeFavorite = (favId) => {
   })
 }
 
-// 清空收藏
-const clearAllFavorites = () => {
-  ElMessageBox.confirm('确定要清空所有收藏吗？', '清空收藏', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'danger'
-  }).then(() => {
-    allFavorites.value = []
-    ElMessage.success('收藏已清空')
-  }).catch(() => {
-    // 取消操作
-  })
-}
+
 
 // 分页处理
 const handleSizeChange = (size) => {

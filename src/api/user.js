@@ -45,3 +45,59 @@ export function logout() {
     method: 'post'
   })
 }
+
+// 关注相关API
+export function getMyFollows(data) {
+  return request({
+    url: '/user/follow/myFollow',
+    method: 'post',
+    data
+  })
+}
+
+export function unfollowUser(userId) {
+  return request({
+    url: `/user/follow/unfollow/${userId}`,
+    method: 'post'
+  })
+}
+
+// 黑名单相关API
+export function getUserBlacklist(data) {
+  return request({
+    url: '/user/blacklist/user/list',
+    method: 'post',
+    data
+  })
+}
+
+export function getItemBlacklist(data) {
+  return request({
+    url: '/user/blacklist/item/list',
+    method: 'post',
+    data
+  })
+}
+
+export function unblockUser(userId) {
+  return request({
+    url: `/user/blacklist/user/remove/${userId}`,
+    method: 'post'
+  })
+}
+
+export function unblockItem(itemId) {
+  return request({
+    url: `/user/blacklist/item/remove/${itemId}`,
+    method: 'post'
+  })
+}
+
+// 评价相关API
+export function getMyEvaluations(data) {
+  return request({
+    url: '/user/evaluation/my',
+    method: 'post',
+    data
+  })
+}

@@ -15,7 +15,7 @@
 
       <!-- 评价分类 -->
       <div class="evaluation-tabs">
-        <el-tabs v-model="activeTab">
+        <el-tabs v-model="activeTab" @tab-click="handleTabClick">
           <el-tab-pane label="全部" name="all">
             <!-- 全部评价 -->
             <div class="evaluation-list">
@@ -50,6 +50,18 @@
                     查看详情
                   </el-button>
                 </div>
+              </div>
+              <!-- 分页 -->
+              <div class="pagination">
+                <el-pagination
+                  @size-change="handleSizeChange"
+                  @current-change="handleCurrentChange"
+                  :current-page="currentPage"
+                  :page-sizes="[5, 10, 20]"
+                  :page-size="pageSize"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="totalEvaluations"
+                />
               </div>
               </div>
             </div>
@@ -87,6 +99,18 @@
                   </el-button>
                 </div>
               </div>
+              <!-- 分页 -->
+              <div class="pagination">
+                <el-pagination
+                  @size-change="handleSizeChange"
+                  @current-change="handleCurrentChange"
+                  :current-page="currentPage"
+                  :page-sizes="[5, 10, 20]"
+                  :page-size="pageSize"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="totalReceivedEvaluations"
+                />
+              </div>
               </div>
             </div>
           </el-tab-pane>
@@ -120,6 +144,18 @@
                   </el-button>
                 </div>
               </div>
+              <!-- 分页 -->
+              <div class="pagination">
+                <el-pagination
+                  @size-change="handleSizeChange"
+                  @current-change="handleCurrentChange"
+                  :current-page="currentPage"
+                  :page-sizes="[5, 10, 20]"
+                  :page-size="pageSize"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="totalGivenEvaluations"
+                />
+              </div>
               </div>
             </div>
           </el-tab-pane>
@@ -132,39 +168,17 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getMyEvaluations } from '@/api/user'
 
-// 模拟评价数据
-const allEvaluations = ref([
-  {
-    id: 1,
-    type: 'received',
-    rating: 5,
-    content: '商品质量很好，卖家服务态度也很棒，非常满意的一次交易！',
-    relatedItem: '大学英语四级词汇书',
-    evalTime: '2026-02-15 14:30',
-    images: []
-  },
-  {
-    id: 2,
-    type: 'given',
-    rating: 4,
-    content: '兼职工作环境不错，工资发放及时，推荐给大家！',
-    relatedItem: '校园超市收银员',
-    evalTime: '2026-02-10 10:20',
-    images: []
-  },
-  {
-    id: 3,
-    type: 'received',
-    rating: 5,
-    content: '卖家很热心，商品和描述的一样，物流也很快，赞！',
-    relatedItem: '小米蓝牙耳机',
-    evalTime: '2026-02-05 09:15',
-    images: [
-      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=bluetooth%20earphones%20evaluation%20photo&image_size=square'
-    ]
-  }
-])
+const activeTab = ref('all')
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+// 评价数据
+const allEvaluations = ref([])
+const totalEvaluations = ref(0)
+const totalReceivedEvaluations = ref(0)
+const totalGivenEvaluations = ref(0)
 
 // 计算属性：收到的评价
 const receivedEvaluations = computed(() => {
@@ -175,8 +189,6 @@ const receivedEvaluations = computed(() => {
 const givenEvaluations = computed(() => {
   return allEvaluations.value.filter(evaluation => evaluation.type === 'given')
 })
-
-const activeTab = ref('all')
 
 // 回复评价
 const replyEvaluation = () => {
@@ -190,9 +202,69 @@ const viewEvaluationDetail = () => {
   // 这里应该导航到评价详情页面
 }
 
-onMounted(() => {
-  // 这里可以从后端获取评价数据
-  console.log('获取评价数据')
+// 分页处理
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
+  fetchEvaluations()
+}
+
+const handleCurrentChange = (current) => {
+  currentPage.value = current
+  fetchEvaluations()
+}
+
+// 标签页切换
+const handleTabClick = (tab) => {
+  activeTab.value = tab.props.name
+  currentPage.value = 1
+  fetchEvaluations()
+}
+
+// 获取评价列表
+const fetchEvaluations = async () => {
+  try {
+    console.log('开始获取评价列表...')
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    console.log('用户信息:', userInfo)
+    const userId = userInfo.userId || userInfo.id
+    console.log('用户ID:', userId)
+    
+    if (!userId) {
+      console.error('用户信息不完整，无法获取评价列表')
+      ElMessage.error('用户信息不完整，无法获取评价列表')
+      return
+    }
+    
+    console.log('请求参数:', {
+      id: userId,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+      type: activeTab.value === 'all' ? '' : activeTab.value
+    })
+    
+    const response = await getMyEvaluations({
+      id: userId,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+      type: activeTab.value === 'all' ? '' : activeTab.value
+    })
+    
+    console.log('API响应:', response)
+    allEvaluations.value = response.data?.list || []
+    totalEvaluations.value = parseInt(response.data?.total) || 0
+    totalReceivedEvaluations.value = parseInt(response.data?.receivedTotal) || 0
+    totalGivenEvaluations.value = parseInt(response.data?.givenTotal) || 0
+    console.log('评价列表数据:', allEvaluations.value)
+    console.log('评价列表总数:', totalEvaluations.value)
+  } catch (error) {
+    console.error('获取评价列表失败:', error)
+    ElMessage.error('获取评价列表失败，请稍后重试')
+  }
+}
+
+onMounted(async () => {
+  await fetchEvaluations()
 })
 </script>
 
@@ -336,5 +408,15 @@ onMounted(() => {
     width: 60px;
     height: 60px;
   }
+  
+  .pagination {
+    margin-top: 20px;
+  }
+}
+
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
 }
 </style>

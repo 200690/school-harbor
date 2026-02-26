@@ -108,6 +108,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
+import { getUserInfo } from '@/api/user'
 
 const route = useRoute()
 const router = useRouter()
@@ -192,10 +193,24 @@ const blockUser = async () => {
 }
 
 onMounted(async () => {
-  // 模拟获取用户信息
-  // 这里应该从后端API获取用户信息，包括发布的商品和兼职
-  // 模拟检查是否已关注
-  isFollowing.value = userStore.userFollows.some(follow => follow.userId === parseInt(userId.value))
+  try {
+    // 从后端API获取用户信息
+    const response = await getUserInfo(userId.value)
+    if (response.data) {
+      userProfile.value = {
+        id: response.data.id,
+        username: response.data.username,
+        avatar: response.data.avatar ? response.data.avatar.replace(/`/g, '') : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20friendly%20student&image_size=square',
+        registerTime: response.data.registerTime || '2026-01-01',
+        creditScore: response.data.creditScore || 60
+      }
+    }
+    // 检查是否已关注
+    isFollowing.value = userStore.userFollows.some(follow => follow.userId === parseInt(userId.value))
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    ElMessage.error('获取用户信息失败，请稍后重试')
+  }
 })
 </script>
 
