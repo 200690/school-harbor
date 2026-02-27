@@ -229,8 +229,7 @@ onMounted(async () => {
 <style scoped lang="scss">
 .user-blacklist {
   min-height: 100vh;
-  padding-top: 80px;
-  padding-bottom: 20px;
+  padding: 80px 0 20px;
 }
 
 .breadcrumb {
@@ -245,6 +244,10 @@ onMounted(async () => {
   font-size: 24px;
   font-weight: bold;
   color: #333;
+}
+
+.blacklist-tabs {
+  margin-bottom: 20px;
 }
 
 .blacklist-list {
@@ -262,18 +265,17 @@ onMounted(async () => {
 .blacklist-items {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .blacklist-item {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 16px;
+  padding: 20px;
   border: 1px solid #f0f0f0;
   border-radius: 8px;
   transition: all 0.3s;
-  background-color: #fef2f2;
   
   &:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -303,7 +305,7 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: bold;
   color: #333;
-  margin-bottom: 4px;
+  margin: 0 0 8px 0;
 }
 
 .block-time {
@@ -314,11 +316,13 @@ onMounted(async () => {
 .user-actions {
   display: flex;
   gap: 10px;
+  justify-content: flex-end;
 }
 
 .item-actions {
   display: flex;
   gap: 10px;
+  justify-content: flex-end;
 }
 
 .item-image {
@@ -343,30 +347,26 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: bold;
   color: #333;
-  margin-bottom: 4px;
+  margin: 0 0 8px 0;
 }
 
 .item-price {
   font-size: 14px;
   color: #f56c6c;
   font-weight: 500;
-  margin-bottom: 4px;
+  margin: 0 0 8px 0;
 }
 
 .item-description {
-  font-size: 12px;
+  font-size: 14px;
   color: #666;
-  margin-bottom: 4px;
-  line-height: 1.4;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.blacklist-tabs {
-  margin-bottom: 20px;
 }
 
 @media (max-width: 768px) {
@@ -382,6 +382,7 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+    padding: 15px;
   }
   
   .user-actions,
