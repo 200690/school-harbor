@@ -16,14 +16,14 @@
       <!-- 评价分类 -->
       <div class="evaluation-tabs">
         <!-- 一级菜单：全部、兼职、二手交易 -->
-        <el-tabs v-model="activeCategory" @tab-click="handleCategoryClick" class="category-tabs">
+        <el-tabs v-model="activeCategory" class="category-tabs">
           <el-tab-pane label="全部" name="all"></el-tab-pane>
           <el-tab-pane label="兼职" name="partTime"></el-tab-pane>
           <el-tab-pane label="二手交易" name="secondHand"></el-tab-pane>
         </el-tabs>
         
         <!-- 二级菜单：发出的评价、收到的评价 -->
-        <el-tabs v-model="activeType" @tab-click="handleTypeClick" class="type-tabs">
+        <el-tabs v-model="activeType" class="type-tabs">
           <el-tab-pane label="发出的评价" name="given"></el-tab-pane>
           <el-tab-pane label="收到的评价" name="received"></el-tab-pane>
         </el-tabs>
@@ -82,9 +82,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getMyEvaluations } from '@/api/user'
+import { showMyComments } from '@/api/user'
 
 // 一级菜单：全部、兼职、二手交易
 const activeCategory = ref('all')
@@ -127,17 +127,17 @@ const handleCurrentChange = (current) => {
   fetchEvaluations()
 }
 
-// 一级菜单切换
-const handleCategoryClick = () => {
+// 监听一级菜单切换
+watch(activeCategory, () => {
   currentPage.value = 1
   fetchEvaluations()
-}
+})
 
-// 二级菜单切换
-const handleTypeClick = () => {
+// 监听二级菜单切换
+watch(activeType, () => {
   currentPage.value = 1
   fetchEvaluations()
-}
+})
 
 // 获取评价列表
 const fetchEvaluations = async () => {
@@ -150,12 +150,21 @@ const fetchEvaluations = async () => {
       return
     }
     
-    const response = await getMyEvaluations({
-      id: userId,
+    // 根据 activeCategory 设置 targetType
+    let targetType = 2 // 默认全部
+    if (activeCategory.value === 'partTime') {
+      targetType = 0 // 兼职
+    } else if (activeCategory.value === 'secondHand') {
+      targetType = 1 // 商品
+    }
+    
+    const response = await showMyComments(activeType.value, {
+      targetType: targetType,
+      targetId: null,
+      userId: userId,
+      sortType: 1,
       pageNum: currentPage.value,
-      pageSize: pageSize.value,
-      type: activeType.value,
-      category: activeCategory.value === 'all' ? '' : activeCategory.value
+      pageSize: pageSize.value
     })
     
     allEvaluations.value = response.data?.list || []

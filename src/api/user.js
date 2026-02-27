@@ -101,3 +101,12 @@ export function getMyEvaluations(data) {
     data
   })
 }
+
+// 评论相关API
+export function showMyComments(type, data) {
+  return request({
+    url: `/comment/showMyComments/${type}`,
+    method: 'post',
+    data
+  })
+}
