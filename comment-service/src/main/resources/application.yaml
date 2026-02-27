@@ -1,0 +1,61 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: comment-service
+  profiles:
+    active: local
+  datasource:
+    url: jdbc:mysql://${harbor.db.host}:3306/${harbor.db.database}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: ${harbor.db.pw}
+  cloud:
+    nacos:
+      server-addr: 115.190.252.109:8848
+#      config:
+#        file-extension: yaml
+#        shared-configs:
+#          - dataId: shared-jdbc.yaml # 共享mybatis配置
+#          - dataId: shared-log.yaml # 共享日志配置
+#          - dataId: shared-swagger.yaml # 共享日志配置
+#          - dataId: shared-seata.yaml # 共享seata配置
+#mybatis-plus:
+#  configuration:
+#    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+#  global-config:
+#    db-config:
+#      update-strategy: not_null
+#      id-type: auto
+logging:
+  level:
+    com.hmall: debug
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    enable-dynamic-parameter: true
+  documents:
+    - name: 标题
+      locations: classpath:markdown/*
+  # OpenAPI 配置
+  openapi:
+    title: 校园港湾接口文档
+    description: 校园港湾接口文档
+    email: 1570040520@qq.com
+    concat: 张龙龙
+    version: v1.0.0
+    license: Apache 2.0
+    license-url: https://www.apache.org/licenses/LICENSE-2.0.html
+    terms-of-service-url: https://doc.xiaominfo.com
+    group:
+      default:
+        group-name: 二手物品相关接口
+        api-rule: package
+        api-rule-resources:
+          - com.school.trade.controller
+# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

@@ -1,0 +1,41 @@
+package com.harbor.comment.domain.po;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+/**
+ * 评论点赞表持久化对象
+ */
+@Data
+public class CommentLikesPO {
+    /**
+     * 点赞ID
+     */
+    private Long id;
+
+    /**
+     * 评论ID
+     */
+    private Long commentId;
+
+    /**
+     * 点赞用户ID
+     */
+    private Long userId;
+
+    /**
+     * 状态：0-取消点赞，1-点赞
+     */
+    private Integer status;
+
+    /**
+     * 点赞时间
+     */
+    private LocalDateTime createdAt;
+
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updatedAt;
+}

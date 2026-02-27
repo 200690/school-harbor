@@ -24,6 +24,7 @@
         <module>harbor-utils</module>
         <module>pay-service</module>
         <module>user-service</module>
+        <module>comment-service</module>
     </modules>
 
     <properties>
