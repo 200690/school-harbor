@@ -79,9 +79,9 @@ export function getItemBlacklist(data) {
   })
 }
 
-export function unblockUser(userId) {
+export function unblockUser(blockUserId) {
   return request({
-    url: `/user/blacklist/user/remove/${userId}`,
+    url: `/user/blacklist/user/unblock/${blockUserId}`,
     method: 'post'
   })
 }

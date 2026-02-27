@@ -31,7 +31,7 @@
                   <p class="block-time">拉黑时间：{{ block.blockTime }}</p>
                 </div>
                 <div class="user-actions">
-                  <button class="btn btn-success" @click="unblockUser(block.userId)">
+                  <button class="btn btn-success" @click="unblockUser(block.blockId)">
                     取消拉黑
                   </button>
                 </div>
@@ -61,14 +61,16 @@
             <div v-else class="blacklist-items">
               <div v-for="block in itemBlacklist" :key="block.id" class="blacklist-item">
                 <div class="item-image">
-                  <img :src="block.itemImage" :alt="block.itemTitle" />
+                  <img :src="block.coverImage" :alt="block.title" />
                 </div>
                 <div class="item-info">
-                  <h3 class="item-title">{{ block.itemTitle }}</h3>
+                  <h3 class="item-title">{{ block.title }}</h3>
+                  <p class="item-price">价格：¥{{ block.price }}</p>
+                  <p class="item-description">{{ block.description }}</p>
                   <p class="block-time">拉黑时间：{{ block.blockTime }}</p>
                 </div>
                 <div class="item-actions">
-                  <button class="btn btn-success" @click="unblockItem(block.itemId)">
+                  <button class="btn btn-success" @click="unblockItem(block.productId)">
                     取消拉黑
                   </button>
                 </div>
@@ -113,9 +115,9 @@ const itemBlacklist = ref([])
 const totalItemBlacklist = ref(0)
 
 // 取消拉黑用户
-const unblockUser = async (userId) => {
+const unblockUser = async (blockId) => {
   try {
-    await unblockUserApi(userId)
+    await unblockUserApi(blockId)
     await fetchUserBlacklist()
     ElMessage.success('取消拉黑成功')
   } catch (error) {
@@ -342,6 +344,25 @@ onMounted(async () => {
   font-weight: bold;
   color: #333;
   margin-bottom: 4px;
+}
+
+.item-price {
+  font-size: 14px;
+  color: #f56c6c;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.item-description {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .blacklist-tabs {
