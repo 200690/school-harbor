@@ -1,5 +1,8 @@
 package com.harbor.comment.domain.po;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -8,6 +11,7 @@ import java.time.LocalDateTime;
  * 评论举报表持久化对象
  */
 @Data
+@TableName("comment_reports")
 public class CommentReportsPO {
     /**
      * 举报ID
@@ -47,6 +51,7 @@ public class CommentReportsPO {
     /**
      * 处理时间
      */
+    @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime handleTime;
 
     /**
@@ -57,5 +62,6 @@ public class CommentReportsPO {
     /**
      * 举报时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

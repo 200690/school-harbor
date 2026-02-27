@@ -9,7 +9,7 @@ import lombok.Data;
 public class CommentQueryDTO {
 
     /**
-     * 业务类型
+     * 业务类型, 0-兼职，1-商品，2-全部
      */
     private Integer targetType;
 
@@ -24,19 +24,9 @@ public class CommentQueryDTO {
     private Long userId;
 
     /**
-     * 评论状态
-     */
-    private Integer status;
-
-    /**
-     * 排序方式：1-时间倒序，2-点赞数倒序，3-热度倒序
+     * 排序方式：1-时间倒序，2-点赞数倒序
      */
     private Integer sortType = 1;
-
-    /**
-     * 是否只查热门评论
-     */
-    private Boolean onlyHot = false;
 
     /**
      * 页码

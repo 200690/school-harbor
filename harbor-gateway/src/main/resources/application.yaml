@@ -42,6 +42,13 @@ spring:
           filters:
             # 去掉 /api，保留 /user/**
             - RewritePath=/api/(?<segment>.*), /$\{segment}
+        - id: comment
+          uri: lb://comment-service
+          predicates:
+            - Path=/api/comment/**
+          filters:
+            # 去掉 /api，保留 /user/**
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
 
 #      config:
 #        file-extension: yaml
