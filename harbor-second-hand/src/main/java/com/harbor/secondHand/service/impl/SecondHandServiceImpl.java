@@ -20,6 +20,7 @@ import com.harbor.secondHand.mapper.BrowseHistoryMapper;
 import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.service.ISecondHandService;
 import com.harbor.utils.client.UserClient;
+import com.harbor.utils.dto.ItemMainDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -113,15 +114,30 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
 //        属性拷贝
         List<ItemPO> list = lambdaQuery().eq(ItemPO::getCategoryId, item.getCategoryId()).orderByDesc(ItemPO::getPublishTime).last("LIMIT 4").list();
-        ItemDetailVO itemDetailVO = new ItemDetailVO();
-        itemDetailVO.setRelatedItems(itemDetailVO.convertToVO(list));
-        BeanUtil.copyProperties(item, itemDetailVO);
+        ItemDetailVO itemDetailDTO = new ItemDetailVO();
+
+        List<ItemListItemVO> itemVOS = list.stream().map(po -> {
+            ItemListItemVO itemListItemVO = new ItemListItemVO();
+            BeanUtil.copyProperties(po, itemListItemVO);
+            itemListItemVO.setConditionDesc(
+                    switch (po.getCondition()) {
+                        case 1 -> "全新";
+                        case 2 -> "9成新";
+                        case 3 -> "8成新";
+                        case 4 -> "7成新及以下";
+                        default -> "未知";
+                    }
+            );
+            return itemListItemVO;
+        }).toList();
+        itemDetailDTO.setRelatedItems(itemVOS);
+        BeanUtil.copyProperties(item, itemDetailDTO);
 
 //        卖家属性拷贝
-        userClient.info(itemDetailVO.getSellerId());
-        itemDetailVO.setSellerName(userClient.info(itemDetailVO.getSellerId()).getData().getUsername());
-        itemDetailVO.setSellerAvatar(userClient.info(itemDetailVO.getSellerId()).getData().getImg());
-        return itemDetailVO;
+        userClient.info(itemDetailDTO.getSellerId());
+        itemDetailDTO.setSellerName(userClient.info(itemDetailDTO.getSellerId()).getData().getUsername());
+        itemDetailDTO.setSellerAvatar(userClient.info(itemDetailDTO.getSellerId()).getData().getImg());
+        return itemDetailDTO;
     }
 
     @Override
@@ -172,6 +188,14 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         BeanUtil.copyProperties(item, itemPO, CopyOptions.create().ignoreNullValue());
         itemPO.setUpdateTime(LocalDateTime.now());
         this.updateById(itemPO);
+    }
+
+    @Override
+    public ItemMainDTO getItemMain(Long id) {
+        Assert.notNull(id, "id为空");
+        ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, id).one();
+        Assert.notNull(itemPO, "商品不存在");
+        return BeanUtil.copyProperties(itemPO, ItemMainDTO.class);
     }
 
     public void addViewCount(ItemPO itemPO){

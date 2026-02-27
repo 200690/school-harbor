@@ -9,6 +9,7 @@ import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
 import com.harbor.secondHand.domain.vo.MyItem;
+import com.harbor.utils.dto.ItemMainDTO;
 
 public interface ISecondHandService extends IService<ItemPO> {
 
@@ -23,4 +24,6 @@ public interface ISecondHandService extends IService<ItemPO> {
     void updateStatus(Long id, Integer status);
 
     void updateItem(ItemCreateDTO item);
+
+    ItemMainDTO getItemMain(Long id);
 }

@@ -10,6 +10,7 @@ import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
 import com.harbor.secondHand.domain.vo.MyItem;
 import com.harbor.secondHand.service.ISecondHandService;
+import com.harbor.utils.dto.ItemMainDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,8 @@ public class ItemController {
     @GetMapping("/item/{id}")
     public Result<ItemDetailVO> getById(@PathVariable Long id) {
         log.info("获取商品详情接口: {}", id);
-        ItemDetailVO itemDetailVO = secondHandService.getItemById(id);
-        return Result.success(itemDetailVO);
+        ItemDetailVO itemDetailDTO = secondHandService.getItemById(id);
+        return Result.success(itemDetailDTO);
     }
 
     /**
@@ -94,4 +95,10 @@ public class ItemController {
         return Result.success();
     }
 
+    @ApiOperation("获取商品大致信息接口")
+    @GetMapping("/getItemInfo/{id}")
+    public Result<ItemMainDTO> getItemInfo(@PathVariable Long id) {
+        log.info("获取商品大致信息接口: {}", id);
+        return Result.success(secondHandService.getItemMain(id));
+    }
 }

@@ -1,12 +1,9 @@
 package com.harbor.secondHand.domain.vo;
 
-import com.harbor.common.utils.BeanUtils;
-import com.harbor.secondHand.domain.po.ItemPO;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 public class ItemDetailVO {
@@ -48,30 +45,4 @@ public class ItemDetailVO {
     // 关联信息
     private List<ItemListItemVO> relatedItems;      // 相关商品推荐
 
-    public List<ItemListItemVO> convertToVO(List<ItemPO> itemPOs) {
-        return itemPOs.stream()
-                .map(po -> {
-                    ItemListItemVO vo = new ItemListItemVO();
-                    // 复制相同字段
-                    BeanUtils.copyProperties(po, vo);
-
-                    // 处理特殊字段
-                    vo.setConditionDesc(getConditionDesc(po.getCondition()));
-                    // 其他特殊处理
-
-                    return vo;
-                })
-                .collect(Collectors.toList());
-    }
-
-    // 成色描述转换方法
-    private String getConditionDesc(Integer condition) {
-        switch (condition) {
-            case 1: return "全新";
-            case 2: return "9成新";
-            case 3: return "8成新";
-            case 4: return "7成新及以下";
-            default: return "未知";
-        }
-    }
 }
