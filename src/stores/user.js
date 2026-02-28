@@ -240,6 +240,7 @@ export const useUserStore = defineStore('user', {
         await logout()
       } catch (error) {
         console.error('退出登录失败:', error)
+        // 模拟退出登录成功
       } finally {
         console.log('[UserStore] 清除token和userInfo')
         this.setToken('')

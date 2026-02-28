@@ -37,29 +37,33 @@
             <div v-for="evaluation in filteredEvaluations" :key="evaluation.id" class="evaluation-item">
               <div class="eval-header">
                 <div class="eval-info">
-                  <el-rate v-model="evaluation.rating" :max="5" disabled />
-                  <span class="eval-time">{{ evaluation.evalTime }}</span>
+                  <div class="user-info">
+                    <img :src="evaluation.userAvatar.trim()" :alt="evaluation.userName" class="user-avatar" />
+                    <div class="user-details">
+                      <span class="user-name">{{ evaluation.userName }}</span>
+                      <span v-if="evaluation.replyUserName" class="reply-info">
+                        回复 {{ evaluation.replyUserName }}
+                      </span>
+                    </div>
+                  </div>
+                  <span class="eval-time">{{ formatTime(evaluation.createdAt) }}</span>
                 </div>
-                <el-tag :type="evaluation.type === 'received' ? 'info' : 'success'">
-                  {{ evaluation.type === 'received' ? '收到的评价' : '发出的评价' }}
-                </el-tag>
+                <el-tag>{{ evaluation.targetTypeDesc }}</el-tag>
               </div>
               <div class="eval-content">
-                <div class="related-item">
-                  <h4 class="item-title">{{ evaluation.relatedItem }}</h4>
-                </div>
                 <p class="eval-text">{{ evaluation.content }}</p>
-                <div v-if="evaluation.images && evaluation.images.length > 0" class="eval-images">
-                  <img v-for="(img, index) in evaluation.images" :key="index" :src="img" :alt="'评价图片' + (index + 1)" />
-                </div>
               </div>
               <div class="eval-actions">
-                <el-button v-if="evaluation.type === 'received'" size="small" type="primary" @click="replyEvaluation()">
-                  回复
-                </el-button>
-                <el-button size="small" type="text" @click="viewEvaluationDetail()">
-                  查看详情
-                </el-button>
+                <div class="interaction-buttons">
+                  <el-button size="small" type="text" @click="toggleLike(evaluation)">
+                    <i :class="evaluation.isLiked ? 'el-icon-s-flag' : 'el-icon-flag'" />
+                    <span>{{ evaluation.likeCount }} 点赞</span>
+                  </el-button>
+                  <el-button size="small" type="text" @click="replyEvaluation()">
+                    <i class="el-icon-chat-line-round" />
+                    <span>{{ evaluation.replyCount }} 回复</span>
+                  </el-button>
+                </div>
               </div>
             </div>
             <!-- 分页 -->
@@ -71,7 +75,7 @@
                 :page-sizes="[5, 10, 20]"
                 :page-size="pageSize"
                 layout="total, sizes, prev, pager, next, jumper"
-                :total="totalFilteredEvaluations"
+                :total="totalRawEvaluations"
               />
             </div>
           </div>
@@ -84,7 +88,11 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { showMyComments } from '@/api/user'
+import axios from 'axios'
+import request from '@/utils/request'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
 
 // 一级菜单：全部、兼职、二手交易
 const activeCategory = ref('all')
@@ -96,12 +104,31 @@ const pageSize = ref(10)
 
 // 评价数据
 const allEvaluations = ref([])
-const totalFilteredEvaluations = ref(0)
+const totalRawEvaluations = ref(0)
 
 // 计算属性：过滤后的评价
 const filteredEvaluations = computed(() => {
+  if (activeCategory.value === 'all') {
+    return allEvaluations.value
+  } else if (activeCategory.value === 'partTime') {
+    return allEvaluations.value.filter(item => item.targetTypeDesc === '兼职')
+  } else if (activeCategory.value === 'secondHand') {
+    return allEvaluations.value.filter(item => item.targetTypeDesc === '商品')
+  }
   return allEvaluations.value
 })
+
+// 格式化时间
+const formatTime = (timeString) => {
+  const date = new Date(timeString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
 // 回复评价
 const replyEvaluation = () => {
@@ -109,10 +136,77 @@ const replyEvaluation = () => {
   // 这里应该实现回复评价的功能
 }
 
-// 查看评价详情
-const viewEvaluationDetail = () => {
-  ElMessage.info('查看评价详情')
-  // 这里应该导航到评价详情页面
+// 切换点赞状态
+const toggleLike = async (evaluation) => {
+  try {
+    const status = evaluation.isLiked ? 0 : 1
+    
+    console.log('[评价页面] 开始处理点赞操作:', {
+      evaluationId: evaluation.id,
+      currentLiked: evaluation.isLiked,
+      targetStatus: status
+    })
+    
+    // 构建完整的请求URL
+    const fullUrl = 'http://localhost:8080/api/comment/commentLike/like'
+    console.log('[评价页面] 准备发送点赞请求:', {
+      fullUrl: fullUrl,
+      data: {
+        commentId: Number(evaluation.id),
+        status: status
+      },
+      token: localStorage.getItem('token') ? '存在' : '不存在'
+    })
+    
+    // 直接使用完整的URL，确保请求发送到正确的端点
+    const response = await axios.post(fullUrl, {
+      commentId: Number(evaluation.id),
+      status: status
+    }, {
+      timeout: 15000,
+      withCredentials: true,
+      headers: {
+        'Authorization': localStorage.getItem('token'),
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    console.log('[评价页面] 点赞请求成功，响应数据:', response)
+    
+    // 更新前端状态
+    evaluation.isLiked = !evaluation.isLiked
+    evaluation.likeCount += evaluation.isLiked ? 1 : -1
+    console.log('[评价页面] 前端状态更新完成:', {
+      newLiked: evaluation.isLiked,
+      newLikeCount: evaluation.likeCount
+    })
+    
+  } catch (error) {
+    console.error('[评价页面] 点赞请求失败:', error)
+    console.error('[评价页面] 错误详情:', {
+      message: error.message,
+      response: error.response,
+      request: error.request,
+      config: error.config
+    })
+    
+    // 恢复原状态
+    evaluation.isLiked = !evaluation.isLiked
+    evaluation.likeCount += evaluation.isLiked ? 1 : -1
+    console.log('[评价页面] 恢复原状态:', {
+      restoredLiked: evaluation.isLiked,
+      restoredLikeCount: evaluation.likeCount
+    })
+    
+    if (error.response && error.response.status === 401) {
+      console.log('[评价页面] 401错误，登录已过期，准备跳转到登录页面')
+      ElMessage.error('登录已过期，请重新登录')
+      await userStore.logoutAction()
+      window.location.href = '/user/user/login'
+    } else {
+      ElMessage.error('操作失败，请稍后重试')
+    }
+  }
 }
 
 // 分页处理
@@ -129,8 +223,8 @@ const handleCurrentChange = (current) => {
 
 // 监听一级菜单切换
 watch(activeCategory, () => {
-  currentPage.value = 1
-  fetchEvaluations()
+  // 当切换分类时，不需要重新获取数据，只需要过滤显示
+  // 因为我们已经在filteredEvaluations计算属性中处理了过滤逻辑
 })
 
 // 监听二级菜单切换
@@ -142,10 +236,19 @@ watch(activeType, () => {
 // 获取评价列表
 const fetchEvaluations = async () => {
   try {
+    console.log('[评价页面] 开始获取评价列表')
+    const token = localStorage.getItem('token')
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
     const userId = userInfo.userId || userInfo.id
     
+    console.log('[评价页面] 登录状态检查:', {
+      token: token ? '存在' : '不存在',
+      userId: userId,
+      userInfo: userInfo
+    })
+    
     if (!userId) {
+      console.log('[评价页面] 用户信息不完整，无法获取评价列表')
       ElMessage.error('用户信息不完整，无法获取评价列表')
       return
     }
@@ -158,7 +261,24 @@ const fetchEvaluations = async () => {
       targetType = 1 // 商品
     }
     
-    const response = await showMyComments(activeType.value, {
+    // 根据 activeType 设置 type
+    const type = activeType.value === 'given' ? 1 : 2
+    
+    console.log('[评价页面] 准备发送API请求:', {
+      url: '/comment/showMyComments',
+      data: {
+        type: type,
+        targetType: targetType,
+        targetId: null,
+        userId: userId,
+        sortType: 1,
+        pageNum: currentPage.value,
+        pageSize: pageSize.value
+      }
+    })
+    
+    const response = await request.post('/comment/showMyComments', {
+      type: type,
       targetType: targetType,
       targetId: null,
       userId: userId,
@@ -167,11 +287,39 @@ const fetchEvaluations = async () => {
       pageSize: pageSize.value
     })
     
-    allEvaluations.value = response.data?.list || []
-    totalFilteredEvaluations.value = parseInt(response.data?.total) || 0
+    console.log('[评价页面] API请求成功，响应数据:', response)
+    
+    allEvaluations.value = response?.data?.list || []
+    totalRawEvaluations.value = parseInt(response?.data?.total) || 0
+    
+    console.log('[评价页面] 评价列表更新完成:', {
+      total: totalRawEvaluations.value,
+      count: allEvaluations.value.length
+    })
   } catch (error) {
-    console.error('获取评价列表失败:', error)
-    ElMessage.error('获取评价列表失败，请稍后重试')
+    console.error('[评价页面] 获取评价列表失败:', error)
+    if (error.response) {
+      console.error('[评价页面] 错误响应:', {
+        status: error.response.status,
+        data: error.response.data
+      })
+    } else if (error.request) {
+      console.error('[评价页面] 请求发送失败，未收到响应:', error.request)
+    } else {
+      console.error('[评价页面] 请求配置错误:', error.message)
+    }
+    
+    if (error.response && error.response.status === 401) {
+      console.log('[评价页面] 401错误，登录已过期，准备跳转到登录页面')
+      ElMessage.error('登录已过期，请重新登录')
+      // 使用store的logoutAction处理退出登录
+      await userStore.logoutAction()
+      // 跳转到登录页面
+      window.location.href = '/user/user/login'
+    } else {
+      console.log('[评价页面] 非401错误，显示错误提示')
+      ElMessage.error('获取评价列表失败，请稍后重试')
+    }
   }
 }
 
@@ -274,14 +422,45 @@ onMounted(async () => {
 .eval-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 15px;
 }
 
 .eval-info {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.user-info {
+  display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.reply-info {
+  font-size: 12px;
+  color: #999;
 }
 
 .eval-time {
@@ -290,44 +469,26 @@ onMounted(async () => {
 }
 
 .eval-content {
-  margin-bottom: 20px;
-}
-
-.related-item {
-  margin-bottom: 12px;
-}
-
-.item-title {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  margin: 0 0 12px 0;
+  margin-bottom: 15px;
+  padding-left: 52px;
 }
 
 .eval-text {
   font-size: 14px;
   color: #666;
   line-height: 1.5;
-  margin: 0 0 15px 0;
-}
-
-.eval-images {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.eval-images img {
-  width: 80px;
-  height: 80px;
-  border-radius: 4px;
-  object-fit: cover;
+  margin: 0;
 }
 
 .eval-actions {
+  padding-left: 52px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 15px;
+}
+
+.interaction-buttons {
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+  gap: 20px;
 }
 
 @media (max-width: 768px) {
@@ -349,13 +510,17 @@ onMounted(async () => {
     gap: 10px;
   }
   
-  .eval-actions {
-    flex-wrap: wrap;
+  .eval-content {
+    padding-left: 42px;
   }
   
-  .eval-images img {
-    width: 60px;
-    height: 60px;
+  .eval-actions {
+    padding-left: 42px;
+  }
+  
+  .user-avatar {
+    width: 32px;
+    height: 32px;
   }
   
   .pagination {

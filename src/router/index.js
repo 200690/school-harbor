@@ -178,15 +178,23 @@ const router = createRouter({
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
-  
+  console.log('[路由守卫] 检查登录状态:', {
+    to: to.path,
+    from: from.path,
+    token: token ? '存在' : '不存在'
+  })
+
   // 如果访问需要登录的页面，检查是否有token
   if (to.path.startsWith('/user/user/') && to.path !== '/user/user/login' && to.path !== '/user/user/register') {
     if (!token) {
+      console.log('[路由守卫] 未登录，跳转到登录页面')
       next('/user/user/login')
       return
+    } else {
+      console.log('[路由守卫] 已登录，允许访问')
     }
   }
-  
+
   next()
 })
 
