@@ -35,12 +35,14 @@ public class CommentVO {
     /**
      * 用户信息
      */
-    private UserInfoVO userInfo;
+    private String userName;
+    private String userAvatar;
 
     /**
      * 被回复用户信息
      */
-    private UserInfoVO replyUserInfo;
+    private String replyUserId;
+    private String replyUserName;
 
     /**
      * 评论内容
@@ -86,21 +88,6 @@ public class CommentVO {
      * 状态
      */
     private Integer status;
-
-    /**
-     * 是否匿名
-     */
-    private Boolean isAnonymous;
-
-    /**
-     * 是否置顶
-     */
-    private Boolean isTop;
-
-    /**
-     * 是否热门
-     */
-    private Boolean isHot;
 
     /**
      * 创建时间

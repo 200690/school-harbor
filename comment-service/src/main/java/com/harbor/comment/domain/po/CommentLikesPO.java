@@ -1,9 +1,8 @@
 package com.harbor.comment.domain.po;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
 
@@ -12,10 +11,12 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("comment_likes")
+@Accessors(chain = true)
 public class CommentLikesPO {
     /**
      * 点赞ID
      */
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -36,12 +37,12 @@ public class CommentLikesPO {
     /**
      * 点赞时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime createdAt;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
 
     /**
      * 更新时间
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
 }

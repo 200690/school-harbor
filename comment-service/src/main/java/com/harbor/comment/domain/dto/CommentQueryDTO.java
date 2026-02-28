@@ -1,5 +1,6 @@
 package com.harbor.comment.domain.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -11,6 +12,7 @@ public class CommentQueryDTO {
     /**
      * 业务类型, 0-兼职，1-商品，2-全部
      */
+    @NotNull
     private Integer targetType;
 
     /**
@@ -21,6 +23,7 @@ public class CommentQueryDTO {
     /**
      * 用户ID
      */
+    @NotNull
     private Long userId;
 
     /**
@@ -37,4 +40,7 @@ public class CommentQueryDTO {
      * 每页大小
      */
     private Integer pageSize = 10;
+
+    @NotNull
+    private Integer type; // 1-发送， 2-接收
 }

@@ -98,21 +98,6 @@ public class CommentsPO {
     private Integer status;
 
     /**
-     * 是否匿名：0-否，1-是
-     */
-    private Integer isAnonymous;
-
-    /**
-     * 是否置顶：0-否，1-是
-     */
-    private Integer isTop;
-
-    /**
-     * 是否热门评论：0-否，1-是
-     */
-    private Integer isHot;
-
-    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)
