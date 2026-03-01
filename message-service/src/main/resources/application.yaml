@@ -1,0 +1,64 @@
+server:
+  port: 8079
+spring:
+  application:
+    name: message-service
+  profiles:
+    active: local
+  datasource:
+    url: jdbc:mysql://${harbor.db.host}:3306/${harbor.db.database}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: ${harbor.db.pw}
+  cloud:
+    nacos:
+      server-addr: 115.190.252.109:8848
+  rabbitmq:
+    host: 115.190.252.109 # 你的虚拟机IP
+    port: 5672 # 端口
+    virtual-host: /  # 虚拟主机
+    username: hmall # 用户名
+    password: 123 # 密码
+    # 生产者确认配置（可选，确保消息成功投递到交换机）
+    publisher-confirm-type: correlated
+    # 生产者退回配置（可选，消息无法路由到队列时回调）
+    publisher-returns: true
+    # 消费者配置（可选，手动确认消息，避免自动确认导致消息丢失）
+    listener:
+      simple:
+        acknowledge-mode: manual  # 手动确认消息（Ack）
+        concurrency: 1            # 消费者最小线程数
+        max-concurrency: 5        # 消费者最大线程数
+        prefetch: 1               # 每次从队列拉取 1 条消息，处理完再拉取下一条（避免消息堆积）
+
+#      config:
+#        file-extension: yaml
+#        shared-configs:
+#          - dataId: shared-jdbc.yaml # 共享mybatis配置
+#          - dataId: shared-log.yaml # 共享日志配置
+#          - dataId: shared-swagger.yaml # 共享日志配置
+#          - dataId: shared-seata.yaml # 共享seata配置
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+  global-config:
+    db-config:
+      update-strategy: not_null
+      id-type: auto
+logging:
+  level:
+    com.hmall: debug
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    enable-dynamic-parameter: true
+  documents:
+    - name: 标题
+      locations: classpath:markdown/*
+
+# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

@@ -3,7 +3,6 @@ package com.harbor.secondHand.domain.vo;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 public class ItemListItemVO {
@@ -12,7 +11,6 @@ public class ItemListItemVO {
     private String title;
     private BigDecimal price;
     private String coverImage;                 // 封面图片
-    private List<String> images;                // 图片列表（可选，列表页通常只展示封面）
 
     // 商品属性
     private Integer condition;

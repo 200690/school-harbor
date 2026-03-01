@@ -11,7 +11,6 @@ import com.harbor.common.domain.PageQuery;
 import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
-import com.harbor.secondHand.domain.po.BrowseHistoryPO;
 import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
@@ -21,12 +20,14 @@ import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.service.ISecondHandService;
 import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.ItemMainDTO;
+import com.harbor.utils.dto.UserInfoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -105,16 +106,13 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         if(item == null){
             throw new RuntimeException("商品不存在");
         }
-//        浏览量+1，添加到浏览历史TODO
+//        浏览量+1，添加到浏览历史
         this.addViewCount(item);
-        BrowseHistoryPO browseHistoryPO = new BrowseHistoryPO();
-        browseHistoryPO.setItemId(id)
-                .setUserId(UserContext.getUser());
-        browerHistory.insert(browseHistoryPO);
+        browerHistory.insertOrUpdate(UserContext.getUser(), id);
 
 //        属性拷贝
         List<ItemPO> list = lambdaQuery().eq(ItemPO::getCategoryId, item.getCategoryId()).orderByDesc(ItemPO::getPublishTime).last("LIMIT 4").list();
-        ItemDetailVO itemDetailDTO = new ItemDetailVO();
+        ItemDetailVO itemDetailVO = new ItemDetailVO();
 
         List<ItemListItemVO> itemVOS = list.stream().map(po -> {
             ItemListItemVO itemListItemVO = new ItemListItemVO();
@@ -130,14 +128,14 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
             );
             return itemListItemVO;
         }).toList();
-        itemDetailDTO.setRelatedItems(itemVOS);
-        BeanUtil.copyProperties(item, itemDetailDTO);
-
+        itemDetailVO.setRelatedItems(itemVOS);
+        BeanUtil.copyProperties(item, itemDetailVO);
+        itemDetailVO.setImages(Arrays.stream(item.getImages().split(",")).toList());
 //        卖家属性拷贝
-        userClient.info(itemDetailDTO.getSellerId());
-        itemDetailDTO.setSellerName(userClient.info(itemDetailDTO.getSellerId()).getData().getUsername());
-        itemDetailDTO.setSellerAvatar(userClient.info(itemDetailDTO.getSellerId()).getData().getImg());
-        return itemDetailDTO;
+        UserInfoDTO userInfoDTO = userClient.info(itemDetailVO.getSellerId()).getData();
+        itemDetailVO.setSellerName(userInfoDTO.getUsername());
+        itemDetailVO.setSellerAvatar(userInfoDTO.getImg());
+        return itemDetailVO;
     }
 
     @Override
