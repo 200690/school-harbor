@@ -55,8 +55,13 @@
               </div>
               <div class="eval-actions">
                 <div class="interaction-buttons">
-                  <el-button size="small" type="text" @click="toggleLike(evaluation)">
-                    <i :class="evaluation.isLiked ? 'el-icon-s-flag' : 'el-icon-flag'" />
+                  <el-button 
+                    size="small" 
+                    type="text" 
+                    @click="toggleLike(evaluation)"
+                    :class="{ 'liked': evaluation.isLiked }"
+                  >
+                    <i :class="evaluation.isLiked ? 'el-icon-star-on' : 'el-icon-star-off'" />
                     <span>{{ evaluation.likeCount }} 点赞</span>
                   </el-button>
                   <el-button size="small" type="text" @click="replyEvaluation()">
@@ -173,13 +178,16 @@ const toggleLike = async (evaluation) => {
     
     console.log('[评价页面] 点赞请求成功，响应数据:', response)
     
-    // 更新前端状态
-    evaluation.isLiked = !evaluation.isLiked
-    evaluation.likeCount += evaluation.isLiked ? 1 : -1
-    console.log('[评价页面] 前端状态更新完成:', {
-      newLiked: evaluation.isLiked,
-      newLikeCount: evaluation.likeCount
-    })
+    // 检查返回值
+    if (response.data && response.data.code === 1) {
+      console.log('[评价页面] 点赞操作成功，准备刷新评价列表')
+      // 刷新评价列表
+      await fetchEvaluations()
+      console.log('[评价页面] 评价列表刷新完成')
+    } else {
+      console.log('[评价页面] 点赞操作返回异常:', response.data)
+      ElMessage.error('操作失败，请稍后重试')
+    }
     
   } catch (error) {
     console.error('[评价页面] 点赞请求失败:', error)
@@ -188,14 +196,6 @@ const toggleLike = async (evaluation) => {
       response: error.response,
       request: error.request,
       config: error.config
-    })
-    
-    // 恢复原状态
-    evaluation.isLiked = !evaluation.isLiked
-    evaluation.likeCount += evaluation.isLiked ? 1 : -1
-    console.log('[评价页面] 恢复原状态:', {
-      restoredLiked: evaluation.isLiked,
-      restoredLikeCount: evaluation.likeCount
     })
     
     if (error.response && error.response.status === 401) {
@@ -489,6 +489,53 @@ onMounted(async () => {
 .interaction-buttons {
   display: flex;
   gap: 20px;
+  
+  .el-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: #909399;
+    transition: all 0.3s;
+    
+    &:hover {
+      color: #409EFF;
+      background-color: rgba(64, 158, 255, 0.1);
+    }
+    
+    &.liked {
+      color: #F56C6C;
+      
+      i {
+        animation: likeAnimation 0.3s ease-in-out;
+      }
+      
+      &:hover {
+        color: #F78989;
+        background-color: rgba(245, 108, 108, 0.1);
+      }
+    }
+    
+    i {
+      font-size: 16px;
+    }
+    
+    span {
+      font-size: 13px;
+    }
+  }
+}
+
+@keyframes likeAnimation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @media (max-width: 768px) {

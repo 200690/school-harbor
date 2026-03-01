@@ -65,14 +65,14 @@
       <div class="item-list">
         <div class="list-item" v-for="item in items" :key="item.id">
           <div class="item-image">
-            <img :src="item.image" :alt="item.title" />
+            <img :src="cleanImageUrl(item.coverImage)" :alt="item.title" />
           </div>
           <div class="item-info">
             <h3 class="item-title">{{ item.title }}</h3>
-            <p class="item-description">{{ item.description }}</p>
+            <p class="item-description">{{ item.description || '暂无描述' }}</p>
             <div class="item-meta">
               <span class="price">¥{{ item.price }}</span>
-              <span class="location"><i class="el-icon-s-position"></i> {{ item.location }}</span>
+              <span class="location"><i class="el-icon-s-position"></i> {{ item.school }} - {{ item.location }}</span>
               <span class="publish-time">{{ item.publishTime }}</span>
             </div>
             <div class="item-seller">
@@ -81,8 +81,7 @@
               </router-link>
             </div>
             <div class="item-tags">
-              <span class="tag tag-primary">{{ item.category }}</span>
-              <span class="tag tag-success">{{ item.condition }}</span>
+              <span class="tag tag-primary">{{ getConditionText(item.condition) }}</span>
             </div>
           </div>
           <div class="item-actions">
@@ -251,6 +250,22 @@ export default {
     handleCurrentChange(current) {
       this.pageNum = current
       this.fetchSecondHandList()
+    },
+    // 清理图片URL（去除多余的反引号和引号）
+    cleanImageUrl(url) {
+      if (!url) return '/default-image.png'
+      return url.toString().replace(/`/g, '').replace(/"/g, '').trim() || '/default-image.png'
+    },
+    // 获取成色文本
+    getConditionText(condition) {
+      const conditionMap = {
+        1: '全新',
+        2: '九成新',
+        3: '八成新',
+        4: '七成新及以下',
+        5: '其他'
+      }
+      return conditionMap[condition] || '未知'
     }
   }
 }

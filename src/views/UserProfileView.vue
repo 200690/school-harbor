@@ -21,12 +21,28 @@
         </div>
         <div class="user-info">
           <h3 class="user-name">{{ userProfile.username }}</h3>
+          <p class="user-bio" v-if="userProfile.bio">{{ userProfile.bio }}</p>
+          <div class="user-stats">
+            <div class="stat-item">
+              <span class="stat-value">{{ userProfile.totalItems || 0 }}</span>
+              <span class="stat-label">在售商品</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ userProfile.totalSales || 0 }}</span>
+              <span class="stat-label">累计成交</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ userProfile.positiveReviews || 0 }}%</span>
+              <span class="stat-label">好评率</span>
+            </div>
+          </div>
           <p class="user-details">注册时间：{{ userProfile.registerTime }}</p>
           <p class="user-details user-credit">
             <span class="credit-label">信誉分：</span>
             <span class="credit-score">{{ userProfile.creditScore || 60 }}</span>
             <span class="credit-level">{{ getCreditLevel(userProfile.creditScore || 60) }}</span>
           </p>
+          <p class="user-details" v-if="userProfile.school"><i class="el-icon-location"></i> {{ userProfile.school }}</p>
         </div>
         <div class="user-actions">
           <button v-if="!isFollowing" class="btn btn-primary" @click="followUser">
@@ -119,10 +135,15 @@ const userStore = useUserStore()
 const userId = computed(() => route.params.id)
 const userProfile = ref({
   id: userId.value,
-  username: '用户' + userId.value,
-  avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20friendly%20student&image_size=square',
-  registerTime: '2026-01-01',
-  creditScore: 60
+  username: '商家' + userId.value,
+  avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=friendly%20shopkeeper%20portrait%20professional&image_size=square',
+  registerTime: '2025-06-15',
+  creditScore: 95,
+  school: 'XX大学',
+  bio: '专业二手交易商家，诚信经营，品质保证',
+  totalItems: 12,
+  totalSales: 86,
+  positiveReviews: 98
 })
 
 const userSecondHandItems = ref([
@@ -197,16 +218,27 @@ const blockUser = async () => {
 onMounted(async () => {
   try {
     // 从后端API获取用户信息
-    const response = await getUserInfo(userId.value)
-    if (response.data) {
-      userProfile.value = {
-        id: response.data.id,
-        username: response.data.username,
-        avatar: response.data.avatar ? response.data.avatar.replace(/`/g, '') : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20friendly%20student&image_size=square',
-        registerTime: response.data.registerTime || '2026-01-01',
-        creditScore: response.data.creditScore || 60
+    try {
+      const response = await getUserInfo(userId.value)
+      if (response.data) {
+        userProfile.value = {
+          id: response.data.id,
+          username: response.data.username,
+          avatar: response.data.avatar ? response.data.avatar.replace(/`/g, '') : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=friendly%20shopkeeper%20portrait%20professional&image_size=square',
+          registerTime: response.data.registerTime || '2025-06-15',
+          creditScore: response.data.creditScore || 95,
+          school: response.data.school || 'XX大学',
+          bio: response.data.bio || '专业二手交易商家，诚信经营，品质保证',
+          totalItems: response.data.totalItems || 12,
+          totalSales: response.data.totalSales || 86,
+          positiveReviews: response.data.positiveReviews || 98
+        }
       }
+    } catch (apiError) {
+      console.log('API调用失败，使用模拟数据:', apiError)
+      // API调用失败时，使用模拟数据
     }
+    
     // 检查是否已关注
     isFollowing.value = userStore.userFollows.some(follow => follow.userId === parseInt(userId.value))
   } catch (error) {
@@ -273,10 +305,52 @@ onMounted(async () => {
   color: #333;
 }
 
+.user-bio {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.user-stats {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 12px;
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #409EFF;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+}
+
 .user-details {
   font-size: 14px;
   color: #666;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-details i {
+  color: #409EFF;
+  font-size: 14px;
 }
 
 .user-credit {

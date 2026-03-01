@@ -62,19 +62,25 @@
       </el-breadcrumb>
 
       <!-- 商品详情 -->
-      <div class="detail-card" v-if="itemDetail">
-        <!-- 商品图片和信息 -->
-        <div class="item-header">
-          <div class="item-images">
-            <div class="main-image">
-              <img :src="cleanImageUrl(itemDetail.coverImage)" :alt="itemDetail.title" />
-            </div>
-            <div class="image-list">
-              <div class="image-item" v-for="(img, index) in itemDetail.images" :key="index">
-                <img :src="cleanImageUrl(img)" :alt="itemDetail.title" />
+        <div class="detail-card" v-if="itemDetail">
+          <!-- 商品图片和信息 -->
+          <div class="item-header">
+            <div class="item-images">
+              <div class="main-image">
+                <img :src="getCurrentImage()" :alt="itemDetail.title" />
+              </div>
+              <div class="image-list" v-if="parseImages(itemDetail.images).length > 0">
+                <div 
+                  class="image-item" 
+                  v-for="(img, index) in parseImages(itemDetail.images)" 
+                  :key="index"
+                  :class="{ 'active': index === currentImageIndex }"
+                  @click="selectImage(index)"
+                >
+                  <img :src="img" :alt="itemDetail.title" />
+                </div>
               </div>
             </div>
-          </div>
           
           <div class="item-info">
             <h1 class="item-title">{{ itemDetail.title }}</h1>
@@ -92,12 +98,14 @@
               <span>{{ itemDetail.school }} - {{ itemDetail.location }}</span>
             </div>
             <div class="seller-info">
-              <div class="seller-avatar">
-                <img :src="itemDetail.sellerAvatar || '/default-avatar.png'" :alt="itemDetail.sellerName || '卖家'" />
-              </div>
-              <div class="seller-details">
-                <h4>{{ itemDetail.sellerName || '卖家' }}</h4>
-              </div>
+              <router-link :to="`/user/profile/${itemDetail.sellerId}`" class="seller-profile-link">
+                <div class="seller-avatar">
+                  <img :src="itemDetail.sellerAvatar || '/default-avatar.png'" :alt="itemDetail.sellerName || '卖家'" />
+                </div>
+                <div class="seller-details">
+                  <h4>{{ itemDetail.sellerName || '卖家' }}</h4>
+                </div>
+              </router-link>
               <el-button type="primary" class="contact-btn">
                 <i class="el-icon-chat-line-round"></i> 联系卖家
               </el-button>
@@ -208,6 +216,7 @@ const isFromMyPublish = ref(false)
 const isFromFavorites = ref(false)
 const isPublisherBanned = ref(false)
 const bannedMessage = ref('')
+const currentImageIndex = ref(0)
 
 // 计算是否已收藏
 const isFavorite = computed(() => {
@@ -249,6 +258,8 @@ const fetchItemDetail = async () => {
       const response = await getSecondHandDetail(itemId.value)
       console.log('后端返回的商品详情:', response.data)
       itemDetail.value = response.data
+      // 重置图片索引
+      currentImageIndex.value = 0
       // 设置推荐商品为相关商品
       recommendedItems.value = response.data.relatedItems || []
       isPublisherBanned.value = false
@@ -339,10 +350,61 @@ const checkFavoriteStatus = async () => {
   }
 }
 
-// 清理图片URL（去除多余的反引号和引号）
+// 清理图片URL（去除多余的反引号和引号，并解析嵌套的JSON字符串）
 const cleanImageUrl = (url) => {
   if (!url) return '/default-image.png'
-  return url.replace(/`/g, '').replace(/"/g, '').trim()
+  
+  let cleanedUrl = url
+  
+  // 如果是字符串形式的JSON数组，先解析
+  if (typeof cleanedUrl === 'string' && cleanedUrl.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(cleanedUrl)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cleanedUrl = parsed[0]
+      }
+    } catch (e) {
+      console.log('解析图片URL失败，使用原始值:', e)
+    }
+  }
+  
+  // 去除多余的反引号和引号
+  cleanedUrl = cleanedUrl.toString().replace(/`/g, '').replace(/"/g, '').trim()
+  
+  return cleanedUrl || '/default-image.png'
+}
+
+// 解析图片列表
+const parseImages = (images) => {
+  if (!images || !Array.isArray(images)) return []
+  
+  return images.map(img => {
+    if (typeof img === 'string' && img.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(img)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return cleanImageUrl(parsed[0])
+        }
+      } catch (e) {
+        console.log('解析图片URL失败，使用原始值:', e)
+      }
+    }
+    return cleanImageUrl(img)
+  }).filter(url => url && url !== '/default-image.png')
+}
+
+// 获取当前显示的大图片
+const getCurrentImage = () => {
+  const images = parseImages(itemDetail.value?.images)
+  if (images.length === 0) {
+    return cleanImageUrl(itemDetail.value?.coverImage)
+  }
+  return images[currentImageIndex.value] || images[0]
+}
+
+// 切换大图片
+const selectImage = (index) => {
+  currentImageIndex.value = index
 }
 
 // 获取成色文本
@@ -647,10 +709,16 @@ const handleClearCache = () => {
   flex-shrink: 0;
   cursor: pointer;
   transition: all 0.3s;
+  border: 2px solid transparent;
   
   &:hover {
     transform: scale(1.05);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  &.active {
+    border-color: #409EFF;
+    box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
   }
 }
 
@@ -734,6 +802,22 @@ const handleClearCache = () => {
   padding: 20px;
   background-color: #f9fafc;
   border-radius: 8px;
+}
+
+.seller-profile-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s;
+  cursor: pointer;
+  
+  &:hover {
+    color: #409EFF;
+    transform: translateY(-2px);
+  }
 }
 
 .seller-avatar {
