@@ -9,6 +9,7 @@ import com.harbor.comment.service.CommentsLikesService;
 import com.harbor.comment.service.ICommentService;
 import com.harbor.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CommentsLikeImpl extends ServiceImpl<CommentsLikes, CommentLikesPO> implements CommentsLikesService {
     private final ICommentService commentService;
 
@@ -31,6 +33,8 @@ public class CommentsLikeImpl extends ServiceImpl<CommentsLikes, CommentLikesPO>
         CommentLikesPO commentLikesPO = lambdaQuery().eq(CommentLikesPO::getCommentId, commentLikeDTO.getCommentId())
                 .eq(CommentLikesPO::getUserId, UserContext.getUser())
                 .one();
+        log.info("DTO: {}", commentLikeDTO);
+        log.info("commentLikesPO: {}", commentLikesPO);
 //        查询是否有记录存在
         if(commentLikesPO == null){
             if(commentLikeDTO.getStatus() == 0)
@@ -52,10 +56,14 @@ public class CommentsLikeImpl extends ServiceImpl<CommentsLikes, CommentLikesPO>
 //        记录存在逻辑
         else{
             lock.lock();
-            if(Objects.equals(commentLikeDTO.getStatus(), commentLikesPO.getStatus()))
+            if(Objects.equals(commentLikeDTO.getStatus(), commentLikesPO.getStatus())){
+                lock.unlock();
                 return;
+            }
+            log.info("更新点赞记录");
             commentLikesPO.setStatus(commentLikeDTO.getStatus());
             if(this.updateById(commentLikesPO)){
+                log.info("更新成功");
                 try {
                     int delta = commentLikeDTO.getStatus() == 1 ? 1 : -1;
                     commentService.lambdaUpdate()

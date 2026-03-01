@@ -5,11 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.comment.domain.dto.CommentQueryDTO;
+import com.harbor.comment.domain.po.CommentLikesPO;
 import com.harbor.comment.domain.po.CommentsPO;
 import com.harbor.comment.domain.vo.CommentVO;
+import com.harbor.comment.mapper.CommentsLikes;
 import com.harbor.comment.mapper.commentMapper;
 import com.harbor.comment.service.ICommentService;
 import com.harbor.common.domain.PageDTO;
+import com.harbor.common.utils.UserContext;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +25,10 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implements ICommentService {
+    private final CommentsLikes commentsLikes;
 
     @Override
     public PageDTO<CommentVO> showMyCommentsGiven(CommentQueryDTO queryDTO) {
-        log.info("显示发出我的评论:{}", queryDTO);
         Page<CommentsPO> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         LambdaQueryWrapper<CommentsPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -61,6 +64,12 @@ public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implemen
                 commentVO.setImages(Arrays.asList(commentsPO.getImages()));
             }
             //TODO 填充是否点赞字段 isLiked
+            CommentLikesPO likesPO = commentsLikes.selectOne((new LambdaQueryWrapper<CommentLikesPO>())
+                    .eq(CommentLikesPO::getCommentId, commentsPO.getId())
+                    .eq(CommentLikesPO::getUserId, commentsPO.getUserId())
+            );
+            if(likesPO != null)
+                commentVO.setIsLiked(likesPO.getStatus() == 1);
             return commentVO;
         }).toList();
         return new PageDTO<>( commentsPOPage.getTotal(), commentsPOPage.getPages(), commentVOS);

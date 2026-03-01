@@ -23,6 +23,7 @@ public class CommentLikes {
     @ApiOperation("点赞")
     public Result like(@RequestBody CommentLikeDTO commentLikeDTO) {
         commentsLikesService.like(commentLikeDTO);
+        log.info("点赞成功");
         return Result.success();
     }
 }
