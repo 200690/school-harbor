@@ -31,38 +31,37 @@ public class CommentsLikeImpl extends ServiceImpl<CommentsLikes, CommentLikesPO>
         CommentLikesPO commentLikesPO = lambdaQuery().eq(CommentLikesPO::getCommentId, commentLikeDTO.getCommentId())
                 .eq(CommentLikesPO::getUserId, UserContext.getUser())
                 .one();
+//        查询是否有记录存在
         if(commentLikesPO == null){
+            if(commentLikeDTO.getStatus() == 0)
+                return;
             commentLikesPO = new CommentLikesPO();
             commentLikesPO.setCommentId(commentLikeDTO.getCommentId())
                     .setUserId(UserContext.getUser())
-                    .setStatus(commentLikeDTO.getStatus());
+                    .setStatus(1);
             try {
                 if (this.save(commentLikesPO)) {
-                    lock.lock();
-                    try {
-                        CommentsPO commentServiceById = commentService.getById(commentLikeDTO.getCommentId());
-                        commentServiceById.setLikeCount(commentServiceById.getLikeCount() + 1);
-                        commentService.updateById(commentServiceById);
-                    }finally {
-                        lock.unlock();
-                    }
+                    commentService.lambdaUpdate()
+                            .eq(CommentsPO::getId, commentLikeDTO.getCommentId())
+                            .setSql("like_count = like_count + " + 1)
+                            .update();
                 }
             } catch (DuplicateKeyException ignored) {
             }
-        }else{
+        }
+//        记录存在逻辑
+        else{
+            lock.lock();
             if(Objects.equals(commentLikeDTO.getStatus(), commentLikesPO.getStatus()))
                 return;
             commentLikesPO.setStatus(commentLikeDTO.getStatus());
             if(this.updateById(commentLikesPO)){
-                lock.lock();
                 try {
-                    CommentsPO commentServiceById = commentService.getById(commentLikeDTO.getCommentId());
-                    if(commentLikeDTO.getStatus() == 1){
-                        commentServiceById.setLikeCount(commentServiceById.getLikeCount() + 1);
-                    } else if (commentLikeDTO.getStatus() == 0) {
-                        commentServiceById.setLikeCount(commentServiceById.getLikeCount() - 1);
-                    }
-                    commentService.updateById(commentServiceById);
+                    int delta = commentLikeDTO.getStatus() == 1 ? 1 : -1;
+                    commentService.lambdaUpdate()
+                            .eq(CommentsPO::getId, commentLikeDTO.getCommentId())
+                            .setSql("like_count = like_count + " + delta)
+                            .update();
                 }finally {
                     lock.unlock();
                 }
