@@ -88,7 +88,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { getUserInfo, updateUserInfo } from '@/api/user'
+import { getUserDetail, updateUserInfo } from '@/api/user'
 
 const router = useRouter()
 const formRef = ref(null)
@@ -233,7 +233,7 @@ const fetchUserInfo = async () => {
       return
     }
     
-    const response = await getUserInfo(userId)
+    const response = await getUserDetail(userId)
     const userInfo = response.data
     // 更新表单数据
     form.username = userInfo.username
