@@ -24,7 +24,6 @@ public class UserItemPostsPO {
     private String title;            // 标题
     private String description;      // 描述
     private BigDecimal price;        // 价格
-    private String category;         // 分类
     private Integer status;          // 状态：0-下架 1-在售 2-已售
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime; // 创建时间

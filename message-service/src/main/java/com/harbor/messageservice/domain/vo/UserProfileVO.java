@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -19,6 +20,8 @@ public class UserProfileVO {
     private String username;
     private String avatar;
     private String phone;
+    private String email;
+    private BigDecimal balance;
     private LocalDateTime createTime;  // 前端可能需要展示创建时间
     private LocalDateTime updateTime;  // 前端可能需要展示更新时间
 }
