@@ -142,6 +142,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
     public void createItem(ItemCreateDTO itemCreateDTO) {
         ItemPO itemPO = new ItemPO();
         BeanUtil.copyProperties(itemCreateDTO, itemPO);
+
         itemPO.setSellerId(UserContext.getUser());
         this.save(itemPO);
     }

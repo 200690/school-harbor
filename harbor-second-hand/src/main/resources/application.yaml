@@ -30,6 +30,11 @@ spring:
         concurrency: 1            # 消费者最小线程数
         max-concurrency: 5        # 消费者最大线程数
         prefetch: 1               # 每次从队列拉取 1 条消息，处理完再拉取下一条（避免消息堆积）
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
 #      config:
 #        file-extension: yaml
 #        shared-configs:
