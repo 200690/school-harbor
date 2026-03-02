@@ -125,7 +125,7 @@ const triggerFileInput = () => {
 }
 
 // 处理头像上传
-const handleAvatarUpload = (event) => {
+const handleAvatarUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
   
@@ -141,6 +141,39 @@ const handleAvatarUpload = (event) => {
     form.avatar = e.target.result
   }
   reader.readAsDataURL(file)
+  
+  // 上传文件
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    // 获取token
+    const token = localStorage.getItem('token')
+    
+    const response = await fetch('http://localhost:8080/api/oss/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': token ? token : ''
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error('上传失败')
+    }
+    
+    const data = await response.json()
+    if (data.code === 1 && data.data) {
+      // 使用返回的URL更新头像
+      form.avatar = data.data
+      ElMessage.success('头像上传成功')
+    } else {
+      ElMessage.error('上传失败: ' + (data.msg || '未知错误'))
+    }
+  } catch (error) {
+    console.error('上传失败:', error)
+    ElMessage.error('上传失败，请重试')
+  }
   
   // 清空文件输入
   event.target.value = ''

@@ -65,21 +65,34 @@
           </el-form-item>
 
           <el-form-item label="商品图片">
-            <el-upload
-              class="upload-demo"
-              action="#"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
-              :file-list="fileList"
-              :auto-upload="false"
-            >
-              <el-button type="primary">点击上传</el-button>
-              <template #tip>
-                <div class="el-upload__tip">
-                  只能上传jpg/png文件，且不超过500kb
+            <div class="image-uploader">
+              <div v-for="(image, index) in formData.images" :key="index" class="uploaded-image">
+                <img :src="image" alt="商品图片" />
+                <div class="image-actions">
+                  <el-button 
+                    :type="formData.coverImage === image ? 'success' : 'info'" 
+                    size="small" 
+                    @click="setCoverImage(image)"
+                  >
+                    {{ formData.coverImage === image ? '当前封面' : '设为封面' }}
+                  </el-button>
+                  <el-button type="danger" size="small" @click="removeImage(index)">删除</el-button>
                 </div>
-              </template>
-            </el-upload>
+              </div>
+              <div class="upload-btn-container">
+                <input
+                  type="file"
+                  ref="fileInput"
+                  style="display: none"
+                  accept="image/*"
+                  @change="handleImageUpload"
+                />
+                <el-button type="primary" @click="triggerFileInput">点击上传</el-button>
+                <div class="upload-tip">
+                  只能上传jpg/png文件，且不超过5MB
+                </div>
+              </div>
+            </div>
           </el-form-item>
 
           <el-form-item>
@@ -102,12 +115,7 @@ import { createSecondHandItem, getSecondHandItemDetail, changeSecondHandItem } f
 const router = useRouter()
 const route = useRoute()
 const formRef = ref(null)
-const fileList = ref([])
-
-// 判断是编辑模式还是发布模式
-const isEditMode = computed(() => {
-  return route.params.id !== 'new'
-})
+const fileInput = ref(null)
 
 // 表单数据
 const formData = reactive({
@@ -118,8 +126,17 @@ const formData = reactive({
   condition: null,
   school: 'XX学校',
   location: '',
-  description: ''
+  description: '',
+  images: [],
+  coverImage: ''
 })
+
+// 判断是编辑模式还是发布模式
+const isEditMode = computed(() => {
+  return route.params.id !== 'new'
+})
+
+
 
 // 表单验证规则
 const rules = {
@@ -148,14 +165,79 @@ const rules = {
   ]
 }
 
-// 处理图片预览
-const handlePreview = (file) => {
-  console.log(file)
+// 触发文件输入框
+const triggerFileInput = () => {
+  fileInput.value?.click()
 }
 
-// 处理图片移除
-const handleRemove = (file, fileList) => {
-  console.log(file, fileList)
+// 处理图片上传
+const handleImageUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // 检查文件大小
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过5MB')
+    return
+  }
+  
+  // 上传文件
+  try {
+    const uploadFormData = new FormData()
+    uploadFormData.append('file', file)
+    
+    // 获取token
+    const token = localStorage.getItem('token')
+    
+    const response = await fetch('http://localhost:8080/api/oss/upload', {
+      method: 'POST',
+      body: uploadFormData,
+      headers: {
+        'Authorization': token ? token : ''
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error('上传失败')
+    }
+    
+    const data = await response.json()
+    if (data.code === 1 && data.data) {
+      // 使用返回的URL添加到图片数组
+      formData.images.push(data.data)
+      // 如果是第一张图片，自动设置为封面图
+      if (formData.images.length === 1) {
+        formData.coverImage = data.data
+      }
+      ElMessage.success('图片上传成功')
+    } else {
+      ElMessage.error('上传失败: ' + (data.msg || '未知错误'))
+    }
+  } catch (error) {
+    console.error('上传失败:', error)
+    ElMessage.error('上传失败，请重试')
+  }
+  
+  // 清空文件输入
+  event.target.value = ''
+}
+
+// 移除图片
+const removeImage = (index) => {
+  const removedImage = formData.images[index]
+  formData.images.splice(index, 1)
+  // 如果删除的是封面图，重新设置封面图为第一张
+  if (removedImage === formData.coverImage && formData.images.length > 0) {
+    formData.coverImage = formData.images[0]
+  } else if (formData.images.length === 0) {
+    formData.coverImage = ''
+  }
+}
+
+// 设置封面图
+const setCoverImage = (image) => {
+  formData.coverImage = image
+  ElMessage.success('封面图设置成功')
 }
 
 // 提交表单
@@ -171,7 +253,9 @@ const submitForm = async () => {
       price: formData.price,
       condition: formData.condition,
       school: formData.school,
-      location: formData.location
+      location: formData.location,
+      images: formData.images,
+      coverImage: formData.coverImage
     }
     
     if (formData.originalPrice) {
@@ -229,12 +313,11 @@ const loadData = async () => {
         formData.location = data.location || ''
         formData.description = data.description || ''
         
-        // 如果有图片，设置文件列表
+        // 如果有图片，设置图片数组
         if (data.images && data.images.length > 0) {
-          fileList.value = data.images.map((img, index) => ({
-            name: `image${index}.jpg`,
-            url: img
-          }))
+          formData.images = data.images
+          // 设置封面图
+          formData.coverImage = data.coverImage || data.images[0]
         }
       }
     } catch (error) {
@@ -276,6 +359,77 @@ onMounted(() => {
   padding: 30px;
 }
 
+.image-uploader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.uploaded-image {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.uploaded-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.image-actions .el-button {
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.image-actions .el-button:first-child {
+  margin-bottom: 2px;
+}
+
+.upload-btn-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 120px;
+  height: 120px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-btn-container:hover {
+  border-color: #409eff;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-top: 8px;
+  width: 100%;
+}
+
 @media (max-width: 768px) {
   .second-hand-edit {
     padding: 70px 0 20px;
@@ -287,6 +441,12 @@ onMounted(() => {
   
   .edit-form {
     padding: 20px;
+  }
+  
+  .uploaded-image,
+  .upload-btn-container {
+    width: 100px;
+    height: 100px;
   }
 }
 </style>

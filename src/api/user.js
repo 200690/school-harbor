@@ -18,7 +18,7 @@ export function register(data) {
 
 export function getUserInfo(id) {
   return request({
-    url: `/message/user/center/${id}`,
+    url: `/user/user/info/${id}`,
     method: 'get'
   })
 }
