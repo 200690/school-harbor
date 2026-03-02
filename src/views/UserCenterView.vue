@@ -12,7 +12,7 @@
       <div class="user-info-card card">
         <div class="user-info-header">
           <div class="user-avatar">
-            <img v-if="userInfo.img" :src="userInfo.img" :alt="userInfo.username" />
+            <img v-if="userInfo.avatar" :src="userInfo.avatar" :alt="userInfo.username" />
             <div v-else class="default-avatar">
               <i class="el-icon-user"></i>
             </div>
@@ -41,19 +41,19 @@
         <div class="user-info-footer">
           <div class="user-stats">
             <div class="user-stat-item">
-              <span class="stat-value">{{ userPosts.length }}</span>
+              <span class="stat-value">{{ userInfo.publicCount || 0 }}</span>
               <span class="stat-label">发布</span>
             </div>
             <div class="user-stat-item">
-              <span class="stat-value">{{ userApplications.length }}</span>
+              <span class="stat-value">{{ userInfo.applicationCount || 0 }}</span>
               <span class="stat-label">申请</span>
             </div>
             <div class="user-stat-item">
-              <span class="stat-value">{{ userPurchases.length }}</span>
+              <span class="stat-value">{{ userInfo.buyCounnt || 0 }}</span>
               <span class="stat-label">购买</span>
             </div>
             <div class="user-stat-item">
-              <span class="stat-value">{{ userFavorites.length }}</span>
+              <span class="stat-value">{{ userInfo.favCount || 0 }}</span>
               <span class="stat-label">收藏</span>
             </div>
           </div>
@@ -90,21 +90,21 @@
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的发布.png" alt="我的发布" />
             </div>
             <span class="function-name">我的发布</span>
-            <span class="function-count">{{ userPosts.length }}</span>
+            <span class="function-count">{{ userInfo.publicCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/applications" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的申请.png" alt="我的申请" />
             </div>
             <span class="function-name">我的申请</span>
-            <span class="function-count">{{ userApplications.length }}</span>
+            <span class="function-count">{{ userInfo.applicationCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/purchases" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的购买.png" alt="我的购买" />
             </div>
             <span class="function-name">我的购买</span>
-            <span class="function-count">{{ userPurchases.length }}</span>
+            <span class="function-count">{{ userInfo.buyCounnt || 0 }}</span>
           </router-link>
           <router-link to="/user/user/messages" class="function-item">
             <div class="function-icon">
@@ -118,7 +118,7 @@
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的收藏.png" alt="我的收藏" />
             </div>
             <span class="function-name">我的收藏</span>
-            <span class="function-count">{{ userFavorites.length }}</span>
+            <span class="function-count">{{ userInfo.favCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/follows" class="function-item">
             <div class="function-icon">
@@ -210,9 +210,7 @@ const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
 const userPosts = ref(userStore.userPosts)
 const userApplications = ref(userStore.userApplications)
-const userPurchases = ref(userStore.userPurchases)
 const userMessages = ref(userStore.userMessages)
-const userFavorites = ref(userStore.userFavorites)
 const userFollows = ref(userStore.userFollows)
 const userBlacklist = ref(userStore.userBlacklist)
 const recentActivities = ref(userStore.recentActivities)
@@ -748,21 +746,7 @@ onMounted(async () => {
 }
 
 .function-count {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background-color: #F56C6C;
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 6px;
-  box-shadow: 0 2px 8px rgba(245, 108, 108, 0.3);
+  display: none;
 }
 
 /* 最近活动样式 */
