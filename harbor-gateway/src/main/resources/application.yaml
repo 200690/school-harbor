@@ -56,6 +56,13 @@ spring:
           filters:
             # 去掉 /api，保留 /user/**
             - RewritePath=/api/(?<segment>.*), /$\{segment}
+        - id: oss
+          uri: lb://oss-service
+          predicates:
+            - Path=/api/oss/**
+          filters:
+            # 去掉 /api，保留 /user/**
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
 
 #      config:
 #        file-extension: yaml

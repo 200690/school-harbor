@@ -39,3 +39,5 @@ harbor-search
 .mvn
 **/test
 **/logs/**
+oss-service/src/main/resources/application-dev.yaml
+oss-service/src/main/resources/application.yaml

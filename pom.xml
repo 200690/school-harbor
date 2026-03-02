@@ -26,6 +26,7 @@
         <module>user-service</module>
         <module>message-service</module>
         <module>comment-service</module>
+        <module>oss-service</module>
     </modules>
 
     <properties>

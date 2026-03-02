@@ -46,6 +46,7 @@ public class AuthGlobalFilter implements GlobalFilter , Ordered {
         } catch (UnauthorizedException e) {
             //         2. 获取请求的路径（比如 /api/auth/login 或 /api/orders/list）
             if(isExclude(request.getPath().toString())){
+                log.info("请求路径，不需要认证");
                 return chain.filter(exchange);
             }
             ServerHttpResponse response = exchange.getResponse();
