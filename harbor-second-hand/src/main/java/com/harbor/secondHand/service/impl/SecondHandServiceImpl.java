@@ -23,6 +23,7 @@ import com.harbor.utils.dto.ItemMainDTO;
 import com.harbor.utils.dto.UserInfoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -40,10 +41,35 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
     private final UserClient userClient;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+
     @Override
     public PageDTO<ItemListItemVO> querySecondHandItemList(ItemQueryConditionDTO itemQueryConditionDTO) {
+        // 对于最新商品列表，尝试从缓存获取
+        if (itemQueryConditionDTO.getPage() == 1 && itemQueryConditionDTO.getSize() == 10
+                && StringUtils.isEmpty(itemQueryConditionDTO.getKeyword())
+                && itemQueryConditionDTO.getCategoryId() == null
+                && itemQueryConditionDTO.getMinPrice() == null
+                && itemQueryConditionDTO.getMaxPrice() == null
+                && itemQueryConditionDTO.getCondition() == null
+                && (itemQueryConditionDTO.getSortField() == null
+                || "publishTime".equals(itemQueryConditionDTO.getSortField()))
+                && (itemQueryConditionDTO.getSortOrder() == null
+                || "desc".equalsIgnoreCase(itemQueryConditionDTO.getSortOrder()))) {
+            // 缓存逻辑
+            String cacheKey = "item:list:latest";
+            PageDTO<ItemListItemVO> cachedList = (PageDTO<ItemListItemVO>) redisTemplate.opsForValue().get(cacheKey);
+            if (cachedList != null) {
+                log.info("从缓存获取最新商品列表");
+                return cachedList;
+            }
+        }
+
+
+
+
         Page<ItemPO> page = new Page<>(itemQueryConditionDTO.getPage(), itemQueryConditionDTO.getSize());
-//        构建条件
+        // 构建条件
         LambdaQueryWrapper<ItemPO> queryWrapper = new LambdaQueryWrapper<>();
         if (itemQueryConditionDTO.getKeyword() != null) {
             queryWrapper.and(w -> w.like(ItemPO::getTitle, itemQueryConditionDTO.getKeyword())
@@ -51,17 +77,17 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
                     .like(ItemPO::getDescription, itemQueryConditionDTO.getKeyword()));
         }
         queryWrapper.eq(ItemPO::getStatus, 1);
-        if(itemQueryConditionDTO.getCategoryId() != null){
+        if (itemQueryConditionDTO.getCategoryId() != null) {
             queryWrapper.eq(ItemPO::getCategoryId, itemQueryConditionDTO.getCategoryId());
             log.info("categoryId: {}", itemQueryConditionDTO.getCategoryId());
         }
-        if(itemQueryConditionDTO.getMinPrice() != null){
+        if (itemQueryConditionDTO.getMinPrice() != null) {
             queryWrapper.ge(ItemPO::getPrice, itemQueryConditionDTO.getMinPrice());
         }
-        if (itemQueryConditionDTO.getMaxPrice() != null){
+        if (itemQueryConditionDTO.getMaxPrice() != null) {
             queryWrapper.le(ItemPO::getPrice, itemQueryConditionDTO.getMaxPrice());
         }
-        if(itemQueryConditionDTO.getCondition() != null){
+        if (itemQueryConditionDTO.getCondition() != null) {
             queryWrapper.eq(ItemPO::getCondition, itemQueryConditionDTO.getCondition());
         }
         queryWrapper.eq(ItemPO::getIsDelete, 0);
@@ -93,25 +119,54 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         }
 
         Page<ItemPO> secondHandItemPage = this.page(page, queryWrapper);
-        return PageDTO.of(secondHandItemPage, ItemListItemVO.class);
+        PageDTO<ItemListItemVO> result = PageDTO.of(secondHandItemPage, ItemListItemVO.class);
+
+        // 缓存最新商品列表，设置10分钟过期
+        if (itemQueryConditionDTO.getPage() == 1 && itemQueryConditionDTO.getSize() == 10
+                && StringUtils.isEmpty(itemQueryConditionDTO.getKeyword())  // 关键修改
+                && itemQueryConditionDTO.getCategoryId() == null
+                && itemQueryConditionDTO.getMinPrice() == null
+                && itemQueryConditionDTO.getMaxPrice() == null
+                && itemQueryConditionDTO.getCondition() == null
+                && (itemQueryConditionDTO.getSortField() == null
+                || "publishTime".equals(itemQueryConditionDTO.getSortField()))
+                && (itemQueryConditionDTO.getSortOrder() == null
+                || "desc".equalsIgnoreCase(itemQueryConditionDTO.getSortOrder()))) {
+            // 缓存逻辑
+            String cacheKey = "item:list:latest";
+            redisTemplate.opsForValue().set(cacheKey, result, 10, java.util.concurrent.TimeUnit.MINUTES);
+            log.info("缓存最新商品列表");
+        }
+
+        return result;
     }
 
     @Override
     public ItemDetailVO getItemById(Long id) {
-//        校验
-        if(id == null){
+        // 校验
+        if (id == null) {
             throw new RuntimeException("商品不存在");
         }
+
+        // 尝试从缓存获取
+        String cacheKey = "item:detail:" + id;
+        ItemDetailVO cachedDetail = (ItemDetailVO) redisTemplate.opsForValue().get(cacheKey);
+        if (cachedDetail != null) {
+            log.info("从缓存获取商品详情: {}", id);
+            return cachedDetail;
+        }
+
         ItemPO item = this.getById(id);
-        if(item == null){
+        if (item == null) {
             throw new RuntimeException("商品不存在");
         }
-//        浏览量+1，添加到浏览历史
+        // 浏览量+1，添加到浏览历史
         this.addViewCount(item);
         browerHistory.insertOrUpdate(UserContext.getUser(), id);
 
-//        属性拷贝
-        List<ItemPO> list = lambdaQuery().eq(ItemPO::getCategoryId, item.getCategoryId()).orderByDesc(ItemPO::getPublishTime).last("LIMIT 4").list();
+        // 属性拷贝
+        List<ItemPO> list = lambdaQuery().eq(ItemPO::getCategoryId, item.getCategoryId())
+                .orderByDesc(ItemPO::getPublishTime).last("LIMIT 4").list();
         ItemDetailVO itemDetailVO = new ItemDetailVO();
 
         List<ItemListItemVO> itemVOS = list.stream().map(po -> {
@@ -124,17 +179,21 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
                         case 3 -> "8成新";
                         case 4 -> "7成新及以下";
                         default -> "未知";
-                    }
-            );
+                    });
             return itemListItemVO;
         }).toList();
         itemDetailVO.setRelatedItems(itemVOS);
         BeanUtil.copyProperties(item, itemDetailVO);
         itemDetailVO.setImages(Arrays.stream(item.getImages().split(",")).toList());
-//        卖家属性拷贝
+        // 卖家属性拷贝
         UserInfoDTO userInfoDTO = userClient.info(itemDetailVO.getSellerId()).getData();
         itemDetailVO.setSellerName(userInfoDTO.getUsername());
         itemDetailVO.setSellerAvatar(userInfoDTO.getImg());
+
+        // 缓存结果，设置1小时过期
+        redisTemplate.opsForValue().set(cacheKey, itemDetailVO, 1, java.util.concurrent.TimeUnit.HOURS);
+        log.info("缓存商品详情: {}", id);
+
         return itemDetailVO;
     }
 
@@ -170,14 +229,22 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
     public void updateStatus(Long id, Integer status) {
         ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, id).one();
         Assert.notNull(itemPO, "商品不存在");
-        if(Objects.equals(itemPO.getStatus(), status)){
+        if (Objects.equals(itemPO.getStatus(), status)) {
             return;
         }
-        if(itemPO.getStatus() > 1){
+        if (itemPO.getStatus() > 1) {
             throw new RuntimeException("商品状态错误");
         }
         itemPO.setStatus(status);
         this.updateById(itemPO);
+
+        // 清除缓存
+        String detailCacheKey = "item:detail:" + id;
+        redisTemplate.delete(detailCacheKey);
+        // 清除最新商品列表缓存，因为状态变化可能影响列表
+        String latestCacheKey = "item:list:latest";
+        redisTemplate.delete(latestCacheKey);
+        log.info("清除商品缓存: detail={}, latest={}", id, latestCacheKey);
     }
 
     @Override
@@ -187,6 +254,14 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         BeanUtil.copyProperties(item, itemPO, CopyOptions.create().ignoreNullValue());
         itemPO.setUpdateTime(LocalDateTime.now());
         this.updateById(itemPO);
+
+        // 清除缓存
+        String detailCacheKey = "item:detail:" + item.getId();
+        redisTemplate.delete(detailCacheKey);
+        // 清除最新商品列表缓存，因为信息变化可能影响列表
+        String latestCacheKey = "item:list:latest";
+        redisTemplate.delete(latestCacheKey);
+        log.info("清除商品缓存: detail={}, latest={}", item.getId(), latestCacheKey);
     }
 
     @Override
@@ -197,7 +272,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         return BeanUtil.copyProperties(itemPO, ItemMainDTO.class);
     }
 
-    public void addViewCount(ItemPO itemPO){
+    public void addViewCount(ItemPO itemPO) {
         itemPO.setViewCount(itemPO.getViewCount() + 1);
         this.updateById(itemPO);
     }

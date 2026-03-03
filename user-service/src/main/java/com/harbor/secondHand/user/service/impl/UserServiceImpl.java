@@ -15,6 +15,7 @@ import com.harbor.secondHand.user.service.IUserService;
 import com.harbor.secondHand.user.utils.JwtTool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -31,6 +32,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final JwtTool jwtTool;
 
     private final JwtProperties jwtProperties;
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 用户登录
@@ -51,9 +54,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new ForbiddenException("用户被冻结");
         }
         // 4.校验密码 TODO
-//        if (!passwordEncoder.matches(password, user.getPassword())) {
-//            throw new BadRequestException("用户名或密码错误");
-//        }
+        // if (!passwordEncoder.matches(password, user.getPassword())) {
+        // throw new BadRequestException("用户名或密码错误");
+        // }
         Assert.isTrue(Objects.equals(password, user.getPassword()), "用户名或密码错误");
         log.info("user1:{}", user);
         // 5.生成TOKEN
@@ -74,7 +77,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public void register(UserRegisterDTO userRegisterDTO) {
-        //TODO 用户注册的密码加密写入数据库
+        // TODO 用户注册的密码加密写入数据库
         User user = new User()
                 .setUsername(userRegisterDTO.getUsername())
                 .setPassword(userRegisterDTO.getPassword())
@@ -94,9 +97,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public UserInfoDTO getUserInfo(Long id) {
+        // 尝试从缓存获取
+        String cacheKey = "user:info:" + id;
+        UserInfoDTO cachedUserInfo = (UserInfoDTO) redisTemplate.opsForValue().get(cacheKey);
+        if (cachedUserInfo != null) {
+            log.info("从缓存获取用户信息: {}", id);
+            return cachedUserInfo;
+        }
+
         User user = checkUserById(id);
         UserInfoDTO userInfoDTO = new UserInfoDTO();
         BeanUtil.copyProperties(user, userInfoDTO);
+
+        // 缓存结果，设置1天过期
+        redisTemplate.opsForValue().set(cacheKey, userInfoDTO, 1, java.util.concurrent.TimeUnit.DAYS);
+        log.info("缓存用户信息: {}", id);
+
         return userInfoDTO;
     }
 
@@ -110,17 +126,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = checkUserById(userInfoDTO.getId());
         BeanUtil.copyProperties(userInfoDTO, user);
         this.updateById(user);
+
+        // 清除缓存
+        String cacheKey = "user:info:" + userInfoDTO.getId();
+        redisTemplate.delete(cacheKey);
+        log.info("清除用户信息缓存: {}", userInfoDTO.getId());
     }
 
     private User checkUserById(Long id) {
-        if(id == null || id < 0){
+        if (id == null || id < 0) {
             throw new ForbiddenException("用户不存在");
         }
         User user = lambdaQuery().eq(User::getId, id).one();
-        if(BeanUtil.isEmpty(user)){
+        if (BeanUtil.isEmpty(user)) {
             throw new ForbiddenException("用户不存在");
         }
-        if(user.getStatus() != 1){
+        if (user.getStatus() != 1) {
             throw new ForbiddenException("用户状态异常");
         }
         return user;

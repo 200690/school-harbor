@@ -62,35 +62,4 @@ public class PartTimeVO extends BaseJobStatusVO{
     // 扩展字段：当前用户是否已申请
     private Boolean hasApplied;                   // 是否已申请
 
-
-    // 获取脱敏后的联系电话
-    public String getDesensitizedPhone() {
-        if (contactPhone != null && contactPhone.length() == 11) {
-            return contactPhone.substring(0, 3) + "****" + contactPhone.substring(7);
-        }
-        return contactPhone;
-    }
-
-    // 类型名称转换
-    public String getTypeName() {
-        if (type == null) return null;
-        switch (type) {
-            case 1: return "校内兼职";
-            case 2: return "校外兼职";
-            case 3: return "实习";
-            default: return "未知类型";
-        }
-    }
-
-    // 状态名称转换
-    public String getStatusName() {
-        if (status == null) return null;
-        switch (status) {
-            case 0: return "已下架";
-            case 1: return "招聘中";
-            case 2: return "已招满";
-            case 3: return "已截止";
-            default: return "未知状态";
-        }
-    }
 }
