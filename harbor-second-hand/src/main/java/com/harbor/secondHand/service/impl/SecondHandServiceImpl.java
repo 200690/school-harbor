@@ -17,6 +17,7 @@ import com.harbor.secondHand.domain.vo.ItemListItemVO;
 import com.harbor.secondHand.domain.vo.MyItem;
 import com.harbor.secondHand.mapper.BrowseHistoryMapper;
 import com.harbor.secondHand.mapper.SecondHandMapper;
+import com.harbor.secondHand.producer.ItemMessageProducer;
 import com.harbor.secondHand.service.ISecondHandService;
 import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.ItemMainDTO;
@@ -43,6 +44,8 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private final ItemMessageProducer itemMessageProducer;
+
     @Override
     public PageDTO<ItemListItemVO> querySecondHandItemList(ItemQueryConditionDTO itemQueryConditionDTO) {
         // 对于最新商品列表，尝试从缓存获取
@@ -53,9 +56,9 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
                 && itemQueryConditionDTO.getMaxPrice() == null
                 && itemQueryConditionDTO.getCondition() == null
                 && (itemQueryConditionDTO.getSortField() == null
-                || "publishTime".equals(itemQueryConditionDTO.getSortField()))
+                        || "publishTime".equals(itemQueryConditionDTO.getSortField()))
                 && (itemQueryConditionDTO.getSortOrder() == null
-                || "desc".equalsIgnoreCase(itemQueryConditionDTO.getSortOrder()))) {
+                        || "desc".equalsIgnoreCase(itemQueryConditionDTO.getSortOrder()))) {
             // 缓存逻辑
             String cacheKey = "item:list:latest";
             PageDTO<ItemListItemVO> cachedList = (PageDTO<ItemListItemVO>) redisTemplate.opsForValue().get(cacheKey);
@@ -64,9 +67,6 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
                 return cachedList;
             }
         }
-
-
-
 
         Page<ItemPO> page = new Page<>(itemQueryConditionDTO.getPage(), itemQueryConditionDTO.getSize());
         // 构建条件
@@ -123,15 +123,15 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
         // 缓存最新商品列表，设置10分钟过期
         if (itemQueryConditionDTO.getPage() == 1 && itemQueryConditionDTO.getSize() == 10
-                && StringUtils.isEmpty(itemQueryConditionDTO.getKeyword())  // 关键修改
+                && StringUtils.isEmpty(itemQueryConditionDTO.getKeyword()) // 关键修改
                 && itemQueryConditionDTO.getCategoryId() == null
                 && itemQueryConditionDTO.getMinPrice() == null
                 && itemQueryConditionDTO.getMaxPrice() == null
                 && itemQueryConditionDTO.getCondition() == null
                 && (itemQueryConditionDTO.getSortField() == null
-                || "publishTime".equals(itemQueryConditionDTO.getSortField()))
+                        || "publishTime".equals(itemQueryConditionDTO.getSortField()))
                 && (itemQueryConditionDTO.getSortOrder() == null
-                || "desc".equalsIgnoreCase(itemQueryConditionDTO.getSortOrder()))) {
+                        || "desc".equalsIgnoreCase(itemQueryConditionDTO.getSortOrder()))) {
             // 缓存逻辑
             String cacheKey = "item:list:latest";
             redisTemplate.opsForValue().set(cacheKey, result, 10, java.util.concurrent.TimeUnit.MINUTES);
@@ -204,6 +204,8 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
         itemPO.setSellerId(UserContext.getUser());
         this.save(itemPO);
+        // 发送二手交易信息创建消息
+        itemMessageProducer.sendItemMessage(itemPO, "CREATE");
     }
 
     @Override
@@ -238,6 +240,9 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         itemPO.setStatus(status);
         this.updateById(itemPO);
 
+        // 发送二手交易信息更新消息
+        itemMessageProducer.sendItemMessage(itemPO, "UPDATE");
+
         // 清除缓存
         String detailCacheKey = "item:detail:" + id;
         redisTemplate.delete(detailCacheKey);
@@ -254,6 +259,9 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         BeanUtil.copyProperties(item, itemPO, CopyOptions.create().ignoreNullValue());
         itemPO.setUpdateTime(LocalDateTime.now());
         this.updateById(itemPO);
+
+        // 发送二手交易信息更新消息
+        itemMessageProducer.sendItemMessage(itemPO, "UPDATE");
 
         // 清除缓存
         String detailCacheKey = "item:detail:" + item.getId();

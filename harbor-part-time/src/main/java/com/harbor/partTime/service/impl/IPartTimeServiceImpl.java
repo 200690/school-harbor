@@ -21,6 +21,7 @@ import com.harbor.partTime.domain.vo.PartTimeVO;
 import com.harbor.partTime.mapper.ApplicationMapper;
 import com.harbor.partTime.mapper.FavoriteMapper;
 import com.harbor.partTime.mapper.PartTimeMapper;
+import com.harbor.partTime.producer.JobMessageProducer;
 import com.harbor.partTime.service.IPartTimeService;
 import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.UserInfoDTO;
@@ -46,6 +47,8 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
     private final FavoriteMapper favoriteMapper;
 
     private final RedisTemplate<String, Object> redisTemplate;
+
+    private final JobMessageProducer jobMessageProducer;
 
     public PageDTO<PartTimeVO> queryPartTimeList(PartTimeQueryDTO dto) {
         // 对于首页推荐列表，尝试从缓存获取
@@ -155,6 +158,8 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         partTimePO.setPublisherId(UserContext.getUser());
         BeanUtil.copyProperties(partTimeCreateDTO, partTimePO);
         this.save(partTimePO);
+        // 发送兼职信息创建消息
+        jobMessageProducer.sendJobMessage(partTimePO, "CREATE");
     }
 
     /**
@@ -208,6 +213,9 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         partTimePO.setStatus(status);
         this.updateById(partTimePO);
 
+        // 发送兼职信息更新消息
+        jobMessageProducer.sendJobMessage(partTimePO, "UPDATE");
+
         // 清除缓存
         String detailCacheKey = "job:detail:" + id;
         redisTemplate.delete(detailCacheKey);
@@ -229,6 +237,9 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         BeanUtil.copyProperties(partTimeDTO, partTimePO, CopyOptions.create().ignoreNullValue());
         partTimePO.setUpdateTime(LocalDateTime.now());
         this.updateById(partTimePO);
+
+        // 发送兼职信息更新消息
+        jobMessageProducer.sendJobMessage(partTimePO, "UPDATE");
 
         // 清除缓存
         String detailCacheKey = "job:detail:" + partTimeDTO.getId();
