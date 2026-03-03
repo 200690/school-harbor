@@ -87,56 +87,56 @@
         <div class="function-nav">
           <router-link to="/user/user/publish" class="function-item">
             <div class="function-icon">
-              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的发布.png" alt="我的发布" />
+              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的发布.png" alt="我的发布" />
             </div>
             <span class="function-name">我的发布</span>
             <span class="function-count">{{ userInfo.publicCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/applications" class="function-item">
             <div class="function-icon">
-              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的申请.png" alt="我的申请" />
+              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的申请.png" alt="我的申请" />
             </div>
             <span class="function-name">我的申请</span>
             <span class="function-count">{{ userInfo.applicationCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/purchases" class="function-item">
             <div class="function-icon">
-              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的购买.png" alt="我的购买" />
+              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的购买.png" alt="我的购买" />
             </div>
             <span class="function-name">我的购买</span>
             <span class="function-count">{{ userInfo.buyCounnt || 0 }}</span>
           </router-link>
           <router-link to="/user/user/messages" class="function-item">
             <div class="function-icon">
-              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/消息通知.png" alt="消息通知" />
+              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/消息通知.png" alt="消息通知" />
             </div>
             <span class="function-name">消息通知</span>
             <span class="function-count">{{ userMessages.length }}</span>
           </router-link>
           <router-link to="/user/user/favorites" class="function-item">
             <div class="function-icon">
-              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的收藏.png" alt="我的收藏" />
+              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的收藏.png" alt="我的收藏" />
             </div>
             <span class="function-name">我的收藏</span>
             <span class="function-count">{{ userInfo.favCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/follows" class="function-item">
             <div class="function-icon">
-              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的关注.png" alt="我的关注" />
+              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的关注.png" alt="我的关注" />
             </div>
             <span class="function-name">我的关注</span>
             <span class="function-count">{{ userFollows.length }}</span>
           </router-link>
           <router-link to="/user/user/blacklist" class="function-item">
             <div class="function-icon">
-              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/黑名单.png" alt="黑名单" />
+              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/黑名单.png" alt="黑名单" />
             </div>
             <span class="function-name">黑名单</span>
             <span class="function-count">{{ userBlacklist.length }}</span>
           </router-link>
           <router-link to="/user/user/evaluations" class="function-item">
             <div class="function-icon">
-              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/user-center/我的评价.png" alt="我的评价" />
+              <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的评价.png" alt="我的评价" />
             </div>
             <span class="function-name">我的评价</span>
           </router-link>

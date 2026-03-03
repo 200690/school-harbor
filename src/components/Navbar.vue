@@ -3,7 +3,7 @@
     <div class="container flex items-center justify-between h-full">
       <!-- 品牌标识 -->
       <div class="navbar-brand flex items-center gap-2">
-        <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/校园港湾.ico" alt="校园港湾" class="brand-logo" />
+        <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/校园港湾.ico" alt="校园港湾" class="brand-logo" />
         <router-link to="/">校园港湾</router-link>
       </div>
       

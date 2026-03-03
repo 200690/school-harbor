@@ -119,12 +119,12 @@ import { getPartTimeList } from '@/api/partTime'
 import { getSecondHandList } from '@/api/secondHand'
 
 const serviceIcons = ref({
-  partTime: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/校园兼职.png',
-  secondHand: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/二手交易.png',
-  internship: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/实习机会.png',
-  textbook: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/教材教辅.png',
-  electronics: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/电子产品.png',
-  life: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/service/生活用品.png'
+  partTime: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/校园兼职.png',
+  secondHand: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/二手交易.png',
+  internship: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/实习机会.png',
+  textbook: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/教材教辅.png',
+  electronics: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/电子产品.png',
+  life: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/生活用品.png'
 })
 
 const carouselItems = ref([
@@ -132,19 +132,19 @@ const carouselItems = ref([
     title: '寻找校园兼职，赚取零花钱',
     description: '海量校园兼职机会，安全可靠，时间灵活',
     link: '/part-time',
-    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/兼职横幅.png'
+    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/%E5%85%BC%E8%81%8C%E6%A8%AA%E5%B9%85.png?x-oss-credential=LTAI5tCJ4Rq9wKoXy2scZa4k%2F20260303%2Fcn-beijing%2Foss%2Faliyun_v4_request&x-oss-date=20260303T134647Z&x-oss-expires=3600&x-oss-signature-version=OSS4-HMAC-SHA256&x-oss-signature=82943d9f8e9fa216d1a1eb25626d429430006da7713700045647193bbe9bc79d'
   },
   {
     title: '二手交易，让闲置物品找到新主人',
     description: '校园内的二手交易平台，方便快捷，性价比高',
     link: '/second-hand',
-    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/二手横幅.png'
+    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/二手横幅.png'
   },
   {
     title: '实习机会，为未来铺路',
     description: '优质实习岗位，提升专业技能，积累工作经验',
     link: '/part-time?type=internship',
-    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/school-harbor/web/实习横幅.png'
+    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/实习横幅.png'
   }
 ])
 
