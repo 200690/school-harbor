@@ -26,4 +26,6 @@ public interface ISecondHandService extends IService<ItemPO> {
     void updateItem(ItemCreateDTO item);
 
     ItemMainDTO getItemMain(Long id);
+
+    void removeItemById(Long id);
 }

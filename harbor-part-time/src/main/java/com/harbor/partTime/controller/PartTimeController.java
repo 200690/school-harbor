@@ -68,7 +68,7 @@ public class PartTimeController {
     @DeleteMapping("/deleteJob/{id}")
     public Result<Void> delete(@PathVariable Long id){
         log.info("删除兼职: {}", id);
-        partTimeService.removeById(id);
+        partTimeService.removeJobById(id);
         return Result.success();
     }
 

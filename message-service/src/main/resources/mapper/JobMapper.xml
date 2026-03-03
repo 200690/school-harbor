@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.harbor.messageservice.mapper.JobMapper">
+
+    <select id="selectByJobId" resultType="com.harbor.messageservice.domain.po.UserJobPostsPO">
+        SELECT * FROM user_job_posts WHERE job_id = #{jobId}
+    </select>
+
+    <delete id="deleteByJobId">
+        DELETE FROM user_job_posts WHERE job_id = #{jobId}
+    </delete>
+
+</mapper>

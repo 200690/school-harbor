@@ -90,6 +90,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Assert.isNull(lambdaQuery().eq(User::getPhone, user.getPhone()).one(), "用户已存在");
         this.save(user);
         // 发送用户信息创建消息
+        // TODO 未测试
         userMessageProducer.sendUserMessage(user, "CREATE");
         log.info("用户注册成功：{}", user);
     }

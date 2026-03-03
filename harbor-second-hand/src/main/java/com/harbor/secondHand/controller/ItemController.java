@@ -90,8 +90,7 @@ public class ItemController {
     @DeleteMapping("/deleteItem/{id}")
     public Result<Void> deleteItem(@PathVariable Long id) {
         log.info("删除商品接口: {}", id);
-        Assert.notNull(id, "商品不存在");
-        secondHandService.removeById(id);
+        secondHandService.removeItemById(id);
         return Result.success();
     }
 

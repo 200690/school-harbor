@@ -13,32 +13,20 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JobConsumer {
+  //更新status表
 
   private final JobMapper jobMapper;
 
   @RabbitListener(queues = RabbitMQConfig.JOB_QUEUE_NAME)
-  public void handleJobMessage(Map<String, Object> message, Channel channel,
-      @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
-    try {
-      log.info("接收到兼职信息变化消息: {}", message);
-
-      // 转换消息
-      JobMessage jobMessage = new JobMessage();
-      jobMessage.setJobId((Long) message.get("jobId"));
-      jobMessage.setUserId((Long) message.get("userId"));
-      jobMessage.setTitle((String) message.get("title"));
-      jobMessage.setDescription((String) message.get("description"));
-      jobMessage.setSalary((String) message.get("salary"));
-      jobMessage.setLocation((String) message.get("location"));
-      jobMessage.setStatus((Integer) message.get("status"));
-      jobMessage.setUpdateTime((java.time.LocalDateTime) message.get("updateTime"));
-      jobMessage.setOperationType((String) message.get("operationType"));
+    public void handleJobMessage(JobMessage jobMessage, Channel channel,
+        @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        try {
+            log.info("接收到兼职信息变化消息: {}", jobMessage);
 
       // 处理消息
       processJobMessage(jobMessage);

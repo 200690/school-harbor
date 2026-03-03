@@ -1,6 +1,7 @@
 package com.harbor.secondHand.producer;
 
 import com.harbor.secondHand.config.RabbitMQConfig;
+import com.harbor.secondHand.domain.dto.ItemMessageDTO;
 import com.harbor.secondHand.domain.po.ItemPO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -8,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -20,21 +19,21 @@ public class ItemMessageProducer {
 
   /**
    * 发送二手交易信息变化消息
-   * 
+   *
    * @param itemPO        二手交易信息
    * @param operationType 操作类型：CREATE, UPDATE, DELETE
    */
   public void sendItemMessage(ItemPO itemPO, String operationType) {
     try {
-      Map<String, Object> message = new HashMap<>();
-      message.put("itemId", itemPO.getId());
-      message.put("userId", itemPO.getSellerId());
-      message.put("title", itemPO.getTitle());
-      message.put("description", itemPO.getDescription());
-      message.put("price", itemPO.getPrice());
-      message.put("status", itemPO.getStatus());
-      message.put("updateTime", LocalDateTime.now());
-      message.put("operationType", operationType);
+      ItemMessageDTO message = new ItemMessageDTO();
+      message.setItemId(itemPO.getId());
+      message.setUserId(itemPO.getSellerId());
+      message.setTitle(itemPO.getTitle());
+      message.setDescription(itemPO.getDescription());
+      message.setPrice(itemPO.getPrice());
+      message.setStatus(itemPO.getStatus());
+      message.setUpdateTime(LocalDateTime.now());
+      message.setOperationType(operationType);
 
       rabbitTemplate.convertAndSend(
           RabbitMQConfig.EXCHANGE_NAME,

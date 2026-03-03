@@ -57,6 +57,7 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
             this.updateById(userBalance);
         }
         log.info("用户充值成功：{}", userBalance);
+        //TODO 发送用户信息更新消息更新余额，user中无balance字段
         userMessageProducer.sendUserMessage(user, "UPDATE");
     }
 }

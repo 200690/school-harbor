@@ -13,30 +13,19 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ItemConsumer {
+    //TODO 更新status表
 
     private final ItemMapper itemMapper;
 
     @RabbitListener(queues = RabbitMQConfig.ITEM_QUEUE_NAME)
-    public void handleItemMessage(Map<String, Object> message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleItemMessage(ItemMessage itemMessage, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         try {
-            log.info("接收到二手交易信息变化消息: {}", message);
-
-            // 转换消息
-            ItemMessage itemMessage = new ItemMessage();
-            itemMessage.setItemId((Long) message.get("itemId"));
-            itemMessage.setUserId((Long) message.get("userId"));
-            itemMessage.setTitle((String) message.get("title"));
-            itemMessage.setDescription((String) message.get("description"));
-            itemMessage.setPrice((java.math.BigDecimal) message.get("price"));
-            itemMessage.setStatus((Integer) message.get("status"));
-            itemMessage.setUpdateTime((java.time.LocalDateTime) message.get("updateTime"));
-            itemMessage.setOperationType((String) message.get("operationType"));
+            log.info("接收到二手交易信息变化消息: {}", itemMessage);
 
             // 处理消息
             processItemMessage(itemMessage);

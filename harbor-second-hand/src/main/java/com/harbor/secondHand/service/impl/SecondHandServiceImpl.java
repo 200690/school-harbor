@@ -280,6 +280,18 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         return BeanUtil.copyProperties(itemPO, ItemMainDTO.class);
     }
 
+    @Override
+    public void removeItemById(Long id) {
+        Assert.notNull(id, "商品不存在");
+        this.removeById(id);
+        // 删除缓存
+        log.info("删除商品缓存: {}", id);
+        String cacheKey = "item:detail:" + id;
+        redisTemplate.delete(cacheKey);
+        // TODO 消息队列删除接口
+//        itemMessageProducer.sendItemMessage(itemPO, "DELETE");
+    }
+
     public void addViewCount(ItemPO itemPO) {
         itemPO.setViewCount(itemPO.getViewCount() + 1);
         this.updateById(itemPO);

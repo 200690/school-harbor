@@ -298,6 +298,17 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         return lambdaQuery().in(PartTimePO::getId, ids).list();
     }
 
+    @Override
+    public void removeJobById(Long id) {
+        Assert.notNull(id, "id不能为空");
+        this.removeById(id);
+        // 删除缓存
+        String cacheKey = "job:detail:" + id;
+        redisTemplate.delete(cacheKey);
+        log.info("清除兼职缓存: {}", id);
+        // TODO 删除消息队列
+    }
+
     public <T extends BaseJobStatusVO> void setBaseJobStatusVO(T vo, Long partTimeId, PartTimePO po) {
         vo.setIsPublisher(Objects.equals(po.getPublisherId(), UserContext.getUser()));
         if (vo.getIsPublisher() == true) {
