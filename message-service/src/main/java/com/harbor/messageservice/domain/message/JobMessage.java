@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class JobMessage {
-    private Long jobId;
+  private Long jobId;
   private Long userId;
   private String title;
   private String description;
@@ -15,4 +15,5 @@ public class JobMessage {
   private Integer status;
   private LocalDateTime updateTime;
   private String operationType;
-  
+
+}

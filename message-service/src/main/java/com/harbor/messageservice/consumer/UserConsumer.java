@@ -3,17 +3,18 @@ package com.harbor.messageservice.consumer;
 import com.harbor.messageservice.config.RabbitMQConfig;
 import com.harbor.messageservice.domain.message.UserMessage;
 import com.harbor.messageservice.domain.po.UserProfilePO;
+import com.harbor.messageservice.domain.vo.UserCenterVO;
 import com.harbor.messageservice.mapper.UserMapper;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -22,22 +23,12 @@ public class UserConsumer {
 
     private final UserMapper userMapper;
 
-    @RabbitListener(queues = RabbitMQConfig.USER_QUEUE_NAME)
-    public void handleUserMessage(Map<String, Object> message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
-        try {
-            log.info("接收到用户信息变化消息: {}", message);
+    private final RedisTemplate<String, Object> redisTemplate;
 
-            // 转换消息
-            UserMessage userMessage = new UserMessage();
-            userMessage.setUserId((Long) message.get("userId"));
-            userMessage.setUsername((String) message.get("username"));
-            userMessage.setAvatar((String) message.get("avatar"));
-            userMessage.setPhone((String) message.get("phone"));
-            userMessage.setEmail((String) message.get("email"));
-            userMessage.setBalance((java.math.BigDecimal) message.get("balance"));
-            userMessage.setCreditScore((Integer) message.get("creditScore"));
-            userMessage.setUpdateTime((java.time.LocalDateTime) message.get("updateTime"));
-            userMessage.setOperationType((String) message.get("operationType"));
+    @RabbitListener(queues = RabbitMQConfig.USER_QUEUE_NAME)
+    public void handleUserMessage(UserMessage userMessage, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        try {
+            log.info("接收到用户信息变化消息: {}", userMessage);
 
             // 处理消息
             processUserMessage(userMessage);
@@ -69,6 +60,11 @@ public class UserConsumer {
                     existingUser.setUpdateTime(userMessage.getUpdateTime());
                     userMapper.updateById(existingUser);
                     log.info("更新用户信息: userId={}", userMessage.getUserId());
+//                    清除缓存
+                    log.info("清除用户信息缓存: userId={}", userMessage.getUserId());
+                    String cacheKey = "user:center:" + userMessage.getUserId();
+                    redisTemplate.delete(cacheKey);
+
                 } else {
                     // 创建
                     UserProfilePO newUser = new UserProfilePO();
@@ -81,6 +77,9 @@ public class UserConsumer {
                     newUser.setCreditScore(userMessage.getCreditScore());
                     userMapper.insert(newUser);
                     log.info("创建用户信息: userId={}", userMessage.getUserId());
+//                    写入缓存
+                    String cacheKey = "user:center:" + userMessage.getUserId();
+                    redisTemplate.opsForValue().set(cacheKey, newUser, 1, java.util.concurrent.TimeUnit.HOURS);
                 }
                 break;
             case "DELETE":

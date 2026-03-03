@@ -6,6 +6,7 @@ import com.harbor.secondHand.user.domain.po.User;
 import com.harbor.secondHand.user.domain.po.UserBalance;
 import com.harbor.secondHand.user.mapper.BalanceMapper;
 import com.harbor.secondHand.user.mapper.UserMapper;
+import com.harbor.secondHand.user.producer.UserMessageProducer;
 import com.harbor.secondHand.user.service.IbalanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,8 @@ import java.util.Objects;
 public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance> implements IbalanceService {
 
     private final UserMapper userMapper;
+
+    private final UserMessageProducer userMessageProducer;
 
     /**
      * 用户充值
@@ -54,5 +57,6 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
             this.updateById(userBalance);
         }
         log.info("用户充值成功：{}", userBalance);
+        userMessageProducer.sendUserMessage(user, "UPDATE");
     }
 }

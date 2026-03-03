@@ -16,9 +16,9 @@ spring:
   rabbitmq:
     host: 115.190.252.109 # 你的虚拟机IP
     port: 5672 # 端口
-    virtual-host: /  # 虚拟主机
-    username: hmall # 用户名
-    password: 123 # 密码
+    virtual-host: /harbor  # 虚拟主机
+    username: harbor # 用户名
+    password: harbor # 密
     # 生产者确认配置（可选，确保消息成功投递到交换机）
     publisher-confirm-type: correlated
     # 生产者退回配置（可选，消息无法路由到队列时回调）
