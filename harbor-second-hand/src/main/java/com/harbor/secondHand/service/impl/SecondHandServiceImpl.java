@@ -18,6 +18,7 @@ import com.harbor.secondHand.domain.vo.MyItem;
 import com.harbor.secondHand.mapper.BrowseHistoryMapper;
 import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.producer.ItemMessageProducer;
+import com.harbor.secondHand.producer.PublishNotificationProducer;
 import com.harbor.secondHand.service.ISecondHandService;
 import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.ItemMainDTO;
@@ -45,6 +46,8 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final ItemMessageProducer itemMessageProducer;
+
+    private final PublishNotificationProducer publishNotificationProducer;
 
     @Override
     public PageDTO<ItemListItemVO> querySecondHandItemList(ItemQueryConditionDTO itemQueryConditionDTO) {
@@ -206,6 +209,12 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         this.save(itemPO);
         // 发送二手交易信息创建消息
         itemMessageProducer.sendItemMessage(itemPO, "CREATE");
+        // 发送发布成功通知消息
+        publishNotificationProducer.sendItemPublishNotification(
+                itemPO.getId(),
+                itemPO.getSellerId(),
+                itemPO.getTitle()
+        );
     }
 
     @Override

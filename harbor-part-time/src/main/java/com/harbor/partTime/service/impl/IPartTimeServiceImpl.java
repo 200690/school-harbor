@@ -22,6 +22,7 @@ import com.harbor.partTime.mapper.ApplicationMapper;
 import com.harbor.partTime.mapper.FavoriteMapper;
 import com.harbor.partTime.mapper.PartTimeMapper;
 import com.harbor.partTime.producer.JobMessageProducer;
+import com.harbor.partTime.producer.PublishNotificationProducer;
 import com.harbor.partTime.service.IPartTimeService;
 import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.UserInfoDTO;
@@ -49,6 +50,8 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final JobMessageProducer jobMessageProducer;
+
+    private final PublishNotificationProducer publishNotificationProducer;
 
     public PageDTO<PartTimeVO> queryPartTimeList(PartTimeQueryDTO dto) {
         // 对于首页推荐列表，尝试从缓存获取
@@ -149,7 +152,7 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
 
     /**
      * 发布兼职
-     * 
+     *
      * @param partTimeCreateDTO
      */
     @Override
@@ -160,6 +163,12 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         this.save(partTimePO);
         // 发送兼职信息创建消息
         jobMessageProducer.sendJobMessage(partTimePO, "CREATE");
+        // 发送发布成功通知消息
+        publishNotificationProducer.sendJobPublishNotification(
+                partTimePO.getId(),
+                partTimePO.getPublisherId(),
+                partTimePO.getTitle()
+        );
     }
 
     /**

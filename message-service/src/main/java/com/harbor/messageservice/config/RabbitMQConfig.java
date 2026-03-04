@@ -19,12 +19,14 @@ public class RabbitMQConfig {
     public static final String ITEM_QUEUE_NAME = "harbor.item.queue";
     public static final String USER_QUEUE_NAME = "harbor.user.queue";
     public static final String APPLICATION_QUEUE_NAME = "harbor.application.queue";
+    public static final String PUBLISH_NOTIFICATION_QUEUE_NAME = "harbor.publish.notification.queue";
 
     // 路由键
     public static final String JOB_ROUTING_KEY = "harbor.job";
     public static final String ITEM_ROUTING_KEY = "harbor.item";
     public static final String USER_ROUTING_KEY = "harbor.user";
     public static final String APPLICATION_ROUTING_KEY = "harbor.application";
+    public static final String PUBLISH_NOTIFICATION_ROUTING_KEY = "harbor.publish.notification";
 
     // 创建交换机
     @Bean
@@ -95,6 +97,22 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(applicationQueue)
                 .to(exchange)
                 .with(APPLICATION_ROUTING_KEY)
+                .noargs();
+    }
+
+    // 创建发布通知消息队列
+    @Bean
+    public Queue publishNotificationQueue() {
+        return QueueBuilder.durable(PUBLISH_NOTIFICATION_QUEUE_NAME)
+                .build();
+    }
+
+    // 绑定发布通知消息队列到交换机
+    @Bean
+    public Binding publishNotificationBinding(Queue publishNotificationQueue, Exchange exchange) {
+        return BindingBuilder.bind(publishNotificationQueue)
+                .to(exchange)
+                .with(PUBLISH_NOTIFICATION_ROUTING_KEY)
                 .noargs();
     }
 

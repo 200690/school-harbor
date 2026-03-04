@@ -20,6 +20,7 @@ public class RabbitMQConfig {
     // 路由键
     public static final String JOB_ROUTING_KEY = "harbor.job";
     public static final String APPLICATION_ROUTING_KEY = "harbor.application";
+    public static final String PUBLISH_NOTIFICATION_ROUTING_KEY = "harbor.publish.notification";
 
     // 创建交换机
     @Bean
