@@ -11,13 +11,15 @@ public class ApplicationPO {
     @TableId(type = IdType.AUTO)
     private Long id;                       // 申请记录ID
     private Long partTimeId;                // 兼职ID
+    private String title;
     private Long userId;                    // 申请人用户ID
-    private Long resumeId;                  // 使用的简历ID
+    private String companyName;
+    private String companyPhone;
+    private String resume;                  // 使用的简历
     private LocalDateTime applyTime;        // 申请时间
+    private String remark;
     private Integer status;                  // 状态：0-待审核，1-已通过，2-已拒绝，3-已取消，4-已完成
-    private LocalDateTime interviewTime;     // 面试时间
-    private String interviewLocation;        // 面试地点/方式
-    private String remark;                   // 备注
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;        // 更新时间
+    private Long publisherId;
 }

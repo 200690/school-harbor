@@ -9,6 +9,7 @@ import com.harbor.common.domain.PageQuery;
 import com.harbor.partTime.domain.po.ApplicationPO;
 import com.harbor.partTime.domain.po.PartTimePO;
 import com.harbor.partTime.domain.vo.ApplicationRecordVO;
+import com.harbor.partTime.domain.vo.ApplicationerVO;
 import com.harbor.partTime.mapper.ApplicationMapper;
 import com.harbor.partTime.mapper.PartTimeMapper;
 import com.harbor.partTime.service.IApplicationService;
@@ -99,4 +100,21 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         partTimePO.setApplicantCount(partTimePO.getApplicantCount() - 1);
         partTimeMapper.updateById(partTimePO);
     }
+
+    @Override
+    public PageDTO<ApplicationerVO> getPartTimeApplyList(PageQuery pageQuery) {
+        Assert.notNull(pageQuery.getId(), "用户ID不能为空");
+        Page<ApplicationPO> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
+
+        Page<ApplicationPO> applicationPOPage = lambdaQuery()
+                .eq(ApplicationPO::getPartTimeId, pageQuery.getId())
+                .orderByDesc(ApplicationPO::getUpdateTime)
+                .page(page);
+        List<ApplicationerVO> voList = applicationPOPage.getRecords().stream().map(applicationPO ->
+                BeanUtil.copyProperties(applicationPO, ApplicationerVO.class)
+        ).toList();
+
+        return new PageDTO<>(applicationPOPage.getTotal(), applicationPOPage.getPages(), voList);
+    }
+
 }

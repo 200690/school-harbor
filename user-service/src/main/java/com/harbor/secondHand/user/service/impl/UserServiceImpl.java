@@ -1,10 +1,14 @@
 package com.harbor.secondHand.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.exception.ForbiddenException;
 import com.harbor.secondHand.user.config.JwtProperties;
 import com.harbor.secondHand.user.domain.dto.LoginFormDTO;
+import com.harbor.secondHand.user.domain.dto.UserMessageDTO;
+import com.harbor.secondHand.user.domain.po.UserBalance;
+import com.harbor.secondHand.user.mapper.BalanceMapper;
 import com.harbor.secondHand.user.producer.UserMessageProducer;
 import com.harbor.utils.dto.UserInfoDTO;
 import com.harbor.secondHand.user.domain.dto.UserRegisterDTO;
@@ -36,6 +40,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final UserMessageProducer userMessageProducer;
+
+    private final BalanceMapper balanceMapper;
 
     /**
      * 用户登录
@@ -90,7 +96,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Assert.isNull(lambdaQuery().eq(User::getPhone, user.getPhone()).one(), "用户已存在");
         this.save(user);
         // 发送用户信息创建消息
-        userMessageProducer.sendUserMessage(user, "CREATE");
+        UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
+        userMessageProducer.sendUserMessage(messageDTO, "CREATE");
+        messageDTO.setBalance(0);
         log.info("用户注册成功：{}", user);
     }
 
@@ -132,7 +140,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         this.updateById(user);
 
         // 发送用户信息更新消息
-        userMessageProducer.sendUserMessage(user, "UPDATE");
+        UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
+        userMessageProducer.sendUserMessage(messageDTO, "CREATE");
+        UserBalance userBalance = balanceMapper.selectOne(new QueryWrapper<UserBalance>().eq("user_id", user.getId()));
+        messageDTO.setBalance(userBalance.getBalance());
+        userMessageProducer.sendUserMessage(messageDTO, "UPDATE");
 
         // 清除缓存
         String cacheKey = "user:info:" + userInfoDTO.getId();

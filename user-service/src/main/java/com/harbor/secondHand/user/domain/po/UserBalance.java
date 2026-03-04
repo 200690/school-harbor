@@ -14,7 +14,7 @@ public class UserBalance {
     /**
      * 用户ID（主键，与用户表1对1）
      */
-    @TableId(type = IdType.INPUT)
+    @TableId(type = IdType.INPUT, value = "user_id")
     private Long userId;
 
     /**

@@ -3,7 +3,9 @@ package com.harbor.partTime.controller;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
+import com.harbor.partTime.domain.po.ApplicationPO;
 import com.harbor.partTime.domain.vo.ApplicationRecordVO;
+import com.harbor.partTime.domain.vo.ApplicationerVO;
 import com.harbor.partTime.service.IApplicationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -39,5 +41,10 @@ public class ApplicationController {
         return Result.success(applicationService.getMyApplications(pageQuery));
     }
 
-
+    @ApiOperation("获取兼职申请列表")
+    @PostMapping("applyMy")
+    public Result<PageDTO<ApplicationerVO>> getPartTimeApplyList(@RequestBody PageQuery pageQuery) {
+        log.info("获取兼职申请列表");
+        return Result.success(applicationService.getPartTimeApplyList(pageQuery));
+    }
 }

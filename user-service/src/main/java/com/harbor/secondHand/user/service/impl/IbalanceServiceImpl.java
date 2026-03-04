@@ -2,6 +2,7 @@ package com.harbor.secondHand.user.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.secondHand.user.domain.dto.RechargeDTO;
+import com.harbor.secondHand.user.domain.dto.UserMessageDTO;
 import com.harbor.secondHand.user.domain.po.User;
 import com.harbor.secondHand.user.domain.po.UserBalance;
 import com.harbor.secondHand.user.mapper.BalanceMapper;
@@ -57,6 +58,8 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
             this.updateById(userBalance);
         }
         log.info("用户充值成功：{}", userBalance);
-        userMessageProducer.sendUserMessage(user, "UPDATE");
+        UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
+        messageDTO.setBalance(userBalance.getBalance());
+        userMessageProducer.sendUserMessage(messageDTO, "UPDATE");
     }
 }
