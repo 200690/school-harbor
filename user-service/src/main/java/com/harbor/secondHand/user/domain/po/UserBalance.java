@@ -53,5 +53,5 @@ public class UserBalance {
     /**
      * 冻结余额
      */
-    private int frozen_balance;
+    private int frozenBalance;
 }

@@ -12,7 +12,7 @@ public class UserMessageDTO {
     private String avatar;
     private String phone;
     private String email;
-    private BigDecimal balance;
+    private Integer balance;
     private Integer creditScore;
     private LocalDateTime updateTime;
     private String operationType;

@@ -63,7 +63,7 @@ public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implemen
             if (StringUtils.isNotBlank(commentsPO.getImages())) {
                 commentVO.setImages(Arrays.asList(commentsPO.getImages()));
             }
-            //TODO 填充是否点赞字段 isLiked
+            //填充是否点赞字段 isLiked
             CommentLikesPO likesPO = commentsLikes.selectOne((new LambdaQueryWrapper<CommentLikesPO>())
                     .eq(CommentLikesPO::getCommentId, commentsPO.getId())
                     .eq(CommentLikesPO::getUserId, commentsPO.getUserId())
