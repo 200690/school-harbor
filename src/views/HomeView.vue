@@ -132,7 +132,7 @@ const carouselItems = ref([
     title: '寻找校园兼职，赚取零花钱',
     description: '海量校园兼职机会，安全可靠，时间灵活',
     link: '/part-time',
-    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/%E5%85%BC%E8%81%8C%E6%A8%AA%E5%B9%85.png?x-oss-credential=LTAI5tCJ4Rq9wKoXy2scZa4k%2F20260303%2Fcn-beijing%2Foss%2Faliyun_v4_request&x-oss-date=20260303T134647Z&x-oss-expires=3600&x-oss-signature-version=OSS4-HMAC-SHA256&x-oss-signature=82943d9f8e9fa216d1a1eb25626d429430006da7713700045647193bbe9bc79d'
+    image: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/兼职横幅.png'
   },
   {
     title: '二手交易，让闲置物品找到新主人',

@@ -114,6 +114,9 @@
                     <el-button size="small" type="success" @click="editPost(post)">
                       编辑
                     </el-button>
+                    <el-button v-if="post.type === 'part-time'" size="small" type="info" @click="manageApplications(post)">
+                      管理申请
+                    </el-button>
                     <el-button size="small" type="warning" @click="toggleStatus(post)">
                       {{ post.status == 1 ? '下架' : '上架' }}
                     </el-button>
@@ -165,6 +168,9 @@
                     </el-button>
                     <el-button size="small" type="success" @click="editPost(post)">
                       编辑
+                    </el-button>
+                    <el-button v-if="post.type === 'part-time'" size="small" type="info" @click="manageApplications(post)">
+                      管理申请
                     </el-button>
                     <el-button size="small" type="warning" @click="toggleStatus(post)">
                       {{ post.status == 1 ? '下架' : '上架' }}
@@ -311,6 +317,28 @@ const deletePost = async (post) => {
     }
   }).catch(() => {
     // 取消删除
+  })
+}
+
+// 管理申请
+const manageApplications = (post) => {
+  // 发送 API 请求
+  fetch(`http://localhost:8080/api/part-time/apply/applyMy/${post.id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('获取申请列表成功:', data)
+    // 跳转到管理申请页面
+    router.push(`/user/user/applications?jobId=${post.id}`)
+  })
+  .catch(error => {
+    console.error('获取申请列表失败:', error)
+    ElMessage.error('获取申请列表失败')
   })
 }
 

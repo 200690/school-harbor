@@ -120,10 +120,10 @@
         <div class="job-actions">
           <!-- 发布者操作 -->
           <template v-if="jobDetail.isPublisher">
-            <el-button type="primary" size="large" class="apply-btn">
+            <el-button type="primary" size="large" class="apply-btn" @click="editJob">
               <i class="el-icon-edit"></i> 编辑职位
             </el-button>
-            <el-button size="large" class="favorite-btn">
+            <el-button size="large" class="favorite-btn" @click="manageApplications">
               <i class="el-icon-s-operation"></i> 管理申请
             </el-button>
             <el-button size="large" class="share-btn" @click="shareJob">
@@ -502,6 +502,29 @@ export default {
     },
     goHome() {
       this.$router.push('/')
+    },
+    editJob() {
+      this.$router.push(`/item/edit/${this.jobId}`)
+    },
+    manageApplications() {
+      // 发送 API 请求
+      fetch(`http://localhost:8080/api/part-time/apply/applyMy/${this.jobId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('获取申请列表成功:', data)
+        // 跳转到管理申请页面
+        this.$router.push(`/user/user/applications?jobId=${this.jobId}`)
+      })
+      .catch(error => {
+        console.error('获取申请列表失败:', error)
+        this.$message.error('获取申请列表失败')
+      })
     }
   }
 }
