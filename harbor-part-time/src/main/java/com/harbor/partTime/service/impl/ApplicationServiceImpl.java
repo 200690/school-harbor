@@ -161,7 +161,20 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new RuntimeException("申请状态异常");
         }
         this.updateById(one);
-        // TODO发送消息队列通知用户申请被拒绝
+
+        // 获取兼职信息，用于构建消息
+        PartTimePO partTimePO = partTimeMapper.selectById(one.getPartTimeId());
+        if (partTimePO != null) {
+            // 发送消息队列通知用户申请被拒绝
+            applicationMessageProducer.sendApplicationRejectMessage(
+                    applicationId,
+                    one.getPartTimeId(),
+                    one.getUserId(),
+                    partTimePO.getTitle()
+            );
+        } else {
+            log.warn("兼职信息不存在，无法发送拒绝通知，partTimeId: {}", one.getPartTimeId());
+        }
     }
 
 }
