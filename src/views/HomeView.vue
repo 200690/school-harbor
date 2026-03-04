@@ -81,7 +81,16 @@
                 <span class="tag tag-success">薪资: {{ job.salary }}</span>
               </div>
             </div>
-            <router-link :to="`/item/${job.id}`" class="btn btn-primary">查看详情</router-link>
+            <div class="job-actions">
+              <router-link :to="`/item/${job.id}`" class="btn btn-primary">查看详情</router-link>
+              <!-- 发布者操作 -->
+              <button 
+                class="btn btn-warning" 
+                @click="manageApplications(job)"
+              >
+                管理申请
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -115,8 +124,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getPartTimeList } from '@/api/partTime'
 import { getSecondHandList } from '@/api/secondHand'
+
+const router = useRouter()
 
 const serviceIcons = ref({
   partTime: 'https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/校园兼职.png',
@@ -190,7 +202,8 @@ const loadData = async () => {
             location: job.location,
             workTime: job.workTime,
             type: job.type === 1 ? '校内兼职' : job.type === 2 ? '校外兼职' : '实习',
-            salary: `${job.salaryDesc} ${job.salaryUnit}`
+            salary: `${job.salaryDesc} ${job.salaryUnit}`,
+            isPublisher: job.isPublisher
           }))
           console.log('兼职数据处理完成:', recommendedJobs.value)
           
@@ -208,7 +221,8 @@ const loadData = async () => {
               location: job.location,
               workTime: job.workTime,
               type: job.type === 1 ? '校内兼职' : job.type === 2 ? '校外兼职' : '实习',
-              salary: `${job.salaryDesc} ${job.salaryUnit}`
+              salary: `${job.salaryDesc} ${job.salaryUnit}`,
+              isPublisher: job.isPublisher
             }))
             console.log('兼职数据（数组格式）处理完成:', recommendedJobs.value)
             
@@ -305,6 +319,33 @@ const loadData = async () => {
 onMounted(() => {
   loadData()
 })
+
+// 管理申请
+const manageApplications = (job) => {
+  console.log('跳转到管理申请页面，jobId:', job.id)
+  
+  // 发送 POST 请求
+  fetch('http://localhost:8080/api/part-time/apply/applyMy', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+    },
+    body: JSON.stringify({
+      id: job.id,
+      pageNum: 1,
+      pageSize: 10
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('获取申请列表成功:', data)
+    router.push(`/manage/applications?jobId=${job.id}`)
+  })
+  .catch(error => {
+    console.error('获取申请列表失败:', error)
+  })
+}
 </script>
 
 <style scoped lang="scss">
@@ -512,6 +553,18 @@ onMounted(() => {
 
 .job-tags {
   margin-top: 12px;
+}
+
+.job-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.job-actions .btn {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
 }
 
 /* 推荐二手物品样式 */

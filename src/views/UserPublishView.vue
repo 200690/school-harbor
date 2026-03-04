@@ -322,23 +322,28 @@ const deletePost = async (post) => {
 
 // 管理申请
 const manageApplications = (post) => {
-  // 发送 API 请求
-  fetch(`http://localhost:8080/api/part-time/apply/applyMy/${post.id}`, {
-    method: 'GET',
+  console.log('跳转到管理申请页面，jobId:', post.id)
+  
+  // 发送 POST 请求
+  fetch('http://localhost:8080/api/part-time/apply/applyMy', {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    }
+      'Authorization': localStorage.getItem('token')
+    },
+    body: JSON.stringify({
+      id: post.id,
+      pageNum: 1,
+      pageSize: 10
+    })
   })
   .then(response => response.json())
   .then(data => {
     console.log('获取申请列表成功:', data)
-    // 跳转到管理申请页面
-    router.push(`/user/user/applications?jobId=${post.id}`)
+    router.push(`/manage/applications?jobId=${post.id}`)
   })
   .catch(error => {
     console.error('获取申请列表失败:', error)
-    ElMessage.error('获取申请列表失败')
   })
 }
 

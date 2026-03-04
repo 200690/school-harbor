@@ -507,23 +507,28 @@ export default {
       this.$router.push(`/item/edit/${this.jobId}`)
     },
     manageApplications() {
-      // 发送 API 请求
-      fetch(`http://localhost:8080/api/part-time/apply/applyMy/${this.jobId}`, {
-        method: 'GET',
+      console.log('跳转到管理申请页面，jobId:', this.jobId)
+      
+      // 发送 POST 请求
+      fetch('http://localhost:8080/api/part-time/apply/applyMy', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+          'Authorization': localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          id: this.jobId,
+          pageNum: 1,
+          pageSize: 10
+        })
       })
       .then(response => response.json())
       .then(data => {
         console.log('获取申请列表成功:', data)
-        // 跳转到管理申请页面
-        this.$router.push(`/user/user/applications?jobId=${this.jobId}`)
+        this.$router.push(`/manage/applications?jobId=${this.jobId}`)
       })
       .catch(error => {
         console.error('获取申请列表失败:', error)
-        this.$message.error('获取申请列表失败')
       })
     }
   }

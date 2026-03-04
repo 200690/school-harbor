@@ -79,7 +79,7 @@
             
             <!-- 发布者操作 -->
             <template v-if="job.isPublisher">
-              <button class="btn btn-warning">管理申请</button>
+              <button class="btn btn-warning" @click="manageApplications(job)">管理申请</button>
             </template>
             
             <!-- 普通用户操作 -->
@@ -273,6 +273,33 @@ export default {
         3: '实习'
       }
       return typeMap[type] || type
+    },
+
+    // 管理申请
+    manageApplications(job) {
+      console.log('跳转到管理申请页面，jobId:', job.id)
+      
+      // 发送 POST 请求
+      fetch('http://localhost:8080/api/part-time/apply/applyMy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          id: job.id,
+          pageNum: 1,
+          pageSize: 10
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('获取申请列表成功:', data)
+        this.$router.push(`/manage/applications?jobId=${job.id}`)
+      })
+      .catch(error => {
+        console.error('获取申请列表失败:', error)
+      })
     }
   }
 }

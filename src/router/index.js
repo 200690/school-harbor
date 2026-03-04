@@ -76,6 +76,11 @@ const routes = [
     component: () => import('../views/UserApplicationsView.vue')
   },
   {
+    path: '/manage/applications',
+    name: 'manage-applications',
+    component: () => import('../views/ManageApplicationsView.vue')
+  },
+  {
     path: '/user/user/purchases',
     name: 'user-purchases',
     component: () => import('../views/UserPurchasesView.vue')
