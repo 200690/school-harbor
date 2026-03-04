@@ -42,16 +42,6 @@ public class RechargeRecord {
     private Integer status;
 
     /**
-     * 支付订单号（关联pay-service）
-     */
-    private String payOrderNo;
-
-    /**
-     * 支付状态（冗余）
-     */
-    private String payStatus;
-
-    /**
      * 充值前余额
      */
     private int beforeBalance;
@@ -60,16 +50,6 @@ public class RechargeRecord {
      * 充值后余额
      */
     private int afterBalance;
-
-    /**
-     * 充值成功时间
-     */
-    private LocalDateTime rechargeTime;
-
-    /**
-     * 备注
-     */
-    private String remark;
 
     /**
      * 创建时间
@@ -82,17 +62,4 @@ public class RechargeRecord {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
-
-    // ========== 辅助方法 ==========
-    public boolean isSuccess() {
-        return status != null && status == 1;
-    }
-
-    public boolean isProcessing() {
-        return status != null && status == 0;
-    }
-
-    public boolean isFailed() {
-        return status != null && status == 2;
-    }
 }

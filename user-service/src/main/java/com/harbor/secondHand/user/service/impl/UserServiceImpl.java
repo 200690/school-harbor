@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.exception.ForbiddenException;
 import com.harbor.secondHand.user.config.JwtProperties;
 import com.harbor.secondHand.user.domain.dto.LoginFormDTO;
+import com.harbor.secondHand.user.domain.dto.UserMessageDTO;
 import com.harbor.secondHand.user.producer.UserMessageProducer;
 import com.harbor.utils.dto.UserInfoDTO;
 import com.harbor.secondHand.user.domain.dto.UserRegisterDTO;
@@ -90,7 +91,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Assert.isNull(lambdaQuery().eq(User::getPhone, user.getPhone()).one(), "用户已存在");
         this.save(user);
         // 发送用户信息创建消息
-        userMessageProducer.sendUserMessage(user, "CREATE");
+        UserMessageDTO message = new UserMessageDTO();
+        message.setUserId(user.getId());
+        message.setUsername(user.getUsername());
+        message.setAvatar(user.getImg());
+        message.setPhone(user.getPhone());
+        message.setEmail(user.getEmail());
+        message.setCreditScore(user.getCreditScore());
+        message.setUpdateTime(LocalDateTime.now());
+        userMessageProducer.sendUserMessage(message, "CREATE");
         log.info("用户注册成功：{}", user);
     }
 
@@ -130,9 +139,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = checkUserById(userInfoDTO.getId());
         BeanUtil.copyProperties(userInfoDTO, user);
         this.updateById(user);
-
+        UserMessageDTO message = new UserMessageDTO();
+        message.setUserId(user.getId());
+        message.setUsername(user.getUsername());
+        message.setAvatar(user.getImg());
+        message.setPhone(user.getPhone());
+        message.setEmail(user.getEmail());
+        message.setCreditScore(user.getCreditScore());
+        message.setUpdateTime(LocalDateTime.now());
         // 发送用户信息更新消息
-        userMessageProducer.sendUserMessage(user, "UPDATE");
+        userMessageProducer.sendUserMessage(message, "UPDATE");
 
         // 清除缓存
         String cacheKey = "user:info:" + userInfoDTO.getId();

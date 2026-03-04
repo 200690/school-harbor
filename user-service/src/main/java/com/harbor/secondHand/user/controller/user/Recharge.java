@@ -10,5 +10,4 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RestController
 public class Recharge {
-    //TODO 消息队列写充值记录
 }
