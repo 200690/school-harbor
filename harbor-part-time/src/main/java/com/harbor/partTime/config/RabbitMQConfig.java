@@ -16,9 +16,10 @@ public class RabbitMQConfig {
 
     // 交换机名称
     public static final String EXCHANGE_NAME = "harbor.exchange";
-    
+
     // 路由键
     public static final String JOB_ROUTING_KEY = "harbor.job";
+    public static final String APPLICATION_ROUTING_KEY = "harbor.application";
 
     // 创建交换机
     @Bean

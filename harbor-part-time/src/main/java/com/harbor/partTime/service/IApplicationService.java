@@ -15,4 +15,7 @@ public interface IApplicationService extends IService<ApplicationPO> {
 
     PageDTO<ApplicationerVO> getPartTimeApplyList(PageQuery pageQuery);
 
+    void approveApply(Long applicationId);
+
+    void rejectApply(Long applicationId);
 }

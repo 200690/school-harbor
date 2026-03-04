@@ -1,5 +1,6 @@
 package com.harbor.partTime.controller;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
@@ -46,5 +47,21 @@ public class ApplicationController {
     public Result<PageDTO<ApplicationerVO>> getPartTimeApplyList(@RequestBody PageQuery pageQuery) {
         log.info("获取兼职申请列表");
         return Result.success(applicationService.getPartTimeApplyList(pageQuery));
+    }
+
+    @ApiOperation("同意兼职申请")
+    @PutMapping("approve/{id}")
+    public Result approveApply(@PathVariable Long id) {
+        log.info("同意兼职申请: {}", id);
+        applicationService.approveApply(id);
+        return Result.success();
+    }
+
+    @ApiOperation("拒绝兼职申请")
+    @PutMapping("reject/{id}")
+    public Result rejectApply(@PathVariable Long id) {
+        log.info("拒绝兼职申请: {}", id);
+        applicationService.rejectApply(id);
+        return Result.success();
     }
 }

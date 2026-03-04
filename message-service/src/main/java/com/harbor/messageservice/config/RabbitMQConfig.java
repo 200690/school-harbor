@@ -18,11 +18,13 @@ public class RabbitMQConfig {
     public static final String JOB_QUEUE_NAME = "harbor.job.queue";
     public static final String ITEM_QUEUE_NAME = "harbor.item.queue";
     public static final String USER_QUEUE_NAME = "harbor.user.queue";
-    
+    public static final String APPLICATION_QUEUE_NAME = "harbor.application.queue";
+
     // 路由键
     public static final String JOB_ROUTING_KEY = "harbor.job";
     public static final String ITEM_ROUTING_KEY = "harbor.item";
     public static final String USER_ROUTING_KEY = "harbor.user";
+    public static final String APPLICATION_ROUTING_KEY = "harbor.application";
 
     // 创建交换机
     @Bean
@@ -53,6 +55,13 @@ public class RabbitMQConfig {
                 .build();
     }
 
+    // 创建申请审批消息队列
+    @Bean
+    public Queue applicationQueue() {
+        return QueueBuilder.durable(APPLICATION_QUEUE_NAME)
+                .build();
+    }
+
     // 绑定兼职信息队列到交换机
     @Bean
     public Binding jobBinding(Queue jobQueue, Exchange exchange) {
@@ -77,6 +86,15 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(userQueue)
                 .to(exchange)
                 .with(USER_ROUTING_KEY)
+                .noargs();
+    }
+
+    // 绑定申请审批消息队列到交换机
+    @Bean
+    public Binding applicationBinding(Queue applicationQueue, Exchange exchange) {
+        return BindingBuilder.bind(applicationQueue)
+                .to(exchange)
+                .with(APPLICATION_ROUTING_KEY)
                 .noargs();
     }
 

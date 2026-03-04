@@ -12,6 +12,7 @@ import com.harbor.partTime.domain.vo.ApplicationRecordVO;
 import com.harbor.partTime.domain.vo.ApplicationerVO;
 import com.harbor.partTime.mapper.ApplicationMapper;
 import com.harbor.partTime.mapper.PartTimeMapper;
+import com.harbor.partTime.producer.ApplicationMessageProducer;
 import com.harbor.partTime.service.IApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, ApplicationPO> implements IApplicationService {
 
     private final PartTimeMapper partTimeMapper;
+    private final ApplicationMessageProducer applicationMessageProducer;
 
 
     /**
@@ -115,6 +117,51 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         ).toList();
 
         return new PageDTO<>(applicationPOPage.getTotal(), applicationPOPage.getPages(), voList);
+    }
+
+    @Override
+    public void approveApply(Long applicationId) {
+        Assert.notNull(applicationId, "申请ID不能为空");
+        ApplicationPO one = lambdaQuery().eq(ApplicationPO::getId, applicationId).one();
+        Assert.notNull(one, "申请不存在");
+        if(one.getStatus() == 0){
+            one.setStatus(1);
+        }else if(one.getStatus() == 1){
+            return;
+        }else{
+            throw new RuntimeException("申请状态异常");
+        }
+        this.updateById(one);
+
+        // 获取兼职信息，用于构建消息
+        PartTimePO partTimePO = partTimeMapper.selectById(one.getPartTimeId());
+        if (partTimePO != null) {
+            // 发送消息队列通知用户申请通过
+            applicationMessageProducer.sendApplicationApproveMessage(
+                    applicationId,
+                    one.getPartTimeId(),
+                    one.getUserId(),
+                    partTimePO.getTitle()
+            );
+        } else {
+            log.warn("兼职信息不存在，无法发送审批通知，partTimeId: {}", one.getPartTimeId());
+        }
+    }
+
+    @Override
+    public void rejectApply(Long applicationId) {
+        Assert.notNull(applicationId, "申请ID不能为空");
+        ApplicationPO one = lambdaQuery().eq(ApplicationPO::getId, applicationId).one();
+        Assert.notNull(one, "申请不存在");
+        if(one.getStatus() == 0){
+            one.setStatus(2);
+        }else if(one.getStatus() == 2){
+            return;
+        }else{
+            throw new RuntimeException("申请状态异常");
+        }
+        this.updateById(one);
+        // TODO发送消息队列通知用户申请被拒绝
     }
 
 }
