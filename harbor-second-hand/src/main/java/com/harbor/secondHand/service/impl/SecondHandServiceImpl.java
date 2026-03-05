@@ -291,14 +291,15 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
     @Override
     public void removeItemById(Long id) {
-        Assert.notNull(id, "商品不存在");
+        ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, id).one();
+        Assert.notNull(itemPO, "商品不存在");
         this.removeById(id);
         // 删除缓存
         log.info("删除商品缓存: {}", id);
         String cacheKey = "item:detail:" + id;
         redisTemplate.delete(cacheKey);
-        // TODO 消息队列删除接口
-//        itemMessageProducer.sendItemMessage(itemPO, "DELETE");
+        //消息队列删除接口
+        itemMessageProducer.sendItemMessage(itemPO, "DELETE");
     }
 
     public void addViewCount(ItemPO itemPO) {
