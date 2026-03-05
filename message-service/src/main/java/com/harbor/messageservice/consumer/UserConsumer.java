@@ -3,8 +3,9 @@ package com.harbor.messageservice.consumer;
 import com.harbor.messageservice.config.RabbitMQConfig;
 import com.harbor.messageservice.domain.message.UserMessage;
 import com.harbor.messageservice.domain.po.UserProfilePO;
-import com.harbor.messageservice.domain.vo.UserCenterVO;
+import com.harbor.messageservice.domain.po.UserStatisticsPO;
 import com.harbor.messageservice.mapper.UserMapper;
+import com.harbor.messageservice.mapper.UserStatisticsMapper;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,8 @@ public class UserConsumer {
     private final UserMapper userMapper;
 
     private final RedisTemplate<String, Object> redisTemplate;
+
+    private final UserStatisticsMapper userStatisticsMapper;
 
     @RabbitListener(queues = RabbitMQConfig.USER_QUEUE_NAME)
     public void handleUserMessage(UserMessage userMessage, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
@@ -80,6 +83,17 @@ public class UserConsumer {
 //                    写入缓存
                     String cacheKey = "user:center:" + userMessage.getUserId();
                     redisTemplate.opsForValue().set(cacheKey, newUser, 1, java.util.concurrent.TimeUnit.HOURS);
+//                    创建用户统计数据
+                    UserStatisticsPO userStatisticsPO = new UserStatisticsPO()
+                            .setUserId(userMessage.getUserId())
+                            .setItemApplyCount(0)
+                            .setItemPostCount(0)
+                            .setItemFavoriteCount(0)
+                            .setItemPurchaseCount(0)
+                            .setJobApplyCount(0)
+                            .setJobFavoriteCount(0)
+                            .setJobPostCount(0);
+                    userStatisticsMapper.insert(userStatisticsPO);
                 }
                 break;
             case "DELETE":

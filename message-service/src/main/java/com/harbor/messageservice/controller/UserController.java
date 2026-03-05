@@ -2,6 +2,7 @@ package com.harbor.messageservice.controller;
 
 import com.harbor.common.result.Result;
 import com.harbor.messageservice.domain.vo.UserCenterVO;
+import com.harbor.messageservice.domain.vo.UserInfoVO;
 import com.harbor.messageservice.service.IUserService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
@@ -23,5 +24,11 @@ public class UserController {
     public Result<UserCenterVO> getUserProfile(@PathVariable Long id) {
         log.info("获取用户信息");
         return Result.success(userService.getUserCenter(id));
+    }
+
+    @GetMapping("/info/{id}")
+    public Result<UserInfoVO> getUserInfo(@PathVariable Long id) {
+        log.info("获取商家信息");
+        return Result.success(userService.getUserInfo(id));
     }
 }

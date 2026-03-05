@@ -71,7 +71,7 @@ public class ItemConsumer {
                 break;
             case "DELETE":
                 // 删除
-                itemMapper.deleteByItemId(itemMessage.getItemId());
+                itemMapper.deleteById(itemMessage.getItemId());
                 log.info("删除二手交易信息: itemId={}", itemMessage.getItemId());
                 break;
             default:
