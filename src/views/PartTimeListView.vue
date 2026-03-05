@@ -85,11 +85,10 @@
             <!-- 普通用户操作 -->
             <template v-else>
               <button 
-                class="btn btn-success" 
-                @click="applyJob(job.id)"
-                :disabled="!job.applicable"
+                :class="job.applicable ? 'btn btn-success' : 'btn btn-danger'" 
+                @click="job.applicable ? showApplyDialog(job.id) : cancelApplication(job.id)"
               >
-                {{ job.applicable ? '立即申请' : '已申请' }}
+                {{ job.applicable ? '立即申请' : '取消申请' }}
               </button>
               <button 
                 class="btn btn-secondary" 
@@ -124,11 +123,45 @@
         </router-link>
       </div>
     </div>
+
+    <!-- 申请弹窗 -->
+    <el-dialog
+      title="申请兼职"
+      v-model="applyDialogVisible"
+      width="800px"
+      :close-on-click-modal="false"
+      append-to-body
+    >
+      <el-form :model="applyForm" label-width="80px">
+        <el-form-item label="简历内容" required>
+          <el-input
+            v-model="applyForm.resume"
+            type="textarea"
+            :rows="8"
+            placeholder="请输入您的简历内容，包括个人基本信息、教育背景、工作经历等"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="备注信息">
+          <el-input
+            v-model="applyForm.remark"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入备注信息（可选）"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleCancel">取消</el-button>
+          <el-button type="primary" @click="submitApplication">立即申请</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { applyPartTimeJob, addPartTimeFavorite, removePartTimeFavorite } from '@/api/partTime'
+import { applyPartTimeJob, addPartTimeFavorite, removePartTimeFavorite, cancelPartTimeApplication } from '@/api/partTime'
 import { usePartTimeStore } from '@/stores/partTime'
 
 export default {
@@ -144,7 +177,14 @@ export default {
       sortOrder: 'desc',
       currentPage: 1,
       pageSize: 10,
-      loading: false
+      loading: false,
+      // 申请弹窗相关
+      applyDialogVisible: false,
+      currentJobId: null,
+      applyForm: {
+        resume: '',
+        remark: ''
+      }
     }
   },
   computed: {
@@ -227,18 +267,82 @@ export default {
       this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc'
       this.fetchPartTimeList()
     },
-    async applyJob(jobId) {
+    showApplyDialog(jobId) {
+      // 保存当前 jobId
+      this.currentJobId = jobId
+      // 重置表单
+      this.applyForm = {
+        resume: '',
+        remark: ''
+      }
+      // 显示弹窗
+      this.applyDialogVisible = true
+    },
+    
+    handleCancel() {
+      // 清空表单内容
+      this.applyForm = {
+        resume: '',
+        remark: ''
+      }
+      // 隐藏弹窗
+      this.applyDialogVisible = false
+    },
+    
+    async submitApplication() {
+      // 验证简历内容
+      if (!this.applyForm.resume || this.applyForm.resume.trim() === '') {
+        this.$message.error('请输入简历内容')
+        return
+      }
+      
       try {
-        await applyPartTimeJob(jobId)
-        this.$message.success('申请成功，请等待审核')
-        // 更新申请状态
-        const job = this.jobs.find(j => j.id === jobId)
+        // 从localStorage获取用户信息
+        const userInfoStr = localStorage.getItem('userInfo')
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : {}
+        
+        // 构建请求数据
+        const applicationData = {
+          partTimeId: this.currentJobId,
+          resume: this.applyForm.resume,
+          remark: this.applyForm.remark,
+          userName: userInfo.username || '',
+          phone: userInfo.phone || ''
+        }
+        
+        await applyPartTimeJob(applicationData)
+        this.$message.success('申请成功！请等待雇主联系')
+        // 关闭弹窗
+        this.applyDialogVisible = false
+        // 更新申请状态，禁用申请按钮
+        const job = this.jobs.find(j => j.id === this.currentJobId)
         if (job) {
           job.applicable = false
         }
       } catch (error) {
         console.error('申请兼职失败:', error)
         this.$message.error('申请兼职失败')
+      }
+    },
+    
+    async applyJob(jobId) {
+      // 这个方法现在不再直接使用，而是通过 showApplyDialog 显示弹窗
+      // 保留此方法以保持兼容性
+      this.showApplyDialog(jobId)
+    },
+    
+    async cancelApplication(jobId) {
+      try {
+        await cancelPartTimeApplication(jobId)
+        this.$message.success('已取消申请')
+        // 更新申请状态，启用申请按钮
+        const job = this.jobs.find(j => j.id === jobId)
+        if (job) {
+          job.applicable = true
+        }
+      } catch (error) {
+        console.error('取消申请失败:', error)
+        this.$message.error('取消申请失败')
       }
     },
     async toggleFavorite(job) {
@@ -566,6 +670,15 @@ export default {
   
   &:hover {
     background-color: #ebb563;
+  }
+}
+
+.btn-danger {
+  background-color: #F56C6C;
+  color: #fff;
+  
+  &:hover {
+    background-color: #f78989;
   }
 }
 

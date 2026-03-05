@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { login } from '@/api/user'
+import { login, getUserInfo } from '@/api/user'
 
 export default {
   name: 'LoginView',
@@ -65,7 +65,23 @@ export default {
             // 存储token和用户信息
             if (token) {
               localStorage.setItem('token', token);
-              localStorage.setItem('userInfo', JSON.stringify({ userId, username }));
+              
+              // 获取用户详细信息
+              try {
+                const userInfoResponse = await getUserInfo(userId);
+                const userInfo = userInfoResponse.data;
+                // 存储完整的用户信息
+                localStorage.setItem('userInfo', JSON.stringify({
+                  userId,
+                  username,
+                  phone: userInfo.phone || '',
+                  ...userInfo
+                }));
+              } catch (error) {
+                console.error('获取用户信息失败:', error);
+                // 如果获取用户信息失败，至少存储基本信息
+                localStorage.setItem('userInfo', JSON.stringify({ userId, username }));
+              }
             }
             
             this.$message.success('登录成功');

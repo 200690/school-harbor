@@ -73,7 +73,9 @@ request.interceptors.response.use(
         // 触发自定义事件通知组件用户被封禁
         window.dispatchEvent(new CustomEvent('user-banned'))
       } else {
-        ElMessage.error({ message: res.msg || '请求失败', duration: 1500 })
+        // 如果data不为null，使用data作为错误消息
+        const errorMessage = res.data !== null ? res.data : (res.msg || '请求失败')
+        ElMessage.error({ message: errorMessage, duration: 1500 })
       }
 
       return Promise.reject(new Error(res.msg || '请求失败'))

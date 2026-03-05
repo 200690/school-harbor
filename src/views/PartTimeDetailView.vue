@@ -134,13 +134,12 @@
           <!-- 普通用户操作 -->
           <template v-else>
             <el-button 
-              type="primary" 
+              :type="jobDetail.applicable ? 'primary' : 'danger'" 
               size="large" 
               class="apply-btn" 
-              @click="applyForJob"
-              :disabled="!jobDetail.applicable"
+              @click="jobDetail.applicable ? showApplyDialog() : cancelApplication()"
             >
-              <i class="el-icon-check"></i> {{ jobDetail.applicable ? '立即申请' : '已申请' }}
+              <i :class="jobDetail.applicable ? 'el-icon-check' : 'el-icon-close'"></i> {{ jobDetail.applicable ? '立即申请' : '取消申请' }}
             </el-button>
             <el-button type="primary" size="large" class="favorite-btn" @click="toggleFavorite">
               <i :class="jobDetail.isFavorite ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
@@ -157,7 +156,7 @@
       <div class="recommended-jobs">
         <h3 class="section-title">推荐兼职</h3>
         <div class="job-list">
-          <div class="list-item" v-for="job in recommendedJobs" :key="job.id">
+          <div class="list-item" v-for="job in jobDetail.topViewJobs" :key="job.id">
             <div class="job-info">
               <h4 class="job-title">{{ job.title }}</h4>
               <div class="job-meta">
@@ -167,7 +166,7 @@
               </div>
               <div class="job-description">{{ job.description }}</div>
               <div class="job-tags">
-                <span class="tag tag-primary">{{ job.typeName }}</span>
+                <span class="tag tag-primary">{{ job.typeName || getTypeName(job.type) }}</span>
                 <span class="tag tag-success">薪资: {{ job.salaryDesc }}</span>
               </div>
             </div>
@@ -176,11 +175,45 @@
         </div>
       </div>
     </div>
+
+    <!-- 申请弹窗 -->
+    <el-dialog
+      title="申请兼职"
+      v-model="applyDialogVisible"
+      width="800px"
+      :close-on-click-modal="false"
+      append-to-body
+    >
+      <el-form :model="applyForm" label-width="80px">
+        <el-form-item label="简历内容" required>
+          <el-input
+            v-model="applyForm.resume"
+            type="textarea"
+            :rows="8"
+            placeholder="请输入您的简历内容，包括个人基本信息、教育背景、工作经历等"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="备注信息">
+          <el-input
+            v-model="applyForm.remark"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入备注信息（可选）"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleCancel">取消</el-button>
+          <el-button type="primary" @click="submitApplication">立即申请</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getPartTimeDetail, applyPartTimeJob, addPartTimeFavorite, removePartTimeFavorite } from '@/api/partTime'
+import { getPartTimeDetail, applyPartTimeJob, addPartTimeFavorite, removePartTimeFavorite, cancelPartTimeApplication } from '@/api/partTime'
 import { usePartTimeStore } from '@/stores/partTime'
 
 export default {
@@ -214,14 +247,21 @@ export default {
         avatar: '',
         isFavorite: false,
         applicable: true,
-        isPublisher: false
+        isPublisher: false,
+        topViewJobs: []
       },
-      recommendedJobs: [],
+
       loading: false,
       isFromMyPublish: false,
       isFromMyApplications: false,
       isPublisherBanned: false,
-      bannedMessage: ''
+      bannedMessage: '',
+      // 申请弹窗相关
+      applyDialogVisible: false,
+      applyForm: {
+        resume: '',
+        remark: ''
+      }
     }
   },
   computed: {
@@ -405,15 +445,74 @@ export default {
         this.$message.error('操作失败，请重试')
       }
     },
-    async applyForJob() {
+    showApplyDialog() {
+      console.log('showApplyDialog called')
+      // 重置表单
+      this.applyForm = {
+        resume: '',
+        remark: ''
+      }
+      // 显示弹窗
+      this.applyDialogVisible = true
+      console.log('applyDialogVisible:', this.applyDialogVisible)
+      // 强制DOM更新
+      this.$nextTick(() => {
+        console.log('DOM updated, applyDialogVisible:', this.applyDialogVisible)
+      })
+    },
+    
+    handleCancel() {
+      // 清空表单内容
+      this.applyForm = {
+        resume: '',
+        remark: ''
+      }
+      // 隐藏弹窗
+      this.applyDialogVisible = false
+    },
+    
+    async submitApplication() {
+      // 验证简历内容
+      if (!this.applyForm.resume || this.applyForm.resume.trim() === '') {
+        this.$message.error('请输入简历内容')
+        return
+      }
+      
       try {
-        await applyPartTimeJob(this.jobId)
+        // 从localStorage获取用户信息
+        const userInfoStr = localStorage.getItem('userInfo')
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : {}
+        
+        // 构建请求数据
+        const applicationData = {
+          partTimeId: this.jobId,
+          resume: this.applyForm.resume,
+          remark: this.applyForm.remark,
+          userName: userInfo.username || '',
+          phone: userInfo.phone || ''
+        }
+        
+        await applyPartTimeJob(applicationData)
         this.$message.success('申请成功！请等待雇主联系')
+        // 关闭弹窗
+        this.applyDialogVisible = false
         // 更新申请状态，禁用申请按钮
         this.jobDetail.applicable = false
       } catch (error) {
         console.error('申请兼职失败:', error)
         this.$message.error('申请兼职失败')
+      }
+    },
+    
+    async cancelApplication() {
+      try {
+        await cancelPartTimeApplication(this.jobId)
+        this.$message.success('已取消申请')
+        // 更新申请状态，启用申请按钮
+        this.jobDetail.applicable = true
+      } catch (error) {
+        console.error('取消申请失败:', error)
+        this.$message.error('取消申请失败')
       }
     },
     shareJob() {

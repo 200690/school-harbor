@@ -85,6 +85,7 @@
               <router-link :to="`/item/${job.id}`" class="btn btn-primary">查看详情</router-link>
               <!-- 发布者操作 -->
               <button 
+                v-if="job.isPublisher"
                 class="btn btn-warning" 
                 @click="manageApplications(job)"
               >

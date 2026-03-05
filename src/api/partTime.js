@@ -38,10 +38,11 @@ export function deletePartTimeJob(id) {
   })
 }
 
-export function applyPartTimeJob(id) {
+export function applyPartTimeJob(data) {
   return request({
-    url: `/part-time/apply/${id}`,
-    method: 'post'
+    url: '/part-time/apply',
+    method: 'post',
+    data
   })
 }
 
@@ -106,9 +107,9 @@ export function getRecommendedPartTimeJobs() {
   })
 }
 
-export function addPartTimeFavorite(id) {
+export function addPartTimeFavorite(partTimeId) {
   return request({
-    url: `/part-time/favorite/${id}`,
+    url: `/part-time/favorite/addFavorite/${partTimeId}`,
     method: 'post'
   })
 }
