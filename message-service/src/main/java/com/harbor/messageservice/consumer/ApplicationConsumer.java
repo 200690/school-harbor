@@ -67,18 +67,38 @@ public class ApplicationConsumer {
      * @param applicationMessage 申请审批消息
      */
     private void processApplicationMessage(ApplicationMessage applicationMessage) {
-        // 构建MessageProcessedPO对象
-        MessageProcessedPO messageProcessed = MessageProcessedPO.builder()
-                .id(applicationMessage.getMessageId())
-                .message(applicationMessage.getMessage())
-                .userId(applicationMessage.getUserId())
-                .status(2)
-                .processedTime(LocalDateTime.now())
-                .build();
+        try {
+            // 构建MessageProcessedPO对象
+            MessageProcessedPO messageProcessed = MessageProcessedPO.builder()
+                    .id(applicationMessage.getMessageId())
+                    .message(applicationMessage.getMessage())
+                    .userId(applicationMessage.getUserId())
+                    .status(1) // 先设置为处理中
+                    .processedTime(LocalDateTime.now())
+                    .build();
 
-        // 保存到message_processed表
-        msgProcessedService.save(messageProcessed);
-        log.info("申请审批消息已写入message_processed表，messageId: {}, userId: {}",
-                applicationMessage.getMessageId(), applicationMessage.getUserId());
+            // 保存到message_processed表
+            msgProcessedService.save(messageProcessed);
+            log.info("申请审批消息已写入message_processed表（处理中），messageId: {}, userId: {}",
+                    applicationMessage.getMessageId(), applicationMessage.getUserId());
+
+            // 更新状态为处理成功
+            messageProcessed.setStatus(2);
+            msgProcessedService.updateById(messageProcessed);
+            log.info("申请审批消息状态已更新为处理成功，messageId: {}", applicationMessage.getMessageId());
+        } catch (Exception e) {
+            log.error("处理申请审批消息失败: {}", e.getMessage(), e);
+            // 构建失败状态的记录
+            MessageProcessedPO messageProcessed = MessageProcessedPO.builder()
+                    .id(applicationMessage.getMessageId())
+                    .message(applicationMessage.getMessage())
+                    .userId(applicationMessage.getUserId())
+                    .status(3) // 设置为处理失败
+                    .processedTime(LocalDateTime.now())
+                    .build();
+            msgProcessedService.save(messageProcessed);
+            log.info("申请审批消息已写入message_processed表（处理失败），messageId: {}", applicationMessage.getMessageId());
+            throw e; // 重新抛出异常，触发消息重新入队
+        }
     }
 }

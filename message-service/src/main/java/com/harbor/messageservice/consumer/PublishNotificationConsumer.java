@@ -36,7 +36,7 @@ public class PublishNotificationConsumer {
      */
     @RabbitListener(queues = RabbitMQConfig.PUBLISH_NOTIFICATION_QUEUE_NAME)
     public void handlePublishNotificationMessage(PublishNotificationMessage publishNotificationMessage, Channel channel,
-                                                 @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+            @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         log.info("接收到发布成功通知消息: {}", publishNotificationMessage);
 
         try {
@@ -67,20 +67,40 @@ public class PublishNotificationConsumer {
      * @param publishNotificationMessage 发布通知消息
      */
     private void processPublishNotificationMessage(PublishNotificationMessage publishNotificationMessage) {
-        // 构建MessageProcessedPO对象
-        MessageProcessedPO messageProcessed = MessageProcessedPO.builder()
-                .id(publishNotificationMessage.getMessageId())
-                .message(publishNotificationMessage.getMessage())
-                .userId(publishNotificationMessage.getUserId())
-                .status(2)
-                .processedTime(LocalDateTime.now())
-                .build();
+        try {
+            // 构建MessageProcessedPO对象
+            MessageProcessedPO messageProcessed = MessageProcessedPO.builder()
+                    .id(publishNotificationMessage.getMessageId())
+                    .message(publishNotificationMessage.getMessage())
+                    .userId(publishNotificationMessage.getUserId())
+                    .status(1) // 先设置为处理中
+                    .processedTime(LocalDateTime.now())
+                    .build();
 
-        // 保存到message_processed表
-        msgProcessedService.save(messageProcessed);
-        log.info("发布成功通知消息已写入message_processed表，messageId: {}, userId: {}, businessType: {}",
-                publishNotificationMessage.getMessageId(),
-                publishNotificationMessage.getUserId(),
-                publishNotificationMessage.getBusinessType());
+            // 保存到message_processed表
+            msgProcessedService.save(messageProcessed);
+            log.info("发布成功通知消息已写入message_processed表（处理中），messageId: {}, userId: {}, businessType: {}",
+                    publishNotificationMessage.getMessageId(),
+                    publishNotificationMessage.getUserId(),
+                    publishNotificationMessage.getBusinessType());
+
+            // 更新状态为处理成功
+            messageProcessed.setStatus(2);
+            msgProcessedService.updateById(messageProcessed);
+            log.info("发布成功通知消息状态已更新为处理成功，messageId: {}", publishNotificationMessage.getMessageId());
+        } catch (Exception e) {
+            log.error("处理发布成功通知消息失败: {}", e.getMessage(), e);
+            // 构建失败状态的记录
+            MessageProcessedPO messageProcessed = MessageProcessedPO.builder()
+                    .id(publishNotificationMessage.getMessageId())
+                    .message(publishNotificationMessage.getMessage())
+                    .userId(publishNotificationMessage.getUserId())
+                    .status(3) // 设置为处理失败
+                    .processedTime(LocalDateTime.now())
+                    .build();
+            msgProcessedService.save(messageProcessed);
+            log.info("发布成功通知消息已写入message_processed表（处理失败），messageId: {}", publishNotificationMessage.getMessageId());
+            throw e; // 重新抛出异常，触发消息重新入队
+        }
     }
 }

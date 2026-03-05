@@ -167,8 +167,7 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         publishNotificationProducer.sendJobPublishNotification(
                 partTimePO.getId(),
                 partTimePO.getPublisherId(),
-                partTimePO.getTitle()
-        );
+                partTimePO.getTitle());
     }
 
     /**
@@ -310,12 +309,21 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
     @Override
     public void removeJobById(Long id) {
         Assert.notNull(id, "id不能为空");
+        // 先查询要删除的兼职信息，用于发送消息
+        PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, id).one();
+        Assert.notNull(partTimePO, "兼职不存在");
+
         this.removeById(id);
         // 删除缓存
         String cacheKey = "job:detail:" + id;
         redisTemplate.delete(cacheKey);
-        log.info("清除兼职缓存: {}", id);
-        // TODO 删除消息队列
+        // 清除推荐列表缓存，因为删除可能影响推荐
+        String recommendCacheKey = "job:list:recommend";
+        redisTemplate.delete(recommendCacheKey);
+        log.info("清除兼职缓存: detail={}, recommend={}", id, recommendCacheKey);
+
+        // 发送兼职信息删除消息
+        jobMessageProducer.sendJobMessage(partTimePO, "DELETE");
     }
 
     public <T extends BaseJobStatusVO> void setBaseJobStatusVO(T vo, Long partTimeId, PartTimePO po) {

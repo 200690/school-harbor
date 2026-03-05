@@ -51,6 +51,17 @@ public class PublishNotificationProducer {
     }
 
     /**
+     * 发送删除商品成功通知
+     *
+     * @param itemId   商品ID
+     * @param userId   发布者用户ID
+     * @param title    商品标题
+     */
+    public void sendItemDeleteNotification(Long itemId, Long userId, String title) {
+        sendPublishNotification(itemId, userId, title, BusinessType.ITEM);
+    }
+
+    /**
      * 发送发布成功通知消息
      *
      * @param businessId   业务ID
