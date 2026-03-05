@@ -5,35 +5,35 @@
       <!-- 页面标题 -->
       <div class="page-header">
         <h2 class="page-title">个人中心</h2>
-        <p class="page-subtitle">欢迎回来，{{ userInfo.username }}</p>
+        <p class="page-subtitle">欢迎回来，{{ userInfo?.username || '用户' }}</p>
       </div>
       
       <!-- 个人信息卡片 -->
       <div class="user-info-card card">
         <div class="user-info-header">
           <div class="user-avatar">
-            <img v-if="userInfo.avatar" :src="userInfo.avatar" :alt="userInfo.username" />
+            <img v-if="userInfo?.avatar" :src="userInfo.avatar" :alt="userInfo?.username || '用户'" />
             <div v-else class="default-avatar">
               <i class="el-icon-user"></i>
             </div>
           </div>
           <div class="user-basic-info">
-            <h3 class="user-name">{{ userInfo.username }}</h3>
+            <h3 class="user-name">{{ userInfo?.username || '用户' }}</h3>
             <div class="user-meta">
-              <span class="user-meta-item">{{ userInfo.phone }}</span>
+              <span class="user-meta-item">{{ userInfo?.phone || '未设置' }}</span>
               <span class="user-meta-divider">|</span>
-              <span class="user-meta-item">{{ userInfo.email }}</span>
+              <span class="user-meta-item">{{ userInfo?.email || '未设置' }}</span>
             </div>
           </div>
           <div class="user-credit-info">
             <div class="credit-score-container">
               <span class="credit-label">信誉分</span>
               <div class="credit-score-value">
-                <span class="credit-score">{{ userInfo.creditScore || 60 }}</span>
-                <span class="credit-level">{{ getCreditLevel(userInfo.creditScore || 60) }}</span>
+                <span class="credit-score">{{ userInfo?.creditScore || 60 }}</span>
+                <span class="credit-level">{{ getCreditLevel(userInfo?.creditScore || 60) }}</span>
               </div>
               <div class="credit-progress">
-                <div class="credit-progress-bar" :style="{ width: (userInfo.creditScore || 60) + '%' }"></div>
+                <div class="credit-progress-bar" :style="{ width: (userInfo?.creditScore || 60) + '%' }"></div>
               </div>
             </div>
           </div>
@@ -41,19 +41,19 @@
         <div class="user-info-footer">
           <div class="user-stats">
             <div class="user-stat-item">
-              <span class="stat-value">{{ userInfo.publicCount || 0 }}</span>
+              <span class="stat-value">{{ userInfo?.publicCount || 0 }}</span>
               <span class="stat-label">发布</span>
             </div>
             <div class="user-stat-item">
-              <span class="stat-value">{{ userInfo.applicationCount || 0 }}</span>
+              <span class="stat-value">{{ userInfo?.applicationCount || 0 }}</span>
               <span class="stat-label">申请</span>
             </div>
             <div class="user-stat-item">
-              <span class="stat-value">{{ userInfo.buyCounnt || 0 }}</span>
+              <span class="stat-value">{{ userInfo?.buyCounnt || 0 }}</span>
               <span class="stat-label">购买</span>
             </div>
             <div class="user-stat-item">
-              <span class="stat-value">{{ userInfo.favCount || 0 }}</span>
+              <span class="stat-value">{{ userInfo?.favCount || 0 }}</span>
               <span class="stat-label">收藏</span>
             </div>
           </div>
@@ -72,11 +72,11 @@
         <div class="balance-content">
           <div class="balance-item">
             <span class="balance-label">可用余额</span>
-            <span class="balance-value">¥{{ userInfo.balance || 0 }}</span>
+            <span class="balance-value">¥{{ userInfo?.balance || 0 }}</span>
           </div>
           <div class="balance-item">
             <span class="balance-label">冻结资金</span>
-            <span class="balance-value frozen">{{ userInfo.frozenBalance || 0 }}</span>
+            <span class="balance-value frozen">{{ userInfo?.frozenBalance || 0 }}</span>
           </div>
         </div>
       </div>
@@ -90,21 +90,21 @@
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的发布.png" alt="我的发布" />
             </div>
             <span class="function-name">我的发布</span>
-            <span class="function-count">{{ userInfo.publicCount || 0 }}</span>
+            <span class="function-count">{{ userInfo?.publicCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/applications" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的申请.png" alt="我的申请" />
             </div>
             <span class="function-name">我的申请</span>
-            <span class="function-count">{{ userInfo.applicationCount || 0 }}</span>
+            <span class="function-count">{{ userInfo?.applicationCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/purchases" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的购买.png" alt="我的购买" />
             </div>
             <span class="function-name">我的购买</span>
-            <span class="function-count">{{ userInfo.buyCounnt || 0 }}</span>
+            <span class="function-count">{{ userInfo?.buyCounnt || 0 }}</span>
           </router-link>
           <router-link to="/user/user/messages" class="function-item">
             <div class="function-icon">
@@ -118,7 +118,7 @@
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的收藏.png" alt="我的收藏" />
             </div>
             <span class="function-name">我的收藏</span>
-            <span class="function-count">{{ userInfo.favCount || 0 }}</span>
+            <span class="function-count">{{ userInfo?.favCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/follows" class="function-item">
             <div class="function-icon">
@@ -205,11 +205,10 @@ import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import { ElDialog, ElInput, ElButton, ElMessage, ElRadioGroup, ElRadio } from 'element-plus'
 import request from '../utils/request'
+import { getUserCenter } from '../api/user'
 
 const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
-const userPosts = ref(userStore.userPosts)
-const userApplications = ref(userStore.userApplications)
 const userMessages = ref(userStore.userMessages)
 const userFollows = ref(userStore.userFollows)
 const userBlacklist = ref(userStore.userBlacklist)
@@ -235,7 +234,7 @@ const handleRecharge = async () => {
   try {
     const amount = parseFloat(rechargeAmount.value)
     // 获取userId
-    const userId = userInfo.value.userId || userInfo.value.id || JSON.parse(localStorage.getItem('userInfo') || '{}').userId
+    const userId = userInfo.value?.userId || userInfo.value?.id || JSON.parse(localStorage.getItem('userInfo') || '{}').userId
     
     if (!userId) {
       ElMessage.error('用户信息不完整，无法充值')
@@ -253,7 +252,9 @@ const handleRecharge = async () => {
     })
     
     // 请求成功后更新余额
-    userInfo.value.balance = (userInfo.value.balance || 0) + amount
+    if (userInfo.value) {
+      userInfo.value.balance = (userInfo.value.balance || 0) + amount
+    }
     ElMessage.success(`充值成功，金额：¥${amount}`)
     rechargeDialogVisible.value = false
     rechargeAmount.value = ''
@@ -278,23 +279,28 @@ const getCreditLevel = (score) => {
 }
 
 onMounted(async () => {
-  // 模拟从后端获取数据
-  await userStore.getUserInfoAction()
-  await userStore.getUserPosts()
-  await userStore.getUserApplications()
-  await userStore.getUserMessages()
-  await userStore.getUserFollows()
-  await userStore.getUserBlacklist()
-  await userStore.getRecentActivities()
-  
-  // 更新本地数据
-  userInfo.value = userStore.userInfo
-  userPosts.value = userStore.userPosts
-  userApplications.value = userStore.userApplications
-  userMessages.value = userStore.userMessages
-  userFollows.value = userStore.userFollows
-  userBlacklist.value = userStore.userBlacklist
-  recentActivities.value = userStore.recentActivities
+  // 只发送一个请求获取用户中心数据
+  try {
+    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    const userId = storedUserInfo.userId || storedUserInfo.id || 6
+    
+    const response = await getUserCenter(userId)
+    console.log('获取用户中心数据:', response.data)
+    
+    // 更新用户信息
+    if (response.data) {
+      userInfo.value = response.data
+      // 同步更新 store 中的用户信息
+      userStore.setUserInfo(response.data)
+    }
+  } catch (error) {
+    console.error('获取用户中心数据失败:', error)
+    // 如果请求失败，使用本地存储的用户信息
+    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    if (storedUserInfo && storedUserInfo.username) {
+      userInfo.value = storedUserInfo
+    }
+  }
 })
 </script>
 

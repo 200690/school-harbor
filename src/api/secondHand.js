@@ -90,9 +90,9 @@ export function getHotSecondHandItems() {
   })
 }
 
-export function addSecondHandFavorite(id) {
+export function addSecondHandFavorite(itemId) {
   return request({
-    url: `/second-hand/favorite/${id}`,
+    url: `/second-hand/favorite/addFavorite/${itemId}`,
     method: 'post'
   })
 }

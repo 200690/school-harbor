@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { login, register, getUserInfo, updateUserInfo, changePassword, logout } from '@/api/user'
+import { login, register, getUserInfo, updateUserInfo, changePassword } from '@/api/user'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -193,22 +193,39 @@ export const useUserStore = defineStore('user', {
     async getUserInfoAction() {
       try {
         // 从localStorage获取用户ID
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const userId = userInfo.userId || userInfo.id || 6
+        const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        const userId = storedUserInfo.userId || storedUserInfo.id || 6
 
         if (!userId) {
-          // 如果没有用户ID，使用模拟数据
+          // 如果没有用户ID，使用现有数据
           return { data: this.userInfo }
         }
 
         const res = await getUserInfo(userId)
         // 确保从res.data.data中获取用户信息
         const userData = res.data && res.data.data ? res.data.data : res.data
-        this.setUserInfo(userData)
+        
+        // 只有当获取到有效数据时才更新，否则保留现有数据
+        if (userData && userData.username) {
+          this.setUserInfo(userData)
+        } else {
+          console.log('API返回的用户数据无效，保留本地存储的用户信息')
+          // 如果本地没有数据，使用默认值
+          if (!this.userInfo || !this.userInfo.username) {
+            this.setUserInfo(storedUserInfo)
+          }
+        }
         return res
       } catch (error) {
         console.error('获取用户信息失败:', error)
-        // 模拟获取用户信息成功，使用返回的JSON数据
+        // 保留本地存储的用户信息，不清空
+        const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        if (storedUserInfo && storedUserInfo.username) {
+          this.setUserInfo(storedUserInfo)
+          return { data: { data: storedUserInfo } }
+        }
+        
+        // 如果本地也没有数据，使用模拟数据
         const mockData = {
           id: "1",
           userId: "6",
@@ -254,7 +271,7 @@ export const useUserStore = defineStore('user', {
     async logoutAction() {
       try {
         console.log('[UserStore] 用户主动退出登录')
-        await logout()
+        // 不再发送logout请求，直接清除本地数据
       } catch (error) {
         console.error('退出登录失败:', error)
         // 模拟退出登录成功
