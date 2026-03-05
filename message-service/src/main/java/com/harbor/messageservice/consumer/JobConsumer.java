@@ -74,7 +74,7 @@ public class JobConsumer {
         break;
       case "DELETE":
         // 删除
-        jobMapper.deleteByJobId(jobMessage.getJobId());
+        jobMapper.deleteById(jobMessage.getJobId());
         log.info("删除兼职信息: jobId={}", jobMessage.getJobId());
         break;
       default:
