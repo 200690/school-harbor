@@ -26,7 +26,8 @@ public class ApplicationMessageProducer {
      */
     public enum MessageType {
         APPROVE("approve", "恭喜！您的兼职申请【%s】已通过审核，请尽快联系雇主确认入职事宜。"),
-        REJECT("reject", "很抱歉，您的兼职申请【%s】未通过审核，请继续关注其他兼职机会。");
+        REJECT("reject", "很抱歉，您的兼职申请【%s】未通过审核，请继续关注其他兼职机会。"),
+        NEW_APPLY("new_apply", "您发布的兼职【%s】收到了新的申请，请注意查看并及时处理。");
 
         private final String type;
         private final String messageTemplate;
@@ -67,6 +68,18 @@ public class ApplicationMessageProducer {
      */
     public void sendApplicationRejectMessage(Long applicationId, Long partTimeId, Long userId, String partTimeTitle) {
         sendMessage(applicationId, partTimeId, userId, partTimeTitle, MessageType.REJECT);
+    }
+
+    /**
+     * 发送新申请通知消息给发布者
+     *
+     * @param applicationId 申请ID
+     * @param partTimeId    兼职ID
+     * @param publisherId   发布者用户ID（消息接收者）
+     * @param partTimeTitle 兼职标题
+     */
+    public void sendNewApplicationMessage(Long applicationId, Long partTimeId, Long publisherId, String partTimeTitle) {
+        sendMessage(applicationId, partTimeId, publisherId, partTimeTitle, MessageType.NEW_APPLY);
     }
 
     /**

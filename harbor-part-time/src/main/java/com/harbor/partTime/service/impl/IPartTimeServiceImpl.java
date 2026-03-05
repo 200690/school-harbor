@@ -332,7 +332,9 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
             vo.setApplicable(false);
         } else {
             ApplicationPO one = applicationMapper.selectOne(new LambdaQueryWrapper<ApplicationPO>()
-                    .eq(ApplicationPO::getPartTimeId, partTimeId).eq(ApplicationPO::getUserId, UserContext.getUser()));
+                    .eq(ApplicationPO::getPartTimeId, partTimeId)
+                    .eq(ApplicationPO::getUserId, UserContext.getUser())
+                    .in(ApplicationPO::getStatus, 0, 1));
             vo.setApplicable(one == null);
         }
         FavoritePO favoritePO = favoriteMapper.selectOne(new LambdaQueryWrapper<FavoritePO>()

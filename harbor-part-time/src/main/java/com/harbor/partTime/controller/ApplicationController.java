@@ -1,10 +1,9 @@
 package com.harbor.partTime.controller;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
-import com.harbor.partTime.domain.po.ApplicationPO;
+import com.harbor.partTime.domain.dto.ApplyPartTime;
 import com.harbor.partTime.domain.vo.ApplicationRecordVO;
 import com.harbor.partTime.domain.vo.ApplicationerVO;
 import com.harbor.partTime.service.IApplicationService;
@@ -23,16 +22,16 @@ public class ApplicationController {
     private final IApplicationService applicationService;
 
     @ApiOperation("申请兼职")
-    @PostMapping( "{id}")
-    public Result applyPartTime(@PathVariable Long userId) {
-//        applicationService.getMyApplications(userId);
+    @PostMapping( "")
+    public Result applyPartTime(@RequestBody ApplyPartTime applyPartTime) {
+         applicationService.applyPartTime(applyPartTime);
         return Result.success();
     }
 
     @ApiOperation("取消申请")
-    @PostMapping("cancel/{partTimeId}")
-    public Result cancelApply(@PathVariable Long partTimeId) {
-        applicationService.cancelApply(partTimeId);
+    @PostMapping("cancel/{id}")
+    public Result cancelApply(@PathVariable Long id) {
+        applicationService.cancelApply(id);
         return Result.success();
     }
 
