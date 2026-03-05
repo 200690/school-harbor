@@ -10,4 +10,6 @@ public interface IFavorite extends IService<FavoritePO> {
     PageDTO<FavoriteVO> getMyFavorites(PageQuery pageQuery);
 
     void removeFavorite(Long itemId);
+
+    void addFavorite(Long itemId);
 }

@@ -59,4 +59,28 @@ public class FavoriteImpl extends ServiceImpl<FavoriteMapper, FavoritePO> implem
             itemPO.setFavoriteCount(itemPO.getFavoriteCount() - 1);
         secondHandMapper.updateById(itemPO);
     }
+
+    @Override
+    @Transactional
+    public void addFavorite(Long itemId) {
+        Long userId = com.harbor.common.utils.UserContext.getUser();
+        // 检查是否已经收藏过
+        boolean exists = lambdaQuery()
+                .eq(FavoritePO::getUserId, userId)
+                .eq(FavoritePO::getItemId, itemId)
+                .exists();
+        if (!exists) {
+            // 创建收藏记录
+            FavoritePO favoritePO = new FavoritePO();
+            favoritePO.setUserId(userId);
+            favoritePO.setItemId(itemId);
+            this.save(favoritePO);
+            
+            // 更新商品收藏数
+            ItemPO itemPO = secondHandMapper.selectById(itemId);
+            Assert.notNull(itemPO, "商品没找到");
+            itemPO.setFavoriteCount(itemPO.getFavoriteCount() + 1);
+            secondHandMapper.updateById(itemPO);
+        }
+    }
 }

@@ -27,8 +27,13 @@ public class FavoriteController {
         return Result.success(pageDTO);
     }
 
-//    @PostMapping("addFavorite")
-//    @ApiOperation("添加收藏")
+    @PostMapping("addFavorite/{itemId}")
+    @ApiOperation("添加收藏")
+    public Result addFavorite(@PathVariable Long itemId) {
+        log.info("添加收藏: {}", itemId);
+        favoriteService.addFavorite(itemId);
+        return Result.success();
+    }
 
     @ApiOperation("移除收藏")
     @DeleteMapping("removeFavorite/{id}")
