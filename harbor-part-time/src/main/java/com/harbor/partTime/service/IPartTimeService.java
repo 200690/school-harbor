@@ -29,4 +29,6 @@ public interface IPartTimeService extends IService<PartTimePO> {
     List<PartTimePO> getJobsById(List<Long> ids);
 
     void removeJobById(Long id);
+
+    List<PartTimeVO> getTopViewJobs(int limit);
 }

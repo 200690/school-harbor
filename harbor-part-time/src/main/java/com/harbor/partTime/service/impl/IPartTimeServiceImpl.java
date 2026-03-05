@@ -270,32 +270,54 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
 
         // 尝试从缓存获取
         String cacheKey = "job:detail:" + partTimeId;
-        PartTimeDetailVO cachedDetail = (PartTimeDetailVO) redisTemplate.opsForValue().get(cacheKey);
+        PartTimeDetailVO cachedDetail = null;
+        try {
+            cachedDetail = (PartTimeDetailVO) redisTemplate.opsForValue().get(cacheKey);
+        } catch (Exception e) {
+            log.error("从缓存获取兼职详情失败: {}", e.getMessage());
+            // 缓存读取失败，直接从数据库获取
+        }
+
+        // 获取浏览量最高的3个兼职
+        List<PartTimeVO> topViewJobs = this.getTopViewJobs(3);
+
         if (cachedDetail != null) {
             log.info("从缓存获取兼职详情: {}", partTimeId);
+            // 更新缓存中的topViewJobs
+            cachedDetail.setTopViewJobs(topViewJobs);
             return cachedDetail;
         }
 
         // 浏览量++
         PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, partTimeId).one();
+        Assert.notNull(partTimePO, "兼职不存在");
         partTimePO.setViewCount(partTimePO.getViewCount() + 1);
         this.updateById(partTimePO);
 
         // 封装BaseJobStatusVO
         PartTimeDetailVO partTimeDetailVO = new PartTimeDetailVO();
-        Assert.notNull(partTimePO, "兼职不存在");
         BeanUtil.copyProperties(partTimePO, partTimeDetailVO);
         this.setBaseJobStatusVO(partTimeDetailVO, partTimeId, partTimePO);
 
         // 封装user部分
         log.info("获取用户信息,{}", partTimePO.getPublisherId());
         Result<UserInfoDTO> userInfoDTOResult = userClient.info(partTimePO.getPublisherId());
-        partTimeDetailVO.setUsername(userInfoDTOResult.getData().getUsername());
-        partTimeDetailVO.setImg(userInfoDTOResult.getData().getImg());
+        if (userInfoDTOResult != null && userInfoDTOResult.getData() != null) {
+            partTimeDetailVO.setUsername(userInfoDTOResult.getData().getUsername());
+            partTimeDetailVO.setImg(userInfoDTOResult.getData().getImg());
+        }
+
+        // 设置浏览量最高的兼职
+        partTimeDetailVO.setTopViewJobs(topViewJobs);
 
         // 缓存结果，设置1小时过期
-        redisTemplate.opsForValue().set(cacheKey, partTimeDetailVO, 1, java.util.concurrent.TimeUnit.HOURS);
-        log.info("缓存兼职详情: {}", partTimeId);
+        try {
+            redisTemplate.opsForValue().set(cacheKey, partTimeDetailVO, 1, java.util.concurrent.TimeUnit.HOURS);
+            log.info("缓存兼职详情: {}", partTimeId);
+        } catch (Exception e) {
+            log.error("缓存兼职详情失败: {}", e.getMessage());
+            // 缓存失败，不影响返回结果
+        }
 
         return partTimeDetailVO;
     }
@@ -326,19 +348,77 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         jobMessageProducer.sendJobMessage(partTimePO, "DELETE");
     }
 
+    @Override
+    public List<PartTimeVO> getTopViewJobs(int limit) {
+        log.info("开始获取浏览量最高的兼职: limit={}", limit);
+        // 尝试从缓存获取
+        String cacheKey = "job:top:view:" + limit;
+        List<PartTimeVO> cachedTopJobs = null;
+        try {
+            cachedTopJobs = (List<PartTimeVO>) redisTemplate.opsForValue().get(cacheKey);
+            if (cachedTopJobs != null) {
+                log.info("从缓存获取浏览量最高的兼职: limit={}, 数量={}", limit, cachedTopJobs.size());
+                return cachedTopJobs;
+            }
+        } catch (Exception e) {
+            log.error("从缓存获取浏览量最高的兼职失败: {}", e.getMessage());
+            // 缓存读取失败，直接从数据库获取
+        }
+
+        // 查询浏览量最高的兼职
+        List<PartTimePO> partTimePOs = lambdaQuery()
+                .eq(PartTimePO::getStatus, 1) // 只查询招聘中的兼职
+                .eq(PartTimePO::getIsDelete, 0) // 只查询未删除的兼职
+                .orderByDesc(PartTimePO::getViewCount) // 按浏览量降序
+                .list();
+
+        // 限制返回数量
+        if (partTimePOs.size() > limit) {
+            partTimePOs = partTimePOs.subList(0, limit);
+        }
+
+        log.info("从数据库查询到浏览量最高的兼职数量: {}", partTimePOs.size());
+
+        // 转换为VO
+        List<PartTimeVO> partTimeVOs = partTimePOs.stream().map(partTimePO -> {
+            PartTimeVO partTimeVO = new PartTimeVO();
+            BeanUtil.copyProperties(partTimePO, partTimeVO, CopyOptions.create().ignoreNullValue());
+            this.setBaseJobStatusVO(partTimeVO, partTimeVO.getId(), partTimePO);
+            return partTimeVO;
+        }).toList();
+
+        // 缓存结果，设置30分钟过期
+        try {
+            redisTemplate.opsForValue().set(cacheKey, partTimeVOs, 30, java.util.concurrent.TimeUnit.MINUTES);
+            log.info("缓存浏览量最高的兼职: limit={}, 数量={}", limit, partTimeVOs.size());
+        } catch (Exception e) {
+            log.error("缓存浏览量最高的兼职失败: {}", e.getMessage());
+            // 缓存失败，不影响返回结果
+        }
+
+        return partTimeVOs;
+    }
+
     public <T extends BaseJobStatusVO> void setBaseJobStatusVO(T vo, Long partTimeId, PartTimePO po) {
-        vo.setIsPublisher(Objects.equals(po.getPublisherId(), UserContext.getUser()));
+        Long userId = UserContext.getUser();
+        vo.setIsPublisher(Objects.equals(po.getPublisherId(), userId));
         if (vo.getIsPublisher() == true) {
             vo.setApplicable(false);
-        } else {
+        } else if (userId != null) {
             ApplicationPO one = applicationMapper.selectOne(new LambdaQueryWrapper<ApplicationPO>()
                     .eq(ApplicationPO::getPartTimeId, partTimeId)
-                    .eq(ApplicationPO::getUserId, UserContext.getUser())
+                    .eq(ApplicationPO::getUserId, userId)
                     .in(ApplicationPO::getStatus, 0, 1));
             vo.setApplicable(one == null);
+        } else {
+            vo.setApplicable(true);
         }
-        FavoritePO favoritePO = favoriteMapper.selectOne(new LambdaQueryWrapper<FavoritePO>()
-                .eq(FavoritePO::getPartTimeId, partTimeId).eq(FavoritePO::getUserId, UserContext.getUser()));
-        vo.setIsFavorite(favoritePO != null);
+        if (userId != null) {
+            FavoritePO favoritePO = favoriteMapper.selectOne(new LambdaQueryWrapper<FavoritePO>()
+                    .eq(FavoritePO::getPartTimeId, partTimeId).eq(FavoritePO::getUserId, userId));
+            vo.setIsFavorite(favoritePO != null);
+        } else {
+            vo.setIsFavorite(false);
+        }
     }
 }

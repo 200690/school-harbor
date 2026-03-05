@@ -3,6 +3,7 @@ package com.harbor.partTime.domain.vo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import java.util.List;
 
 /**
  * 兼职详情VO（继承基础VO，可添加额外信息）
@@ -29,4 +30,5 @@ public class PartTimeDetailVO extends BaseJobStatusVO{
     private Integer applicantCount;
     private String username;
     private String img;
+    private List<PartTimeVO> topViewJobs;
 }
