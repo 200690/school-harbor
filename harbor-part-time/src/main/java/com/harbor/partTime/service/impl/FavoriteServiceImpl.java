@@ -59,4 +59,20 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, FavoritePO>
                 .eq(FavoritePO::getPartTimeId, partTimeId)
                 .remove();
     }
+
+    @Override
+    public void addFavorite(Long partTimeId) {
+        Long userId = com.harbor.common.utils.UserContext.getUser();
+        // 检查是否已经收藏过
+        boolean exists = lambdaQuery()
+                .eq(FavoritePO::getUserId, userId)
+                .eq(FavoritePO::getPartTimeId, partTimeId)
+                .exists();
+        if (!exists) {
+            FavoritePO favoritePO = new FavoritePO();
+            favoritePO.setUserId(userId);
+            favoritePO.setPartTimeId(partTimeId);
+            this.save(favoritePO);
+        }
+    }
 }

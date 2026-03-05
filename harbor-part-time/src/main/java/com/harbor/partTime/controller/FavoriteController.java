@@ -3,6 +3,7 @@ package com.harbor.partTime.controller;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
+import com.harbor.common.utils.UserContext;
 import com.harbor.partTime.domain.vo.FavoriteVO;
 import com.harbor.partTime.service.IFavoriteService;
 import io.swagger.annotations.Api;
@@ -32,6 +33,14 @@ public class FavoriteController {
     public Result<Void> removeFavorite(@PathVariable Long id) {
         log.info("移除收藏: {}", id);
         favoriteService.removeFavorite(id);
+        return Result.success();
+    }
+
+    @ApiOperation("添加收藏")
+    @PostMapping("addFavorite/{partTimeId}")
+    public Result addFavorite(@PathVariable Long partTimeId) {
+        log.info("添加收藏: {}", partTimeId);
+        favoriteService.addFavorite(partTimeId);
         return Result.success();
     }
 }
