@@ -4,8 +4,14 @@
       <!-- 面包屑导航 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item><router-link to="/">首页</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
-        <el-breadcrumb-item><router-link to="/user/user/follows">我的关注</router-link></el-breadcrumb-item>
+        <template v-if="from === 'second-hand-detail'">
+          <el-breadcrumb-item><router-link to="/second-hand">二手交易</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link :to="`/second-hand/detail/${route.query.itemId}`">商品详情</router-link></el-breadcrumb-item>
+        </template>
+        <template v-else>
+          <el-breadcrumb-item><router-link to="/user/user/center">个人中心</router-link></el-breadcrumb-item>
+          <el-breadcrumb-item><router-link to="/user/user/follows">我的关注</router-link></el-breadcrumb-item>
+        </template>
         <el-breadcrumb-item>{{ userProfile.username }}的主页</el-breadcrumb-item>
       </el-breadcrumb>
 
@@ -36,7 +42,7 @@
               <span class="stat-label">好评率</span>
             </div>
           </div>
-          <p class="user-details">注册时间：{{ userProfile.registerTime }}</p>
+          <p class="user-details">注册时间：{{ userProfile.createTime }}</p>
           <p class="user-details user-credit">
             <span class="credit-label">信誉分：</span>
             <span class="credit-score">{{ userProfile.creditScore || 60 }}</span>
@@ -72,10 +78,10 @@
               </div>
               <div class="item-info">
                 <h4 class="item-title">{{ item.title }}</h4>
-                <p class="item-description">{{ item.description }}</p>
+                <p class="item-description">{{ item.description || '暂无描述' }}</p>
                 <div class="item-meta">
                   <span class="price">¥{{ item.price }}</span>
-                  <span class="location">{{ item.location }}</span>
+                  <span class="location">{{ item.location || '未知' }}</span>
                   <span class="publish-time">{{ item.publishTime }}</span>
                 </div>
               </div>
@@ -99,17 +105,17 @@
               <div class="job-info">
                 <h4 class="job-title">{{ job.title }}</h4>
                 <div class="job-meta">
-                  <span class="meta-item">{{ job.location }}</span>
-                  <span class="meta-item">{{ job.workTime }}</span>
+                  <span class="meta-item">{{ job.location || '未知' }}</span>
+                  <span class="meta-item">{{ job.publishTime || '' }}</span>
                 </div>
-                <p class="job-description">{{ job.description }}</p>
+                <p class="job-description">{{ job.description || '暂无描述' }}</p>
                 <div class="job-tags">
-                  <span class="tag tag-primary">{{ job.type }}</span>
-                  <span class="tag tag-success">薪资: {{ job.salary }}</span>
+                  <span class="tag tag-primary">{{ job.type || '兼职' }}</span>
+                  <span class="tag tag-success">薪资: {{ job.salary || '面议' }}</span>
                 </div>
               </div>
               <div class="job-actions">
-                <router-link :to="`/item/${job.id}`" class="btn btn-primary">
+                <router-link :to="`/part-time/detail/${job.id}`" class="btn btn-primary">
                   查看详情
                 </router-link>
               </div>
@@ -124,7 +130,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { getUserInfo } from '@/api/user'
 
@@ -133,43 +139,27 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const userId = computed(() => route.params.id)
+const from = computed(() => route.query.from || '')
 const userProfile = ref({
-  id: userId.value,
-  username: '商家' + userId.value,
-  avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=friendly%20shopkeeper%20portrait%20professional&image_size=square',
-  registerTime: '2025-06-15',
-  creditScore: 95,
-  school: 'XX大学',
-  bio: '专业二手交易商家，诚信经营，品质保证',
-  totalItems: 12,
-  totalSales: 86,
-  positiveReviews: 98
+  id: '',
+  userId: '',
+  username: '',
+  avatar: '',
+  phone: '',
+  email: '',
+  balance: 0,
+  createTime: '',
+  updateTime: '',
+  school: '',
+  bio: '',
+  creditScore: 60,
+  totalItems: 0,
+  totalSales: 0,
+  positiveReviews: 0
 })
 
-const userSecondHandItems = ref([
-  {
-    id: 1,
-    title: '大学英语四级词汇书',
-    description: '几乎全新，附赠听力光盘',
-    price: 20,
-    location: '图书馆',
-    publishTime: '2026-02-09',
-    image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=English%20vocabulary%20book%20for%20college%20students&image_size=square'
-  }
-])
-
-const userPartTimeJobs = ref([
-  {
-    id: 1,
-    title: '校园超市收银员兼职',
-    description: '负责收银和理货，要求认真负责',
-    employer: userProfile.value.username,
-    location: '校园超市',
-    workTime: '周末',
-    salary: '15元/小时',
-    type: '校内兼职'
-  }
-])
+const userSecondHandItems = ref([])
+const userPartTimeJobs = ref([])
 
 const isFollowing = ref(false)
 
@@ -207,36 +197,77 @@ const unfollowUser = async () => {
 // 拉黑用户
 const blockUser = async () => {
   try {
-    await userStore.blockUser(userProfile.value.id, userProfile.value.username, userProfile.value.avatar)
+    await ElMessageBox.confirm(
+      `确定要拉黑 ${userProfile.value.username} 吗？拉黑后将无法看到该用户的发布内容。`,
+      '拉黑确认',
+      {
+        confirmButtonText: '确定拉黑',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await userStore.blockUser(userProfile.value.userId || userProfile.value.id, userProfile.value.username, userProfile.value.avatar)
     ElMessage.success('拉黑成功')
     router.push('/user/user/center')
   } catch (error) {
-    ElMessage.error('拉黑失败')
+    if (error !== 'cancel') {
+      ElMessage.error('拉黑失败')
+    }
   }
 }
 
 onMounted(async () => {
   try {
     // 从后端API获取用户信息
-    try {
-      const response = await getUserInfo(userId.value)
-      if (response.data) {
-        userProfile.value = {
-          id: response.data.id,
-          username: response.data.username,
-          avatar: response.data.avatar ? response.data.avatar.replace(/`/g, '') : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=friendly%20shopkeeper%20portrait%20professional&image_size=square',
-          registerTime: response.data.registerTime || '2025-06-15',
-          creditScore: response.data.creditScore || 95,
-          school: response.data.school || 'XX大学',
-          bio: response.data.bio || '专业二手交易商家，诚信经营，品质保证',
-          totalItems: response.data.totalItems || 12,
-          totalSales: response.data.totalSales || 86,
-          positiveReviews: response.data.positiveReviews || 98
-        }
+    const response = await getUserInfo(userId.value)
+    if (response.data) {
+      const data = response.data
+      
+      // 更新用户基本信息
+      userProfile.value = {
+        id: data.id || '',
+        userId: data.userId || '',
+        username: data.username || '',
+        avatar: data.avatar ? data.avatar.replace(/`/g, '') : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=friendly%20shopkeeper%20portrait%20professional&image_size=square',
+        phone: data.phone || '',
+        email: data.email || '',
+        balance: data.balance || 0,
+        createTime: data.createTime || '',
+        updateTime: data.updateTime || '',
+        school: data.school || '',
+        bio: data.bio || '',
+        creditScore: data.creditScore || 60,
+        totalItems: data.items?.length || 0,
+        totalSales: data.totalSales || 0,
+        positiveReviews: data.positiveReviews || 0
       }
-    } catch (apiError) {
-      console.log('API调用失败，使用模拟数据:', apiError)
-      // API调用失败时，使用模拟数据
+      
+      // 更新二手商品列表
+      if (data.items && Array.isArray(data.items)) {
+        userSecondHandItems.value = data.items.map(item => ({
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          image: item.coverImage || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=second%20hand%20item&image_size=square',
+          publishTime: item.publishTime,
+          status: item.status
+        }))
+      }
+      
+      // 更新兼职列表
+      if (data.jobs && Array.isArray(data.jobs)) {
+        userPartTimeJobs.value = data.jobs.map(job => ({
+          id: job.id,
+          title: job.title,
+          description: job.employer || '',
+          location: job.location || '',
+          salary: job.salaryDesc || '',
+          type: '兼职',
+          publishTime: job.publishTime,
+          status: job.status
+        }))
+      }
     }
     
     // 检查是否已关注

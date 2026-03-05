@@ -98,7 +98,7 @@
               <span>{{ itemDetail.school }} - {{ itemDetail.location }}</span>
             </div>
             <div class="seller-info">
-              <router-link :to="`/user/profile/${itemDetail.sellerId}`" class="seller-profile-link">
+              <router-link :to="`/user/profile/${itemDetail.sellerId}?from=second-hand-detail&itemId=${itemId}`" class="seller-profile-link">
                 <div class="seller-avatar">
                   <img :src="itemDetail.sellerAvatar || '/default-avatar.png'" :alt="itemDetail.sellerName || '卖家'" />
                 </div>
@@ -106,15 +106,21 @@
                   <h4>{{ itemDetail.sellerName || '卖家' }}</h4>
                 </div>
               </router-link>
-              <el-button type="primary" class="contact-btn">
+              <el-button v-if="isSeller" type="primary" class="contact-btn" @click="editItem">
+                <i class="el-icon-edit"></i> 编辑
+              </el-button>
+              <el-button v-else type="primary" class="contact-btn">
                 <i class="el-icon-chat-line-round"></i> 联系卖家
+              </el-button>
+              <el-button v-if="!isSeller" type="danger" class="block-btn" @click="blockItem">
+                <i class="el-icon-circle-close"></i> 拉黑商品
               </el-button>
             </div>
             <div class="item-actions">
-              <el-button type="primary" size="large" class="buy-btn" @click="buyItem">
+              <el-button v-if="!isSeller" type="primary" size="large" class="buy-btn" @click="buyItem">
                 <i class="el-icon-s-finance"></i> 立即购买
               </el-button>
-              <el-button :type="isFavorite ? 'warning' : 'default'" size="large" class="favorite-btn" @click="toggleFavorite">
+              <el-button v-if="!isSeller" :type="isFavorite ? 'warning' : 'default'" size="large" class="favorite-btn" @click="toggleFavorite">
                 <i :class="isFavorite ? 'el-icon-star-on' : 'el-icon-star-off'"></i> {{ isFavorite ? '已收藏' : '收藏' }}
               </el-button>
             </div>
@@ -198,7 +204,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useSecondHandStore } from '../stores/secondHand'
 import { useUserStore } from '../stores/user'
 import { getSecondHandDetail, checkSecondHandFavorite } from '@/api/secondHand'
@@ -217,6 +223,20 @@ const isFromFavorites = ref(false)
 const isPublisherBanned = ref(false)
 const bannedMessage = ref('')
 const currentImageIndex = ref(0)
+
+// 计算当前用户是否是商品卖家
+const isSeller = computed(() => {
+  if (!itemDetail.value || !itemDetail.value.sellerId) {
+    return false
+  }
+  
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  const currentUserId = userInfo.userId || userInfo.id
+  const itemSellerId = itemDetail.value.sellerId
+  
+  // 确保都是字符串类型进行比较
+  return String(currentUserId) === String(itemSellerId)
+})
 
 // 计算是否已收藏
 const isFavorite = computed(() => {
@@ -250,16 +270,60 @@ const buyItem = async () => {
   }
 }
 
+// 编辑商品
+const editItem = () => {
+  if (!itemDetail.value || !itemDetail.value.id) {
+    ElMessage.error('无法获取商品信息')
+    return
+  }
+  
+  // 跳转到编辑页面
+  router.push(`/user/publish/edit/second-hand/${itemDetail.value.id}`)
+}
+
+// 拉黑商品
+const blockItem = async () => {
+  if (!itemDetail.value || !itemDetail.value.id) {
+    ElMessage.error('无法获取商品信息')
+    return
+  }
+  
+  try {
+    await ElMessageBox.confirm(
+      `确定要拉黑商品 "${itemDetail.value.title}" 吗？拉黑后将无法看到该商品。`,
+      '拉黑确认',
+      {
+        confirmButtonText: '确定拉黑',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await userStore.blockItem(
+      itemDetail.value.id,
+      itemDetail.value.title || '未知商品',
+      itemDetail.value.coverImage || itemDetail.value.image || ''
+    )
+    ElMessage.success('拉黑成功')
+    setTimeout(() => {
+      router.push('/second-hand')
+    }, 1500)
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('拉黑失败，请稍后重试')
+    }
+  }
+}
+
 // 获取商品详情
 const fetchItemDetail = async () => {
   try {
     console.log('正在获取商品详情，ID:', itemId.value)
     try {
       const response = await getSecondHandDetail(itemId.value)
-      console.log('后端返回的商品详情:', response.data)
-      itemDetail.value = response.data
-      // 重置图片索引
-      currentImageIndex.value = 0
+    itemDetail.value = response.data
+    // 重置图片索引
+    currentImageIndex.value = 0
       // 设置推荐商品为相关商品
       recommendedItems.value = response.data.relatedItems || []
       isPublisherBanned.value = false
@@ -853,6 +917,11 @@ const handleClearCache = () => {
 
 .contact-btn {
   white-space: nowrap;
+}
+
+.block-btn {
+  white-space: nowrap;
+  margin-left: 10px;
 }
 
 .item-actions {

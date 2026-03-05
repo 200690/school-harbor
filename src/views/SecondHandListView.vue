@@ -86,7 +86,8 @@
           </div>
           <div class="item-actions">
             <router-link :to="`/second-hand/detail/${item.id}?from=list`" class="btn btn-primary">查看详情</router-link>
-            <button class="btn btn-success" @click="contactSeller(item.id)">联系卖家</button>
+            <button v-if="isItemSeller(item)" class="btn btn-primary" @click="editItem(item.id)">编辑</button>
+            <button v-else class="btn btn-success" @click="contactSeller(item.id)">联系卖家</button>
           </div>
         </div>
       </div>
@@ -161,7 +162,6 @@ export default {
   methods: {
     // 清除与二手交易列表相关的所有缓存
     clearCache() {
-      console.log('清除二手交易列表缓存')
       // 遍历localStorage中的所有键，删除所有以secondHandList_开头的键
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
@@ -177,7 +177,6 @@ export default {
     async fetchSecondHandList() {
       // 如果已经有请求在执行，直接返回
       if (this.isRequesting) {
-        console.log('已有请求在执行，跳过重复请求')
         return
       }
       
@@ -207,16 +206,11 @@ export default {
           }
         }
         
-        console.log('请求参数:', params)
         const response = await getSecondHandList(params)
-        console.log('后端返回的完整响应:', response)
-        console.log('后端返回的数据:', response.data)
         
         const { list, total } = response.data
         this.items = list || []
         this.totalItems = total || 0
-        console.log('处理后的items:', this.items)
-        console.log('处理后的total:', this.totalItems)
       } catch (error) {
         console.error('获取二手物品列表失败:', error)
         this.$message.error('获取二手物品列表失败')
@@ -242,6 +236,17 @@ export default {
         console.error('购买失败:', error)
         this.$message.error('购买失败')
       }
+    },
+    // 判断当前用户是否是商品的卖家
+    isItemSeller(item) {
+      if (!item || !item.sellerId) return false
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+      const currentUserId = userInfo.userId || userInfo.id
+      return String(currentUserId) === String(item.sellerId)
+    },
+    // 编辑商品
+    editItem(itemId) {
+      this.$router.push(`/user/publish/edit/second-hand/${itemId}`)
     },
     handleSizeChange(size) {
       this.pageSize = size
