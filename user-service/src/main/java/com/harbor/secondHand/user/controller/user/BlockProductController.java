@@ -32,4 +32,12 @@ public class BlockProductController {
         blockProductService.removeByItemId(id);
         return Result.success();
     }
+
+    @PostMapping("add/{id}")
+    @ApiOperation("拉黑商品")
+    public Result add(@PathVariable Long id){
+        log.info("拉黑商品: {}", id);
+        blockProductService.addBlock(id);
+        return Result.success();
+    }
 }

@@ -9,4 +9,6 @@ public interface IBlockUserService extends IService<UserBlockUser> {
     PageDTO getMyBlockUsers(PageQuery pageQuery);
 
     void unblock(Long blockUserId);
+
+    void addBlock(Long blockUserId);
 }

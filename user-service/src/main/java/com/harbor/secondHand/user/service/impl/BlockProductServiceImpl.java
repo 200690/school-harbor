@@ -89,7 +89,6 @@ public class BlockProductServiceImpl extends ServiceImpl<UserBlockProductMapper,
         Assert.notNull(Itemid, "商品ID不能为空");
         Long userId = UserContext.getUser();
         
-        // 更新当前用户的拉黑状态
         lambdaUpdate().eq(UserBlockProductPO::getProductId, Itemid)
                 .eq(UserBlockProductPO::getUserId, userId)
                 .eq(UserBlockProductPO::getStats, UserBlockProductPO.STATS_ACTIVE)
@@ -115,6 +114,66 @@ public class BlockProductServiceImpl extends ServiceImpl<UserBlockProductMapper,
         // 写入缓存，设置1天过期
         redisTemplate.opsForValue().set(cacheKey, productIds, 1, java.util.concurrent.TimeUnit.DAYS);
         log.info("重新缓存拉黑商品id集合: userId={}, size={}", userId, productIds.size());
+        
+        // 清除二手交易缓存
+        String secondHandCacheKey = "item:list:latest";
+        redisTemplate.delete(secondHandCacheKey);
+        log.info("清除二手交易缓存: key={}", secondHandCacheKey);
+    }
+
+    @Override
+    public void addBlock(Long itemId) {
+        Assert.notNull(itemId, "商品ID不能为空");
+        Long userId = UserContext.getUser();
+        
+        // 检查是否存在该用户对该商品的任何记录（无论状态）
+        UserBlockProductPO existingRecord = lambdaQuery()
+                .eq(UserBlockProductPO::getUserId, userId)
+                .eq(UserBlockProductPO::getProductId, itemId)
+                .one();
+        
+        if (existingRecord != null) {
+            // 如果记录存在，检查状态
+            if (existingRecord.getStats() == UserBlockProductPO.STATS_ACTIVE) {
+                log.info("商品已经被拉黑: userId={}, itemId={}", userId, itemId);
+                return;
+            } else {
+                // 如果记录存在但状态为非活跃，更新为活跃
+                lambdaUpdate()
+                        .eq(UserBlockProductPO::getUserId, userId)
+                        .eq(UserBlockProductPO::getProductId, itemId)
+                        .set(UserBlockProductPO::getStats, UserBlockProductPO.STATS_ACTIVE)
+                        .set(UserBlockProductPO::getBlockTime, java.time.LocalDateTime.now())
+                        .update();
+                log.info("重新拉黑商品: userId={}, itemId={}", userId, itemId);
+            }
+        } else {
+            // 如果记录不存在，创建新记录
+            UserBlockProductPO blockProductPO = new UserBlockProductPO();
+            blockProductPO.setUserId(userId);
+            blockProductPO.setProductId(itemId);
+            blockProductPO.setBlockTime(java.time.LocalDateTime.now());
+            blockProductPO.setStats(UserBlockProductPO.STATS_ACTIVE);
+            this.save(blockProductPO);
+            log.info("添加拉黑商品: userId={}, itemId={}", userId, itemId);
+        }
+        
+        // 清除并更新缓存
+        String cacheKey = "user:block:product:ids:" + userId;
+        redisTemplate.delete(cacheKey);
+        
+        // 重新查询并写入缓存
+        List<UserBlockProductPO> updatedBlockProducts = lambdaQuery()
+                .eq(UserBlockProductPO::getUserId, userId)
+                .eq(UserBlockProductPO::getStats, UserBlockProductPO.STATS_ACTIVE)
+                .list();
+        List<Long> productIds = updatedBlockProducts.stream()
+                .map(UserBlockProductPO::getProductId)
+                .collect(java.util.stream.Collectors.toList());
+        
+        // 写入缓存，设置1天过期
+        redisTemplate.opsForValue().set(cacheKey, productIds, 1, java.util.concurrent.TimeUnit.DAYS);
+        log.info("更新拉黑商品id集合缓存: userId={}, size={}", userId, productIds.size());
         
         // 清除二手交易缓存
         String secondHandCacheKey = "item:list:latest";

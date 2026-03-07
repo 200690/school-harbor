@@ -115,4 +115,68 @@ public class BlockUserServiceServiceImpl extends ServiceImpl<UserBlockUserMapper
         redisTemplate.delete(secondHandCacheKey);
         log.info("清除二手交易缓存: key={}", secondHandCacheKey);
     }
+
+    @Override
+    public void addBlock(Long blockUserId) {
+        Long userId = UserContext.getUser();
+        
+        // 检查是否存在该用户对该用户的任何记录（无论状态）
+        UserBlockUser existingRecord = lambdaQuery()
+                .eq(UserBlockUser::getUserId, userId)
+                .eq(UserBlockUser::getBlockId, blockUserId)
+                .one();
+        
+        if (existingRecord != null) {
+            // 如果记录存在，检查状态
+            if (existingRecord.getStats() == UserBlockUser.STATS_ACTIVE) {
+                log.info("用户已经被拉黑: userId={}, blockUserId={}", userId, blockUserId);
+                return;
+            } else {
+                // 如果记录存在但状态为非活跃，更新为活跃
+                lambdaUpdate()
+                        .eq(UserBlockUser::getUserId, userId)
+                        .eq(UserBlockUser::getBlockId, blockUserId)
+                        .set(UserBlockUser::getStats, UserBlockUser.STATS_ACTIVE)
+                        .set(UserBlockUser::getBlockTime, java.time.LocalDateTime.now())
+                        .update();
+                log.info("重新拉黑用户: userId={}, blockUserId={}", userId, blockUserId);
+            }
+        } else {
+            // 如果记录不存在，创建新记录
+            UserBlockUser blockUser = new UserBlockUser();
+            blockUser.setUserId(userId);
+            blockUser.setBlockId(blockUserId);
+            blockUser.setBlockTime(java.time.LocalDateTime.now());
+            blockUser.setStats( UserBlockUser.STATS_ACTIVE);
+            this.save(blockUser);
+            log.info("添加拉黑用户: userId={}, blockUserId={}", userId, blockUserId);
+        }
+        
+        // 清除并更新缓存
+        String cacheKey = "user:block:ids:" + userId;
+        redisTemplate.delete(cacheKey);
+        
+        // 重新查询并写入缓存
+        List<UserBlockUser> updatedBlockUsers = lambdaQuery()
+                .eq(UserBlockUser::getUserId, userId)
+                .eq(UserBlockUser::getStats, UserBlockUser.STATS_ACTIVE)
+                .list();
+        List<Long> blockIds = updatedBlockUsers.stream()
+                .map(UserBlockUser::getBlockId)
+                .collect(java.util.stream.Collectors.toList());
+        
+        // 写入缓存，设置1天过期
+        redisTemplate.opsForValue().set(cacheKey, blockIds, 1, TimeUnit.DAYS);
+        log.info("更新拉黑用户id集合缓存: userId={}, size={}", userId, blockIds.size());
+        
+        // 清除兼职缓存
+        String partTimeCacheKey = "job:list:recommend";
+        redisTemplate.delete(partTimeCacheKey);
+        log.info("清除兼职缓存: key={}", partTimeCacheKey);
+        
+        // 清除二手交易缓存
+        String secondHandCacheKey = "item:list:latest";
+        redisTemplate.delete(secondHandCacheKey);
+        log.info("清除二手交易缓存: key={}", secondHandCacheKey);
+    }
 }

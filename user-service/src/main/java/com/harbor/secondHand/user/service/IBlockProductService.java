@@ -9,4 +9,6 @@ public interface IBlockProductService extends IService<UserBlockProductPO> {
     PageDTO getMyBlockProducts(PageQuery pageQuery);
 
     void removeByItemId(Long Itemid);
+
+    void addBlock(Long itemId);
 }

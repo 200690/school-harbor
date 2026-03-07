@@ -58,6 +58,11 @@ public class CommentsPO {
     private String content;
 
     /**
+     * 评分
+     */
+    private Integer score;
+
+    /**
      * 图片URL列表（JSON数组格式）
      */
     private String images;

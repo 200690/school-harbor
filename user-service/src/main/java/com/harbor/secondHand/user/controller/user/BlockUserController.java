@@ -31,4 +31,12 @@ public class BlockUserController {
         blockUserService.unblock(id);
         return Result.success();
     }
+
+    @ApiOperation("添加拉黑用户")
+    @PostMapping("add/{id}")
+    public Result addBlock(@PathVariable Long id){
+        log.info("添加拉黑用户");
+        blockUserService.addBlock(id);
+        return Result.success();
+    }
 }

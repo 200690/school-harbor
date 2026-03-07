@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 public class UserBlockUser {
 
-    public static final Object STATS_ACTIVE = 1;
-    public static final Object STATS_INACTIVE = 0;
+    public static final Integer STATS_ACTIVE = 1;
+    public static final Integer STATS_INACTIVE = 0;
     /**
      * 拉黑记录ID
      */
