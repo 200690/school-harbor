@@ -100,7 +100,7 @@
               </div>
               <!-- 回复列表 -->
               <div v-if="comment.children && comment.children.length > 0" class="replies-list">
-                <div v-for="reply in comment.children" :key="reply.id" class="reply-item">
+                <div v-for="(reply, index) in comment.children" :key="reply.id" class="reply-item" v-show="index < 2 || expandedComments[comment.id]">
                   <div class="reply-header">
                     <img :src="cleanImageUrl(reply.userAvatar)" :alt="reply.userName" class="reply-avatar" />
                     <div class="reply-info">
@@ -129,20 +129,27 @@
                     </el-button>
                   </div>
                 </div>
+                <!-- 展开/折叠按钮 -->
+                <div v-if="comment.children.length > 2" class="expand-toggle">
+                  <el-button size="small" type="text" @click="toggleExpand(comment.id)">
+                    <i :class="expandedComments[comment.id] ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
+                    <span>{{ expandedComments[comment.id] ? '收起回复' : `展开更多回复 (${comment.children.length - 2})` }}</span>
+                  </el-button>
+                </div>
               </div>
             </div>
-            <!-- 分页 -->
-            <div class="pagination">
-              <el-pagination
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page="currentPage"
-                :page-sizes="[5, 10, 20]"
-                :page-size="pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="totalComments"
-              />
-            </div>
+          </div>
+          <!-- 分页 -->
+          <div class="pagination">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="currentPage"
+              :page-sizes="[5, 10, 20]"
+              :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="totalComments"
+            />
           </div>
         </div>
       </div>
@@ -176,6 +183,14 @@ const commentForm = ref({
 // 评论图片
 const commentImages = ref([])
 const fileInput = ref(null)
+
+// 展开/折叠状态
+const expandedComments = ref({})
+
+// 切换展开/折叠状态
+const toggleExpand = (commentId) => {
+  expandedComments.value[commentId] = !expandedComments.value[commentId]
+}
 
 const rules = {
   rating: [
@@ -749,6 +764,26 @@ onMounted(async () => {
   background-color: #f9fafc;
   border-radius: 6px;
   margin-bottom: 12px;
+}
+
+.expand-toggle {
+  text-align: center;
+  padding: 8px 0;
+  border-top: 1px dashed #e4e7ed;
+  margin-top: 8px;
+  
+  .el-button {
+    color: #409eff;
+    font-size: 13px;
+    
+    &:hover {
+      color: #66b1ff;
+    }
+    
+    i {
+      margin-right: 4px;
+    }
+  }
 }
 
 .reply-header {

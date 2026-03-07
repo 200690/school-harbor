@@ -90,49 +90,42 @@
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的发布.png" alt="我的发布" />
             </div>
             <span class="function-name">我的发布</span>
-            <span class="function-count">{{ userInfo?.publicCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/applications" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的申请.png" alt="我的申请" />
             </div>
             <span class="function-name">我的申请</span>
-            <span class="function-count">{{ userInfo?.applicationCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/purchases" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的购买.png" alt="我的购买" />
             </div>
             <span class="function-name">我的购买</span>
-            <span class="function-count">{{ userInfo?.buyCounnt || 0 }}</span>
           </router-link>
           <router-link to="/user/user/messages" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/消息通知.png" alt="消息通知" />
             </div>
             <span class="function-name">消息通知</span>
-            <span class="function-count">{{ userMessages.length }}</span>
           </router-link>
           <router-link to="/user/user/favorites" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的收藏.png" alt="我的收藏" />
             </div>
             <span class="function-name">我的收藏</span>
-            <span class="function-count">{{ userInfo?.favCount || 0 }}</span>
           </router-link>
           <router-link to="/user/user/follows" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/我的关注.png" alt="我的关注" />
             </div>
             <span class="function-name">我的关注</span>
-            <span class="function-count">{{ userFollows.length }}</span>
           </router-link>
           <router-link to="/user/user/blacklist" class="function-item">
             <div class="function-icon">
               <img src="https://zll-java-ai.oss-cn-beijing.aliyuncs.com/harbor/background/黑名单.png" alt="黑名单" />
             </div>
             <span class="function-name">黑名单</span>
-            <span class="function-count">{{ userBlacklist.length }}</span>
           </router-link>
           <router-link to="/user/user/evaluations" class="function-item">
             <div class="function-icon">
@@ -147,7 +140,10 @@
       <div class="recent-activities card">
         <h3 class="section-title">最近活动</h3>
         <div class="activity-list">
-          <div v-for="(activity, index) in recentActivities" :key="index" class="activity-item">
+          <div v-if="recentActivities.length === 0" class="activity-empty">
+            <el-empty description="暂无最近活动" :image-size="60" />
+          </div>
+          <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
             <div class="activity-icon">
               <i :class="activity.icon"></i>
             </div>
@@ -203,16 +199,49 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
-import { ElDialog, ElInput, ElButton, ElMessage, ElRadioGroup, ElRadio } from 'element-plus'
+import { ElDialog, ElInput, ElButton, ElMessage, ElRadioGroup, ElRadio, ElEmpty } from 'element-plus'
 import request from '../utils/request'
 import { getUserCenter } from '../api/user'
 
 const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
-const userMessages = ref(userStore.userMessages)
-const userFollows = ref(userStore.userFollows)
-const userBlacklist = ref(userStore.userBlacklist)
-const recentActivities = ref(userStore.recentActivities)
+// 最近活动从 userInfo.tags 动态生成
+const recentActivities = ref([])
+
+// 根据 tags 生成最近活动列表
+const generateRecentActivities = (tags) => {
+  if (!tags || !Array.isArray(tags) || tags.length === 0) {
+    return []
+  }
+  return tags.map((tag, index) => ({
+    id: index,
+    title: tag,
+    time: new Date().toLocaleString(),
+    icon: getActivityIcon(tag)
+  }))
+}
+
+// 根据活动内容获取对应图标
+const getActivityIcon = (title) => {
+  if (title.includes('兼职')) {
+    return 'el-icon-suitcase'
+  } else if (title.includes('二手') || title.includes('商品')) {
+    return 'el-icon-goods'
+  } else if (title.includes('回复') || title.includes('评论')) {
+    return 'el-icon-chat-dot-round'
+  } else if (title.includes('申请')) {
+    return 'el-icon-document-checked'
+  } else if (title.includes('发布')) {
+    return 'el-icon-circle-plus'
+  } else if (title.includes('购买') || title.includes('订单')) {
+    return 'el-icon-shopping-cart-full'
+  } else if (title.includes('收藏')) {
+    return 'el-icon-star-on'
+  } else if (title.includes('消息') || title.includes('通知')) {
+    return 'el-icon-bell'
+  }
+  return 'el-icon-info'
+}
 
 // 充值弹窗
 const rechargeDialogVisible = ref(false)
@@ -292,6 +321,8 @@ onMounted(async () => {
       userInfo.value = response.data
       // 同步更新 store 中的用户信息
       userStore.setUserInfo(response.data)
+      // 根据 tags 字段生成最近活动
+      recentActivities.value = generateRecentActivities(response.data.tags)
     }
   } catch (error) {
     console.error('获取用户中心数据失败:', error)
@@ -300,6 +331,8 @@ onMounted(async () => {
     if (storedUserInfo && storedUserInfo.username) {
       userInfo.value = storedUserInfo
     }
+    // 使用 store 中的默认最近活动数据
+    recentActivities.value = userStore.recentActivities
   }
 })
 </script>
@@ -310,60 +343,86 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   padding-top: 80px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
 }
 
 .main-content {
   flex: 1;
-  margin-top: 20px;
-  padding: 20px 0;
+  margin-top: 24px;
+  padding: 24px 0 40px;
 }
 
 /* 页面标题 */
 .page-header {
-  margin-bottom: 30px;
-}
-
-.page-title {
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.page-subtitle {
-  font-size: 16px;
-  color: #666;
-  margin: 0;
+  margin-bottom: 32px;
+  text-align: center;
+  
+  .page-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #1a1a2e;
+    letter-spacing: -0.5px;
+  }
+  
+  .page-subtitle {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+    font-weight: 400;
+  }
 }
 
 /* 个人信息卡片样式 */
 .user-info-card {
-  margin-bottom: 30px;
-  padding: 30px;
-  border-radius: 12px;
+  margin-bottom: 24px;
+  padding: 32px;
+  border-radius: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
 }
 
 .user-info-header {
   display: flex;
   align-items: center;
-  margin-bottom: 30px;
-  gap: 40px;
+  margin-bottom: 32px;
+  gap: 32px;
+  position: relative;
+  z-index: 1;
 }
 
 .user-avatar {
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   overflow: hidden;
-  border: 4px solid rgba(255, 255, 255, 0.3);
+  border: 4px solid rgba(255, 255, 255, 0.4);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .user-avatar img {
@@ -379,7 +438,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .user-basic-info {
@@ -387,113 +446,132 @@ onMounted(async () => {
 }
 
 .user-name {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 12px;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 10px;
   color: #fff;
+  letter-spacing: 0.5px;
 }
 
 .user-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   font-size: 14px;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .user-meta-item {
   display: flex;
   align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 14px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
 }
 
 .user-meta-divider {
-  color: rgba(255, 255, 255, 0.6);
+  display: none;
 }
 
 .user-credit-info {
-  min-width: 250px;
+  min-width: 220px;
 }
 
 .credit-score-container {
   background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 20px 24px;
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .credit-label {
-  font-size: 14px;
-  margin-bottom: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
   display: block;
   opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .credit-score-value {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .credit-score {
-  font-size: 28px;
-  font-weight: bold;
+  font-size: 32px;
+  font-weight: 700;
   color: #fff;
 }
 
 .credit-level {
-  font-size: 14px;
+  font-size: 12px;
   padding: 4px 12px;
-  border-radius: 16px;
-  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.25);
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .credit-progress {
   width: 100%;
-  height: 6px;
+  height: 8px;
   background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .credit-progress-bar {
   height: 100%;
-  background-color: #fff;
-  border-radius: 3px;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
 }
 
 .user-info-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 20px;
+  padding-top: 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
 .user-stats {
   display: flex;
-  gap: 40px;
+  gap: 48px;
 }
 
 .user-stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .stat-value {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 700;
   color: #fff;
 }
 
 .stat-label {
-  font-size: 14px;
-  opacity: 0.9;
+  font-size: 13px;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .user-actions {
@@ -503,36 +581,38 @@ onMounted(async () => {
 
 .btn {
   display: inline-block;
-  padding: 10px 24px;
-  border-radius: 24px;
+  padding: 12px 28px;
+  border-radius: 25px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   transition: all 0.3s ease;
   cursor: pointer;
   border: none;
   outline: none;
+  letter-spacing: 0.5px;
 }
 
 .btn-primary {
-  background-color: #fff;
+  background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
   color: #667eea;
-  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   
   &:hover {
-    background-color: rgba(255, 255, 255, 0.9);
+    background: linear-gradient(135deg, #fff 0%, #e8e8e8 100%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   }
 }
 
 .btn-secondary {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2);
   color: #fff;
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   
   &:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
@@ -540,70 +620,88 @@ onMounted(async () => {
 
 /* 余额卡片样式 */
 .balance-card {
-  margin-bottom: 30px;
-  padding: 30px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  margin-bottom: 24px;
+  padding: 28px 32px;
+  border-radius: 16px;
+  background: #fff;
+  color: #333;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .balance-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .balance-title {
-  font-size: 20px;
-  font-weight: bold;
-  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  &::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+  }
 }
 
 .recharge-btn {
-  padding: 8px 20px;
+  padding: 10px 24px;
   border-radius: 20px;
   font-size: 14px;
-  font-weight: 500;
-  background-color: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: none;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   
   &:hover {
-    background-color: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
   }
 }
 
 .balance-content {
   display: flex;
-  gap: 40px;
+  gap: 48px;
 }
 
 .balance-item {
   flex: 1;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f3f8 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(102, 126, 234, 0.1);
 }
 
 .balance-label {
   display: block;
-  font-size: 14px;
-  opacity: 0.9;
+  font-size: 13px;
+  color: #666;
   margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .balance-value {
   font-size: 28px;
-  font-weight: bold;
-  color: #fff;
+  font-weight: 700;
+  color: #667eea;
   
   &.frozen {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 20px;
+    color: #999;
+    font-size: 22px;
   }
 }
 
@@ -624,45 +722,45 @@ onMounted(async () => {
 
 /* 功能导航样式 */
 .function-nav-section {
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .section-title {
   font-size: 20px;
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 20px;
-  color: #333;
+  color: #1a1a2e;
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.section-title::before {
-  content: '';
-  width: 4px;
-  height: 20px;
-  background-color: #667eea;
-  border-radius: 2px;
+  gap: 10px;
+  
+  &::before {
+    content: '';
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+  }
 }
 
 .function-nav {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
 }
 
 .function-item {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 16px;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
   color: #333;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
   
   &::before {
     content: '';
@@ -670,151 +768,121 @@ onMounted(async () => {
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
+    height: 3px;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
     transform: scaleX(0);
-    transform-origin: left;
+    transform-origin: center;
     transition: transform 0.3s ease;
   }
   
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.1);
     
     &::before {
       transform: scaleX(1);
+    }
+    
+    .function-icon {
+      transform: scale(1.1);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
     }
   }
 }
 
 .function-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 12px;
   overflow: hidden;
-  background-color: rgba(64, 158, 255, 0.05);
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
   transition: all 0.3s ease;
-}
-
-.function-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: all 0.3s ease;
-}
-
-.function-item {
-  flex: 1;
-  min-width: 150px;
-  text-align: center;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  text-decoration: none;
-  color: #333;
-  position: relative;
-  overflow: hidden;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-  }
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
-    
-    &::before {
-      transform: scaleX(1);
-    }
+  img {
+    width: 60%;
+    height: 60%;
+    object-fit: contain;
   }
 }
 
 .function-name {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.function-count {
-  display: none;
+  color: #1a1a2e;
 }
 
 /* 最近活动样式 */
 .recent-activities {
-  margin-bottom: 30px;
-  padding: 30px;
-  border-radius: 12px;
-  background-color: #fff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  padding: 28px 32px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .activity-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+}
+
+.activity-empty {
+  padding: 40px 0;
 }
 
 .activity-item {
   display: flex;
-  align-items: flex-start;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  border-left: 4px solid transparent;
-}
-
-.activity-item:hover {
-  background-color: #f0f7ff;
-  transform: translateX(8px);
-  border-left-color: #667eea;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #fafbfc 0%, #f5f7fa 100%);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  
+  &:hover {
+    background: #fff;
+    transform: translateX(6px);
+    border-color: rgba(102, 126, 234, 0.2);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+  }
 }
 
 .activity-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 20px;
-  font-size: 24px;
+  margin-right: 16px;
+  font-size: 20px;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
 }
 
 .activity-content {
   flex: 1;
+  min-width: 0;
 }
 
 .activity-title {
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 8px;
+  font-size: 15px;
+  color: #1a1a2e;
+  margin-bottom: 4px;
   font-weight: 500;
+  line-height: 1.4;
 }
 
 .activity-time {
-  font-size: 14px;
+  font-size: 13px;
   color: #999;
   margin: 0;
 }
@@ -824,7 +892,7 @@ onMounted(async () => {
   .user-info-header {
     flex-direction: column;
     text-align: center;
-    gap: 30px;
+    gap: 24px;
   }
   
   .user-credit-info {
@@ -839,97 +907,176 @@ onMounted(async () => {
   
   .user-stats {
     width: 100%;
-    justify-content: space-around;
+    justify-content: center;
+    gap: 32px;
   }
   
-  .function-nav {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  .balance-content {
+    flex-direction: column;
+    gap: 16px;
   }
 }
 
 @media (max-width: 768px) {
+  .user-center {
+    padding-top: 70px;
+  }
+  
+  .main-content {
+    margin-top: 16px;
+    padding: 16px 0 24px;
+  }
+  
+  .page-header {
+    margin-bottom: 24px;
+    
+    .page-title {
+      font-size: 26px;
+    }
+    
+    .page-subtitle {
+      font-size: 14px;
+    }
+  }
+  
   .user-info-card {
-    padding: 20px;
+    padding: 24px;
+    border-radius: 16px;
+  }
+  
+  .user-info-header {
+    margin-bottom: 24px;
   }
   
   .user-avatar {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
   }
   
   .user-name {
-    font-size: 20px;
+    font-size: 22px;
   }
   
   .user-meta {
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
   }
   
-  .user-meta-divider {
-    display: none;
+  .user-meta-item {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+  
+  .user-credit-info {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .credit-score-container {
+    padding: 16px 20px;
+  }
+  
+  .credit-score {
+    font-size: 28px;
+  }
+  
+  .user-info-footer {
+    padding-top: 20px;
+  }
+  
+  .user-stats {
+    gap: 24px;
+  }
+  
+  .stat-value {
+    font-size: 20px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
   }
   
   .user-actions {
-    flex-direction: column;
     width: 100%;
   }
   
   .btn {
     width: 100%;
     text-align: center;
+    padding: 10px 20px;
+  }
+  
+  .balance-card {
+    padding: 20px 24px;
+  }
+  
+  .balance-value {
+    font-size: 24px;
   }
   
   .function-nav {
     grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
   }
   
   .function-item {
-    padding: 20px 12px;
+    padding: 16px 10px;
+    border-radius: 12px;
   }
   
   .function-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
   }
   
   .function-name {
-    font-size: 14px;
+    font-size: 12px;
   }
   
   .recent-activities {
-    padding: 20px;
+    padding: 20px 24px;
   }
   
   .activity-item {
-    padding: 16px;
+    padding: 12px 16px;
   }
   
   .activity-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    font-size: 18px;
+    margin-right: 12px;
   }
   
   .activity-title {
     font-size: 14px;
+  }
+  
+  .activity-time {
+    font-size: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .function-nav {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   
   .user-stats {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
   
   .user-stat-item {
-    flex: 1 1 calc(50% - 8px);
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
   }
 }
 </style>

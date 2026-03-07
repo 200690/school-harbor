@@ -103,17 +103,22 @@
       </div>
       
       <!-- 分页 -->
-      <div class="pagination">
-        <el-pagination
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :current-page="currentPage"
-          :page-sizes="[10, 20, 50, 100]"
-          :page-size="pageSize"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="totalJobs"
-        >
-        </el-pagination>
+      <div class="pagination-wrapper">
+        <div class="pagination-container">
+          <div class="pagination">
+            <el-pagination
+              v-model:current-page="currentPage"
+              v-model:page-size="pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="Number(totalJobs) || Number(jobs.length) || 1"
+              layout="total, sizes, prev, pager, next, jumper"
+              :hide-on-single-page="false"
+              background
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            />
+          </div>
+        </div>
       </div>
       
       <!-- 发布兼职按钮 -->
@@ -619,10 +624,22 @@ export default {
 }
 
 /* 分页样式 */
+.pagination-wrapper {
+  width: 100%;
+  display: block;
+  margin: 10px 0 20px;
+  padding: 10px 0;
+}
+
+.pagination-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .pagination {
   display: flex;
   justify-content: center;
-  margin-bottom: 30px;
 }
 
 /* 发布按钮样式 */

@@ -131,3 +131,11 @@ export function showMyComments(type, data) {
     data
   })
 }
+
+// 消息相关API
+export function getMyMessage(id) {
+  return request({
+    url: `/message/getMymsg/${id}`,
+    method: 'get'
+  })
+}

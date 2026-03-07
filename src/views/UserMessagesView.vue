@@ -8,17 +8,9 @@
         <el-breadcrumb-item>消息通知</el-breadcrumb-item>
       </el-breadcrumb>
 
-      <!-- 页面标题和操作 -->
+      <!-- 页面标题 -->
       <div class="page-header">
         <h2 class="page-title">消息通知</h2>
-        <div class="page-actions">
-          <el-button type="primary" @click="markAllAsRead">
-            <i class="el-icon-check"></i> 全部已读
-          </el-button>
-          <el-button type="danger" @click="deleteAllRead">
-            <i class="el-icon-delete"></i> 删除已读
-          </el-button>
-        </div>
       </div>
 
       <!-- 消息分类 -->
@@ -31,129 +23,16 @@
                 <el-empty description="暂无消息通知" />
               </div>
               <div v-else class="message-items">
-                <div v-for="msg in allMessages" :key="msg.id" :class="['message-item', { 'unread': !msg.read }]" @click="markAsRead(msg)">
+                <div v-for="msg in allMessages" :key="msg.id" class="message-item">
                   <div class="msg-icon">
-                    <i :class="getMsgIcon(msg.type)"></i>
+                    <i class="el-icon-message"></i>
                   </div>
                   <div class="msg-content">
                     <div class="msg-header">
-                      <h4 class="msg-title">{{ msg.title }}</h4>
-                      <span class="msg-time">{{ msg.time }}</span>
+                      <h4 class="msg-title">系统消息</h4>
+                      <span class="msg-time">{{ formatTime(msg.processedTime) }}</span>
                     </div>
-                    <p class="msg-body">{{ msg.content }}</p>
-                  </div>
-                  <div class="msg-actions">
-                    <el-button size="small" type="text" @click.stop="deleteMessage(msg.id)">
-                      <i class="el-icon-delete"></i>
-                    </el-button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
-          <el-tab-pane label="未读" name="unread">
-            <!-- 未读消息 -->
-            <div class="message-list">
-              <div v-if="unreadMessages.length === 0" class="empty-state">
-                <el-empty description="暂无未读消息" />
-              </div>
-              <div v-else class="message-items">
-                <div v-for="msg in unreadMessages" :key="msg.id" class="message-item unread" @click="markAsRead(msg)">
-                  <div class="msg-icon">
-                    <i :class="getMsgIcon(msg.type)"></i>
-                  </div>
-                  <div class="msg-content">
-                    <div class="msg-header">
-                      <h4 class="msg-title">{{ msg.title }}</h4>
-                      <span class="msg-time">{{ msg.time }}</span>
-                    </div>
-                    <p class="msg-body">{{ msg.content }}</p>
-                  </div>
-                  <div class="msg-actions">
-                    <el-button size="small" type="text" @click.stop="deleteMessage(msg.id)">
-                      <i class="el-icon-delete"></i>
-                    </el-button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
-          <el-tab-pane label="系统" name="system">
-            <!-- 系统消息 -->
-            <div class="message-list">
-              <div v-if="systemMessages.length === 0" class="empty-state">
-                <el-empty description="暂无系统消息" />
-              </div>
-              <div v-else class="message-items">
-                <div v-for="msg in systemMessages" :key="msg.id" :class="['message-item', { 'unread': !msg.read }]" @click="markAsRead(msg)">
-                  <div class="msg-icon">
-                    <i :class="getMsgIcon(msg.type)"></i>
-                  </div>
-                  <div class="msg-content">
-                    <div class="msg-header">
-                      <h4 class="msg-title">{{ msg.title }}</h4>
-                      <span class="msg-time">{{ msg.time }}</span>
-                    </div>
-                    <p class="msg-body">{{ msg.content }}</p>
-                  </div>
-                  <div class="msg-actions">
-                    <el-button size="small" type="text" @click.stop="deleteMessage(msg.id)">
-                      <i class="el-icon-delete"></i>
-                    </el-button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
-          <el-tab-pane label="交易" name="trade">
-            <!-- 交易消息 -->
-            <div class="message-list">
-              <div v-if="tradeMessages.length === 0" class="empty-state">
-                <el-empty description="暂无交易消息" />
-              </div>
-              <div v-else class="message-items">
-                <div v-for="msg in tradeMessages" :key="msg.id" :class="['message-item', { 'unread': !msg.read }]" @click="markAsRead(msg)">
-                  <div class="msg-icon">
-                    <i :class="getMsgIcon(msg.type)"></i>
-                  </div>
-                  <div class="msg-content">
-                    <div class="msg-header">
-                      <h4 class="msg-title">{{ msg.title }}</h4>
-                      <span class="msg-time">{{ msg.time }}</span>
-                    </div>
-                    <p class="msg-body">{{ msg.content }}</p>
-                  </div>
-                  <div class="msg-actions">
-                    <el-button size="small" type="text" @click.stop="deleteMessage(msg.id)">
-                      <i class="el-icon-delete"></i>
-                    </el-button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
-          <el-tab-pane label="申请" name="application">
-            <!-- 申请消息 -->
-            <div class="message-list">
-              <div v-if="applicationMessages.length === 0" class="empty-state">
-                <el-empty description="暂无申请消息" />
-              </div>
-              <div v-else class="message-items">
-                <div v-for="msg in applicationMessages" :key="msg.id" :class="['message-item', { 'unread': !msg.read }]" @click="markAsRead(msg)">
-                  <div class="msg-icon">
-                    <i :class="getMsgIcon(msg.type)"></i>
-                  </div>
-                  <div class="msg-content">
-                    <div class="msg-header">
-                      <h4 class="msg-title">{{ msg.title }}</h4>
-                      <span class="msg-time">{{ msg.time }}</span>
-                    </div>
-                    <p class="msg-body">{{ msg.content }}</p>
-                  </div>
-                  <div class="msg-actions">
-                    <el-button size="small" type="text" @click.stop="deleteMessage(msg.id)">
-                      <i class="el-icon-delete"></i>
-                    </el-button>
+                    <p class="msg-body">{{ msg.message }}</p>
                   </div>
                 </div>
               </div>
@@ -162,13 +41,14 @@
         </el-tabs>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage, ElConfirm } from 'element-plus'
+import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
+import { getMyMessage } from '../api/user'
 
 const userStore = useUserStore()
 const activeTab = ref('all')
@@ -176,88 +56,53 @@ const activeTab = ref('all')
 // 获取所有消息
 const allMessages = ref([])
 
-// 计算属性：未读消息
-const unreadMessages = computed(() => {
-  return allMessages.value.filter(msg => !msg.read)
-})
-
-// 计算属性：系统消息
-const systemMessages = computed(() => {
-  return allMessages.value.filter(msg => msg.type === 'system')
-})
-
-// 计算属性：交易消息
-const tradeMessages = computed(() => {
-  return allMessages.value.filter(msg => msg.type === 'trade')
-})
-
-// 计算属性：申请消息
-const applicationMessages = computed(() => {
-  return allMessages.value.filter(msg => msg.type === 'application')
-})
-
-// 根据消息类型获取图标
-const getMsgIcon = (type) => {
-  switch (type) {
-    case 'system':
-      return 'el-icon-message'
-    case 'trade':
-      return 'el-icon-s-finance'
-    case 'application':
-      return 'el-icon-s-flag'
-    default:
-      return 'el-icon-bell'
-  }
-}
-
-// 标记为已读
-const markAsRead = (msg) => {
-  if (!msg.read) {
-    msg.read = true
-    ElMessage.success('已标记为已读')
-  }
-}
-
-// 标记全部为已读
-const markAllAsRead = () => {
-  allMessages.value.forEach(msg => {
-    msg.read = true
-  })
-  ElMessage.success('全部消息已标记为已读')
-}
-
-// 删除消息
-const deleteMessage = (msgId) => {
-  ElConfirm('确定要删除这条消息吗？', '删除确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    allMessages.value = allMessages.value.filter(msg => msg.id !== msgId)
-    ElMessage.success('消息已删除')
-  }).catch(() => {
-    // 取消操作
-  })
-}
-
-// 删除所有已读消息
-const deleteAllRead = () => {
-  ElConfirm('确定要删除所有已读消息吗？', '删除确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    allMessages.value = allMessages.value.filter(msg => !msg.read)
-    ElMessage.success('已读消息已删除')
-  }).catch(() => {
-    // 取消操作
+// 格式化时间
+const formatTime = (timeStr) => {
+  if (!timeStr) return ''
+  const date = new Date(timeStr)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
 onMounted(async () => {
-  // 从 store 获取用户消息
-  await userStore.getUserMessages()
-  allMessages.value = userStore.userMessages
+  // 从 localStorage 获取用户信息，优先于 store 中的默认值
+  const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  const userId = storedUserInfo.userId || storedUserInfo.id || userStore.userInfo?.userId || userStore.userInfo?.id
+  
+  console.log('store中的userInfo:', userStore.userInfo)
+  console.log('localStorage中的userInfo:', storedUserInfo)
+  console.log('最终使用的用户ID:', userId)
+  
+  if (!userId) {
+    console.error('用户未登录')
+    return
+  }
+  
+  // 发送请求获取消息列表
+  try {
+    console.log('开始获取消息列表, 用户ID:', userId)
+    const res = await getMyMessage(userId)
+    console.log('消息列表API响应:', res)
+    
+    // 处理响应数据，res 可能是 {data: {code, msg, data}} 或者直接是 {code, msg, data}
+    const responseData = res.data?.data ? res.data : res
+    
+    if (responseData && responseData.code == 1) {
+      allMessages.value = responseData.data || []
+      console.log('消息列表获取成功:', allMessages.value)
+    } else {
+      allMessages.value = []
+      console.log('消息列表为空或API返回错误, code:', responseData?.code, 'data:', responseData)
+    }
+  } catch (error) {
+    console.error('获取消息列表失败:', error)
+    allMessages.value = []
+  }
 })
 </script>
 
@@ -377,6 +222,85 @@ onMounted(async () => {
 .msg-actions {
   display: flex;
   align-items: center;
+  pointer-events: none;
+  
+  .el-button {
+    pointer-events: auto;
+  }
+}
+
+// 消息详情弹窗样式
+.message-detail-content {
+  min-height: 200px;
+}
+
+.detail-wrapper {
+  .detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ebeef5;
+  }
+
+  .detail-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #f0f9eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #67c23a;
+    flex-shrink: 0;
+  }
+
+  .detail-info {
+    flex: 1;
+  }
+
+  .detail-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 8px 0;
+  }
+
+  .detail-time {
+    font-size: 13px;
+    color: #999;
+  }
+
+  .detail-body {
+    .detail-content {
+      font-size: 15px;
+      color: #606266;
+      line-height: 1.8;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+  }
+
+  .detail-extra {
+    margin-top: 20px;
+
+    .extra-data {
+      pre {
+        background-color: #f5f7fa;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #666;
+        overflow-x: auto;
+      }
+    }
+  }
+}
+
+.detail-empty {
+  padding: 40px 0;
 }
 
 @media (max-width: 768px) {
