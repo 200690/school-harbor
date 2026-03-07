@@ -42,10 +42,14 @@ public class CommentCreateDTO {
      */
     private Long parentId;
 
+    private Long rootId;
+
+    private Integer score;
+
     /**
-     * 被回复用户ID（回复时必填）
+     * 被回复用户名称（回复时必填）
      */
-    private Long replyUserId;
+    private String replyUserName;
 
     /**
      * 是否匿名：0-否，1-是

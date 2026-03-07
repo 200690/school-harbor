@@ -10,4 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface SecondHandClient {
     @GetMapping("/second-hand/getItemInfo/{id}")
     Result<ItemMainDTO> getItemInfo(@PathVariable Long id);
+    
+    @GetMapping("/second-hand/getSellerId/{id}")
+    Result<Long> getSellerId(@PathVariable Long id);
 }

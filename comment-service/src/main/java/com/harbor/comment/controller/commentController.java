@@ -41,11 +41,11 @@ public class commentController {
 
 //    @ApiOperation("删除评论")
 
-//    @ApiOperation("发表评论")
-//    @PostMapping("/addComment")
-//    public Result addComment(@RequestBody CommentCreateDTO commentDTO){
-//        log.info("发表评论");
-//        commentService.addComment(commentDTO);
-//        return Result.success();
-//    }
+    @ApiOperation("发表评论")
+    @PostMapping("/addComment")
+    public Result addComment(@RequestBody CommentCreateDTO commentDTO){
+        log.info("发表评论");
+        commentService.addComment(commentDTO);
+        return Result.success();
+    }
 }

@@ -20,6 +20,7 @@ public class RabbitMQConfig {
     public static final String USER_QUEUE_NAME = "harbor.user.queue";
     public static final String APPLICATION_QUEUE_NAME = "harbor.application.queue";
     public static final String PUBLISH_NOTIFICATION_QUEUE_NAME = "harbor.publish.notification.queue";
+    public static final String COMMENT_NOTIFICATION_QUEUE_NAME = "harbor.comment.notification.queue";
 
     // 路由键
     public static final String JOB_ROUTING_KEY = "harbor.job";
@@ -27,6 +28,7 @@ public class RabbitMQConfig {
     public static final String USER_ROUTING_KEY = "harbor.user";
     public static final String APPLICATION_ROUTING_KEY = "harbor.application";
     public static final String PUBLISH_NOTIFICATION_ROUTING_KEY = "harbor.publish.notification";
+    public static final String COMMENT_NOTIFICATION_ROUTING_KEY = "harbor.comment.notification";
 
     // 创建交换机
     @Bean
@@ -113,6 +115,22 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(publishNotificationQueue)
                 .to(exchange)
                 .with(PUBLISH_NOTIFICATION_ROUTING_KEY)
+                .noargs();
+    }
+
+    // 创建评论通知消息队列
+    @Bean
+    public Queue commentNotificationQueue() {
+        return QueueBuilder.durable(COMMENT_NOTIFICATION_QUEUE_NAME)
+                .build();
+    }
+
+    // 绑定评论通知消息队列到交换机
+    @Bean
+    public Binding commentNotificationBinding(Queue commentNotificationQueue, Exchange exchange) {
+        return BindingBuilder.bind(commentNotificationQueue)
+                .to(exchange)
+                .with(COMMENT_NOTIFICATION_ROUTING_KEY)
                 .noargs();
     }
 
