@@ -273,7 +273,18 @@ const submitForm = async () => {
       ElMessage.success('发布成功')
     }
     
-    router.push('/user/user/publish')
+    // 根据来源决定跳转目标
+    const from = route.query.from
+    if (from === 'detail' && isEditMode.value) {
+      // 从详情页来的，返回详情页
+      router.push(`/second-hand/detail/${route.params.id}`)
+    } else if (from === 'list' && isEditMode.value) {
+      // 从列表页来的，返回列表页
+      router.push('/second-hand')
+    } else {
+      // 默认返回我的发布页面
+      router.push('/user/user/publish')
+    }
   } catch (error) {
     console.error('提交失败:', error)
     ElMessage.error(error.message || '提交失败，请重试')
@@ -290,7 +301,18 @@ const resetForm = () => {
 
 // 取消编辑
 const cancelEdit = () => {
-  router.push('/user/user/publish')
+  // 根据来源决定跳转目标
+  const from = route.query.from
+  if (from === 'detail' && isEditMode.value) {
+    // 从详情页来的，返回详情页
+    router.push(`/second-hand/detail/${route.params.id}`)
+  } else if (from === 'list' && isEditMode.value) {
+    // 从列表页来的，返回列表页
+    router.push('/second-hand')
+  } else {
+    // 默认返回我的发布页面
+    router.push('/user/user/publish')
+  }
 }
 
 // 加载数据

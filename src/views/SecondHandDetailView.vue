@@ -277,8 +277,8 @@ const editItem = () => {
     return
   }
   
-  // 跳转到编辑页面
-  router.push(`/user/publish/edit/second-hand/${itemDetail.value.id}`)
+  // 跳转到编辑页面，带上来源参数
+  router.push(`/second-hand/edit/${itemDetail.value.id}?from=detail`)
 }
 
 // 拉黑商品

@@ -246,7 +246,7 @@ export default {
     },
     // 编辑商品
     editItem(itemId) {
-      this.$router.push(`/user/publish/edit/second-hand/${itemId}`)
+      this.$router.push(`/second-hand/edit/${itemId}?from=list`)
     },
     handleSizeChange(size) {
       this.pageSize = size
