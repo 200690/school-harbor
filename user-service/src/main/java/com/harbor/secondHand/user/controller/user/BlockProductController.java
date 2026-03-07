@@ -22,7 +22,6 @@ public class BlockProductController {
     @ApiOperation("拉黑商品列表")
     public Result<PageDTO> list(@RequestBody PageQuery pageQuery){
         log.info("拉黑商品列表");
-        //TODO 改为查Redis
         return Result.success(blockProductService.getMyBlockProducts(pageQuery));
     }
 

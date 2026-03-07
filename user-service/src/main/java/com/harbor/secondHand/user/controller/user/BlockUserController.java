@@ -3,7 +3,6 @@ package com.harbor.secondHand.user.controller.user;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
-import com.harbor.secondHand.user.service.IBlockProductService;
 import com.harbor.secondHand.user.service.IBlockUserService;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ public class BlockUserController {
     @PostMapping("list")
     public Result<PageDTO> list(@RequestBody  PageQuery pageQuery){
         log.info("拉黑用户列表");
-        //TODO 改为查Redis
         return Result.success(blockUserService.getMyBlockUsers(pageQuery));
     }
 

@@ -51,6 +51,9 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
     @Override
     public PageDTO<ItemListItemVO> querySecondHandItemList(ItemQueryConditionDTO itemQueryConditionDTO) {
+        // 获取当前登录用户ID
+        Long currentUserId = UserContext.getUser();
+        
         // 对于最新商品列表，尝试从缓存获取
         if (itemQueryConditionDTO.getPage() == 1 && itemQueryConditionDTO.getSize() == 10
                 && StringUtils.isEmpty(itemQueryConditionDTO.getKeyword())
@@ -67,7 +70,8 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
             PageDTO<ItemListItemVO> cachedList = (PageDTO<ItemListItemVO>) redisTemplate.opsForValue().get(cacheKey);
             if (cachedList != null) {
                 log.info("从缓存获取最新商品列表");
-                return cachedList;
+                // 过滤掉拉黑的商品和拉黑的用户的商品
+                return filterBlockedItems(cachedList, currentUserId);
             }
         }
 
@@ -123,6 +127,9 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
         Page<ItemPO> secondHandItemPage = this.page(page, queryWrapper);
         PageDTO<ItemListItemVO> result = PageDTO.of(secondHandItemPage, ItemListItemVO.class);
+        
+        // 过滤掉拉黑的商品和拉黑的用户的商品
+        result = filterBlockedItems(result, currentUserId);
 
         // 缓存最新商品列表，设置10分钟过期
         if (itemQueryConditionDTO.getPage() == 1 && itemQueryConditionDTO.getSize() == 10
@@ -141,6 +148,51 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
             log.info("缓存最新商品列表");
         }
 
+        return result;
+    }
+    
+    private PageDTO<ItemListItemVO> filterBlockedItems(PageDTO<ItemListItemVO> result, Long currentUserId) {
+        if (currentUserId == null) {
+            return result;
+        }
+        
+        // 从Redis获取用户拉黑的商品id集合
+        String productCacheKey = "user:block:product:ids:" + currentUserId;
+        List<Long> blockedProductIds = (List<Long>) redisTemplate.opsForValue().get(productCacheKey);
+        
+        // 从Redis获取用户拉黑的用户id集合
+        String userCacheKey = "user:block:ids:" + currentUserId;
+        List<Long> blockedUserIds = (List<Long>) redisTemplate.opsForValue().get(userCacheKey);
+        
+        if (blockedProductIds == null && blockedUserIds == null) {
+            return result;
+        }
+        
+        // 过滤掉拉黑的商品和拉黑的用户的商品
+        List<ItemListItemVO> filteredItems = result.getList().stream()
+                .filter(item -> {
+                    // 过滤掉拉黑的商品
+                    if (blockedProductIds != null && blockedProductIds.contains(item.getId())) {
+                        return false;
+                    }
+                    // 过滤掉拉黑的用户的商品
+                    if (blockedUserIds != null && blockedUserIds.contains(item.getSellerId())) {
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+        
+        // 更新结果
+        result.setList(filteredItems);
+        result.setTotal((long) filteredItems.size());
+        
+        log.info("过滤拉黑商品和拉黑用户的商品: userId={}, blockedProductCount={}, blockedUserCount={}, filteredCount={}", 
+                currentUserId, 
+                blockedProductIds != null ? blockedProductIds.size() : 0,
+                blockedUserIds != null ? blockedUserIds.size() : 0,
+                result.getList().size());
+        
         return result;
     }
 

@@ -54,6 +54,9 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
     private final PublishNotificationProducer publishNotificationProducer;
 
     public PageDTO<PartTimeVO> queryPartTimeList(PartTimeQueryDTO dto) {
+        // 获取当前登录用户ID
+        Long currentUserId = UserContext.getUser();
+        
         // 对于首页推荐列表，尝试从缓存获取
         if (dto.getPage() == 1 && dto.getSize() == 10 && !StringUtils.hasText(dto.getKeyword()) &&
                 (dto.getTypes() == null || dto.getTypes().isEmpty()) && dto.getCreditScore() == null) {
@@ -61,7 +64,8 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
             PageDTO<PartTimeVO> cachedList = (PageDTO<PartTimeVO>) redisTemplate.opsForValue().get(cacheKey);
             if (cachedList != null) {
                 log.info("从缓存获取推荐兼职列表");
-                return cachedList;
+                // 过滤掉拉黑的用户的兼职
+                return filterBlockedJobs(cachedList, currentUserId);
             }
         }
 
@@ -137,6 +141,9 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         }).toList();
 
         PageDTO<PartTimeVO> result = new PageDTO<>(partTimePage.getTotal(), partTimePage.getPages(), voList);
+        
+        // 过滤掉拉黑的用户的兼职
+        result = filterBlockedJobs(result, currentUserId);
 
         // 缓存推荐列表，设置10分钟过期
         if (dto.getPage() == 1 && dto.getSize() == 10 && !StringUtils.hasText(dto.getKeyword()) &&
@@ -147,6 +154,42 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         }
 
         // 5. 转换为VO并返回
+        return result;
+    }
+    
+    private PageDTO<PartTimeVO> filterBlockedJobs(PageDTO<PartTimeVO> result, Long currentUserId) {
+        if (currentUserId == null) {
+            return result;
+        }
+        
+        // 从Redis获取用户拉黑的用户id集合
+        String userCacheKey = "user:block:ids:" + currentUserId;
+        List<Long> blockedUserIds = (List<Long>) redisTemplate.opsForValue().get(userCacheKey);
+        
+        if (blockedUserIds == null) {
+            return result;
+        }
+        
+        // 过滤掉拉黑的用户的兼职
+        List<PartTimeVO> filteredJobs = result.getList().stream()
+                .filter(job -> {
+                    // 过滤掉拉黑的用户的兼职
+                    if (blockedUserIds != null && blockedUserIds.contains(job.getPublisherId())) {
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        
+        // 更新结果
+        result.setList(filteredJobs);
+        result.setTotal((long) filteredJobs.size());
+        
+        log.info("过滤拉黑用户的兼职: userId={}, blockedUserCount={}, filteredCount={}", 
+                currentUserId, 
+                blockedUserIds != null ? blockedUserIds.size() : 0,
+                result.getList().size());
+        
         return result;
     }
 

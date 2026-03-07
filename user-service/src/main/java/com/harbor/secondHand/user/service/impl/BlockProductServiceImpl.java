@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
+import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.user.domain.po.UserBlockProductPO;
 import com.harbor.secondHand.user.domain.vo.BlockProductDetailVO;
 import com.harbor.secondHand.user.mapper.UserBlockProductMapper;
@@ -16,9 +17,13 @@ import com.harbor.utils.client.SecondHandClient;
 import com.harbor.utils.dto.ItemMainDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.catalina.startup.UserConfig;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author ZLL15
@@ -28,9 +33,32 @@ import java.util.List;
 @Slf4j
 public class BlockProductServiceImpl extends ServiceImpl<UserBlockProductMapper, UserBlockProductPO> implements IBlockProductService {
     private final SecondHandClient secondHandClient;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public PageDTO<BlockProductDetailVO> getMyBlockProducts(PageQuery pageQuery) {
+        // 生成缓存key（存储所有拉黑的商品id集合）
+        String cacheKey = "user:block:product:ids:" + pageQuery.getId();
+        
+        // 尝试从缓存获取所有拉黑的商品id集合
+        List<Long> productIds = (List<Long>) redisTemplate.opsForValue().get(cacheKey);
+        
+        // 缓存不存在，从数据库查询所有拉黑的商品id
+        if (productIds == null) {
+            List<UserBlockProductPO> blockProducts = lambdaQuery()
+                    .eq(UserBlockProductPO::getUserId, pageQuery.getId())
+                    .eq(UserBlockProductPO::getStats, UserBlockProductPO.STATS_ACTIVE)
+                    .list();
+            productIds = blockProducts.stream()
+                    .map(UserBlockProductPO::getProductId)
+                    .collect(java.util.stream.Collectors.toList());
+            
+            // 写入缓存，设置1天过期
+            redisTemplate.opsForValue().set(cacheKey, productIds, 1, TimeUnit.DAYS);
+            log.info("缓存拉黑商品id集合: userId={}, size={}", pageQuery.getId(), productIds.size());
+        }
+        
+        // 构建分页查询
         Page<UserBlockProductPO> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
 
         LambdaQueryWrapper<UserBlockProductPO> wrapper = new LambdaQueryWrapper<>();
@@ -49,16 +77,48 @@ public class BlockProductServiceImpl extends ServiceImpl<UserBlockProductMapper,
             BeanUtil.copyProperties(itemMainDTO, productDetailVO);
             return productDetailVO;
         }).toList();
+        
+        PageDTO<BlockProductDetailVO> pageResult = new PageDTO<>( result.getTotal(), result.getPages(), blockProductDetailVOS);
+        
         log.info("获取用户屏蔽的商品列表成功,{}", blockProductDetailVOS);
-        return new PageDTO<>( result.getTotal(), result.getPages(), blockProductDetailVOS);
+        return pageResult;
     }
 
     @Override
     public void removeByItemId(Long Itemid) {
         Assert.notNull(Itemid, "商品ID不能为空");
+        Long userId = UserContext.getUser();
+        
+        // 更新当前用户的拉黑状态
         lambdaUpdate().eq(UserBlockProductPO::getProductId, Itemid)
+                .eq(UserBlockProductPO::getUserId, userId)
                 .eq(UserBlockProductPO::getStats, UserBlockProductPO.STATS_ACTIVE)
                 .set(UserBlockProductPO::getStats, UserBlockProductPO.STATS_INACTIVE)
                 .update();
+        
+        // 清除并重新写入当前用户的缓存
+        String cacheKey = "user:block:product:ids:" + userId;
+        
+        // 清除缓存
+        redisTemplate.delete(cacheKey);
+        log.info("清除用户拉黑商品id集合缓存: userId={}", userId);
+        
+        // 重新查询并写入缓存
+        List<UserBlockProductPO> updatedBlockProducts = lambdaQuery()
+                .eq(UserBlockProductPO::getUserId, userId)
+                .eq(UserBlockProductPO::getStats, UserBlockProductPO.STATS_ACTIVE)
+                .list();
+        List<Long> productIds = updatedBlockProducts.stream()
+                .map(UserBlockProductPO::getProductId)
+                .collect(java.util.stream.Collectors.toList());
+        
+        // 写入缓存，设置1天过期
+        redisTemplate.opsForValue().set(cacheKey, productIds, 1, java.util.concurrent.TimeUnit.DAYS);
+        log.info("重新缓存拉黑商品id集合: userId={}, size={}", userId, productIds.size());
+        
+        // 清除二手交易缓存
+        String secondHandCacheKey = "item:list:latest";
+        redisTemplate.delete(secondHandCacheKey);
+        log.info("清除二手交易缓存: key={}", secondHandCacheKey);
     }
 }
