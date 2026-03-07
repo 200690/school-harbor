@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @author ZLL15
@@ -19,6 +20,8 @@ public class UserCenterVO extends UserProfileVO{
     private Integer applicationCount;
     private Integer buyCounnt;
     private Integer favCount;
+
+    private List<String> tags;
 
     public static UserCenterVO countCpToVo(UserCenterVO vo, UserStatisticsPO po){
         return vo.setApplicationCount(po.getItemApplyCount() + po.getJobApplyCount())

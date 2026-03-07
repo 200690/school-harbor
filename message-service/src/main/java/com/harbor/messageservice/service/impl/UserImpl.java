@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Assert;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.harbor.messageservice.domain.po.MessageProcessedPO;
 import com.harbor.messageservice.domain.po.UserProfilePO;
 import com.harbor.messageservice.domain.po.UserStatisticsPO;
 import com.harbor.messageservice.domain.po.UserItemPostsPO;
@@ -14,6 +15,7 @@ import com.harbor.messageservice.domain.vo.ItemInfoVO;
 import com.harbor.messageservice.domain.vo.JobInfoVO;
 import com.harbor.messageservice.mapper.ItemMapper;
 import com.harbor.messageservice.mapper.JobMapper;
+import com.harbor.messageservice.mapper.MsgProcessedMapper;
 import com.harbor.messageservice.mapper.UserMapper;
 import com.harbor.messageservice.mapper.UserStatisticsMapper;
 import com.harbor.messageservice.service.IUserService;
@@ -36,6 +38,8 @@ public class UserImpl extends ServiceImpl<UserMapper, UserProfilePO> implements 
 
     private final JobMapper jobMapper;
 
+    private final MsgProcessedMapper msgProcessedMapper;
+
     @Override
     public UserCenterVO getUserCenter(Long userId) {
         Assert.notNull(userId, "用户ID不能为空");
@@ -56,6 +60,17 @@ public class UserImpl extends ServiceImpl<UserMapper, UserProfilePO> implements 
                 ((new LambdaQueryWrapper<UserStatisticsPO>())
                 .eq(UserStatisticsPO::getUserId, userId));
         UserCenterVO userCenterVO1 = UserCenterVO.countCpToVo(centerVO, userStatisticsPO);
+
+        // 查询最新的3条消息通知
+        List<MessageProcessedPO> recentMessages = msgProcessedMapper.selectList(
+                new LambdaQueryWrapper<MessageProcessedPO>()
+                        .eq(MessageProcessedPO::getUserId, userId)
+                        .orderByDesc(MessageProcessedPO::getProcessedTime)
+                        .last("LIMIT 3"));
+        List<String> tags = recentMessages.stream()
+                .map(MessageProcessedPO::getMessage)
+                .toList();
+        userCenterVO1.setTags(tags);
 
 //        写入缓存
         redisTemplate.opsForValue().set(cacheKey, userCenterVO1, 1, java.util.concurrent.TimeUnit.HOURS);

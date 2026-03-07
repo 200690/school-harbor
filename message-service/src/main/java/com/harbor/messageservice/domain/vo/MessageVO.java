@@ -15,5 +15,4 @@ public class MessageVO {
     private String id;              // 消息唯一ID
     private String message;         // 消息通知内容
     private LocalDateTime processedTime; // 通知时间
-    private Integer status;         // 状态(0:未处理 1:处理中 2:处理成功 3:处理失败)
 }

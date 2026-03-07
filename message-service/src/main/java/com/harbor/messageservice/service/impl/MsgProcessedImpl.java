@@ -32,8 +32,7 @@ public class MsgProcessedImpl extends ServiceImpl<MsgProcessedMapper, MessagePro
             MessageVO vo = new MessageVO();
             vo.setId(po.getId())
                     .setMessage(po.getMessage())
-                    .setProcessedTime(po.getProcessedTime())
-                    .setStatus(po.getStatus());
+                    .setProcessedTime(po.getProcessedTime());
             return vo;
         }).collect(Collectors.toList());
     }
