@@ -99,10 +99,25 @@ import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
 // 一级菜单：全部、兼职、二手交易
 const activeCategory = ref('all')
 // 二级菜单：发出的评价、收到的评价
 const activeType = ref('given')
+
+// 从URL参数获取目标类型和ID
+const targetTypeFromUrl = route.query.targetType
+const targetIdFromUrl = route.query.targetId
+
+// 如果有URL参数，自动设置对应的分类
+if (targetTypeFromUrl === '0') {
+  activeCategory.value = 'partTime' // 兼职
+} else if (targetTypeFromUrl === '1') {
+  activeCategory.value = 'secondHand' // 商品
+}
 
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -264,12 +279,15 @@ const fetchEvaluations = async () => {
     // 根据 activeType 设置 type
     const type = activeType.value === 'given' ? 1 : 2
     
+    // 使用URL参数中的targetId（如果存在）
+    const targetId = targetIdFromUrl || null
+    
     console.log('[评价页面] 准备发送API请求:', {
       url: '/comment/showMyComments',
       data: {
         type: type,
         targetType: targetType,
-        targetId: null,
+        targetId: targetId,
         userId: userId,
         sortType: 1,
         pageNum: currentPage.value,
@@ -280,7 +298,7 @@ const fetchEvaluations = async () => {
     const response = await request.post('/comment/showMyComments', {
       type: type,
       targetType: targetType,
-      targetId: null,
+      targetId: targetId,
       userId: userId,
       sortType: 1,
       pageNum: currentPage.value,

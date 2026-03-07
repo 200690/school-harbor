@@ -109,8 +109,11 @@
               <el-button v-if="isSeller" type="primary" class="contact-btn" @click="editItem">
                 <i class="el-icon-edit"></i> 编辑
               </el-button>
-              <el-button v-else type="primary" class="contact-btn">
+              <el-button v-if="!isSeller" type="primary" class="contact-btn">
                 <i class="el-icon-chat-line-round"></i> 联系卖家
+              </el-button>
+              <el-button v-if="!isSeller" type="info" class="comment-btn" @click="viewComments">
+                <i class="el-icon-chat-dot-round"></i> 查看评论
               </el-button>
               <el-button v-if="!isSeller" type="danger" class="block-btn" @click="blockItem">
                 <i class="el-icon-circle-close"></i> 拉黑商品
@@ -208,6 +211,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useSecondHandStore } from '../stores/secondHand'
 import { useUserStore } from '../stores/user'
 import { getSecondHandDetail, checkSecondHandFavorite } from '@/api/secondHand'
+import request from '@/utils/request'
 
 const route = useRoute()
 const router = useRouter()
@@ -299,17 +303,24 @@ const blockItem = async () => {
       }
     )
     
-    await userStore.blockItem(
-      itemDetail.value.id,
-      itemDetail.value.title || '未知商品',
-      itemDetail.value.coverImage || itemDetail.value.image || ''
-    )
-    ElMessage.success('拉黑成功')
-    setTimeout(() => {
-      router.push('/second-hand')
-    }, 1500)
+    // 调用拉黑API - 使用路径参数
+    const response = await request({
+      url: `/user/blacklist/item/add/${itemDetail.value.id}`,
+      method: 'post'
+    })
+    
+    // 检查响应是否成功
+    if (response.code === 1) {
+      ElMessage.success('拉黑成功')
+      setTimeout(() => {
+        router.push('/second-hand')
+      }, 1500)
+    } else {
+      ElMessage.error(response.msg || '拉黑失败，请稍后重试')
+    }
   } catch (error) {
     if (error !== 'cancel') {
+      console.error('拉黑失败:', error)
       ElMessage.error('拉黑失败，请稍后重试')
     }
   }
@@ -519,6 +530,17 @@ onBeforeUnmount(() => {
   window.removeEventListener('user-banned', handleUserBanned)
   window.removeEventListener('clear-cache', handleClearCache)
 })
+
+// 查看评论
+const viewComments = () => {
+  if (!itemDetail.value || !itemDetail.value.id) {
+    ElMessage.error('无法获取商品信息')
+    return
+  }
+  
+  // 跳转到商品评论页面
+  router.push(`/second-hand/comments/${itemDetail.value.id}`)
+}
 
 // 处理清除缓存事件
 const handleClearCache = () => {

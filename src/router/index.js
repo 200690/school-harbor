@@ -31,6 +31,11 @@ const routes = [
     component: () => import('../views/PartTimeEditView.vue')
   },
   {
+    path: '/part-time/comments',
+    name: 'part-time-comments',
+    component: () => import('../views/PartTimeCommentsView.vue')
+  },
+  {
     path: '/second-hand',
     name: 'second-hand',
     component: SecondHandListView
@@ -39,6 +44,11 @@ const routes = [
     path: '/second-hand/detail/:id',
     name: 'second-hand-detail',
     component: SecondHandDetailView
+  },
+  {
+    path: '/second-hand/comments/:id',
+    name: 'second-hand-comments',
+    component: () => import('../views/SecondHandCommentsView.vue')
   },
   {
     path: '/second-hand/edit/:id',

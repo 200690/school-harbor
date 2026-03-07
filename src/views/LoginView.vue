@@ -28,6 +28,7 @@
 
 <script>
 import { login, getUserInfo } from '@/api/user'
+import { useUserStore } from '@/stores/user'
 
 export default {
   name: 'LoginView',
@@ -81,6 +82,16 @@ export default {
                 console.error('获取用户信息失败:', error);
                 // 如果获取用户信息失败，至少存储基本信息
                 localStorage.setItem('userInfo', JSON.stringify({ userId, username }));
+              }
+              
+              // 获取黑名单数据
+              const userStore = useUserStore();
+              try {
+                await userStore.getUserBlacklist();
+                await userStore.getItemBlacklist();
+                console.log('黑名单数据加载成功');
+              } catch (error) {
+                console.error('获取黑名单数据失败:', error);
               }
             }
             

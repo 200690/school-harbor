@@ -74,12 +74,12 @@
           </div>
           <div class="job-tags">
             <!-- 发布者信息 -->
-            <div class="publisher-info-mini">
+            <router-link :to="`/user/profile/${jobDetail.publisherId}?from=part-time-detail&jobId=${jobId}`" class="publisher-info-mini">
               <el-avatar :size="30" :src="jobDetail.img || jobDetail.avatar" class="publisher-avatar-mini">
                 {{ jobDetail.username ? jobDetail.username.charAt(0) : '用' }}
               </el-avatar>
               <span class="publisher-name">{{ jobDetail.username }}</span>
-            </div>
+            </router-link>
             
             <!-- 兼职类型标签 -->
             <span class="tag tag-primary">{{ getTypeName(jobDetail.type) }}</span>
@@ -147,6 +147,9 @@
             </el-button>
             <el-button size="large" class="share-btn" @click="shareJob">
               <i class="el-icon-share"></i> 分享职位
+            </el-button>
+            <el-button type="info" size="large" class="comment-btn" @click="viewComments">
+              <i class="el-icon-chat-dot-round"></i> 查看评论
             </el-button>
           </template>
         </div>
@@ -518,6 +521,23 @@ export default {
     shareJob() {
       this.$message.info('分享功能开发中...')
     },
+    
+    viewComments() {
+      if (!this.jobDetail || !this.jobDetail.id) {
+        this.$message.error('无法获取职位信息')
+        return
+      }
+      
+      // 跳转到兼职评论页面
+      this.$router.push({
+        path: '/part-time/comments',
+        query: {
+          targetId: this.jobDetail.id
+        }
+      })
+    },
+    
+
     handleUserBanned() {
       console.log('收到用户被封禁事件')
       this.isPublisherBanned = true

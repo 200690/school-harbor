@@ -107,6 +107,13 @@ export function unblockItem(itemId) {
   })
 }
 
+export function blockUser(userId) {
+  return request({
+    url: `/user/blacklist/user/add/${userId}`,
+    method: 'post'
+  })
+}
+
 // 评价相关API
 export function getMyEvaluations(data) {
   return request({

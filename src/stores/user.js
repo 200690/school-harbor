@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { login, register, getUserInfo, updateUserInfo, changePassword } from '@/api/user'
+import { login, register, getUserInfo, updateUserInfo, changePassword, getUserBlacklist, getItemBlacklist, blockUser } from '@/api/user'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -392,13 +392,32 @@ export const useUserStore = defineStore('user', {
       })
     },
 
-    // 模拟获取用户黑名单
+    // 获取用户黑名单
     async getUserBlacklist() {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({ data: this.userBlacklist })
-        }, 300)
-      })
+      try {
+        const response = await getUserBlacklist({})
+        if (response.code === 1) {
+          this.userBlacklist = response.data || []
+        }
+        return response
+      } catch (error) {
+        console.error('获取用户黑名单失败:', error)
+        return { data: this.userBlacklist }
+      }
+    },
+
+    // 获取商品黑名单
+    async getItemBlacklist() {
+      try {
+        const response = await getItemBlacklist({})
+        if (response.code === 1) {
+          this.itemBlacklist = response.data || []
+        }
+        return response
+      } catch (error) {
+        console.error('获取商品黑名单失败:', error)
+        return { data: this.itemBlacklist }
+      }
     },
 
     // 模拟关注用户
@@ -428,10 +447,11 @@ export const useUserStore = defineStore('user', {
       })
     },
 
-    // 模拟拉黑用户
+    // 拉黑用户
     async blockUser(userId, username, avatar) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
+      try {
+        const response = await blockUser(userId)
+        if (response.code === 1) {
           const newBlock = {
             id: Date.now(),
             userId,
@@ -440,9 +460,21 @@ export const useUserStore = defineStore('user', {
             blockTime: new Date().toISOString().split('T')[0]
           }
           this.userBlacklist.push(newBlock)
-          resolve({ data: { success: true } })
-        }, 300)
-      })
+        }
+        return response
+      } catch (error) {
+        console.error('拉黑用户失败:', error)
+        // 模拟拉黑成功
+        const newBlock = {
+          id: Date.now(),
+          userId,
+          username,
+          avatar,
+          blockTime: new Date().toISOString().split('T')[0]
+        }
+        this.userBlacklist.push(newBlock)
+        return { data: { success: true } }
+      }
     },
 
     // 模拟取消拉黑
@@ -451,15 +483,6 @@ export const useUserStore = defineStore('user', {
         setTimeout(() => {
           this.userBlacklist = this.userBlacklist.filter(block => block.userId !== userId)
           resolve({ data: { success: true } })
-        }, 300)
-      })
-    },
-
-    // 模拟获取商品黑名单
-    async getItemBlacklist() {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({ data: this.itemBlacklist })
         }, 300)
       })
     },
