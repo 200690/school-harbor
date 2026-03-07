@@ -23,7 +23,6 @@ public class CommentQueryDTO {
     /**
      * 用户ID
      */
-    @NotNull
     private Long userId;
 
     /**

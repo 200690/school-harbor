@@ -20,19 +20,6 @@ public class CommentVO {
     private Long id;
 
     /**
-     * 业务类型
-     */
-    private Integer targetType;
-
-    /**
-     * 业务类型描述
-     */
-    public String getTargetTypeDesc() {
-        if (targetType == null) return "未知";
-        return targetType == 0 ? "兼职" : "商品";
-    }
-
-    /**
      * 用户信息
      */
     private String userName;
@@ -65,7 +52,12 @@ public class CommentVO {
     private Long rootId;
 
     /**
-     * 评论层级
+     * 评分
+     */
+    private Integer score;
+
+    /**
+     * 评论层级：1-一级评论，2-二级回复
      */
     private Integer level;
 
