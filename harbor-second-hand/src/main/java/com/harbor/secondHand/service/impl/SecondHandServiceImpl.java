@@ -127,7 +127,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
         Page<ItemPO> secondHandItemPage = this.page(page, queryWrapper);
         PageDTO<ItemListItemVO> result = PageDTO.of(secondHandItemPage, ItemListItemVO.class);
-        
+
         // 过滤掉拉黑的商品和拉黑的用户的商品
         result = filterBlockedItems(result, currentUserId);
 
@@ -176,10 +176,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
                         return false;
                     }
                     // 过滤掉拉黑的用户的商品
-                    if (blockedUserIds != null && blockedUserIds.contains(item.getSellerId())) {
-                        return false;
-                    }
-                    return true;
+                    return blockedUserIds == null || !blockedUserIds.contains(item.getSellerId());
                 })
                 .collect(Collectors.toList());
         

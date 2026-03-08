@@ -70,6 +70,12 @@
             <artifactId>mybatis-plus-core</artifactId>
             <scope>provided</scope>
         </dependency>
+<!--        webSocket依赖-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

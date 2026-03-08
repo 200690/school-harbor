@@ -205,17 +205,19 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
                 .eq(ApplicationPO::getPartTimeId, applyPartTime.getPartTimeId())
                 .eq(ApplicationPO::getUserId, currentUserId)
                 .one();
-        if (existingApplication.getStatus() == 0 || existingApplication.getStatus() == 1) {
-            throw new RuntimeException("已经申请过该兼职");
-        }
-        if(existingApplication.getStatus() == 2 || existingApplication.getStatus() == 3) {
-            // 如果之前的申请被拒绝或取消，可以重新申请，先删除之前的记录
-            // 如果更新时间是七天内的，不允许申请
-            if(existingApplication.getUpdateTime() != null &&
-                    existingApplication.getUpdateTime().isAfter(LocalDateTime.now().minusDays(7))) {
-                throw new RuntimeException("之前的申请被拒绝或取消，七天内不能重新申请");
+        if(existingApplication != null){
+            if (existingApplication.getStatus() == 0 || existingApplication.getStatus() == 1) {
+                throw new RuntimeException("已经申请过该兼职");
             }
-            this.removeById(existingApplication.getId());
+            if(existingApplication.getStatus() == 2 || existingApplication.getStatus() == 3) {
+                // 如果之前的申请被拒绝或取消，可以重新申请，先删除之前的记录
+                // 如果更新时间是七天内的，不允许申请
+                if(existingApplication.getUpdateTime() != null &&
+                        existingApplication.getUpdateTime().isAfter(LocalDateTime.now().minusDays(7))) {
+                    throw new RuntimeException("之前的申请被拒绝或取消，七天内不能重新申请");
+                }
+                this.removeById(existingApplication.getId());
+            }
         }
 
         // 4. 创建申请记录
