@@ -60,7 +60,7 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         // 对于首页推荐列表，尝试从缓存获取
         if (dto.getPage() == 1 && dto.getSize() == 10 && !StringUtils.hasText(dto.getKeyword()) &&
                 (dto.getTypes() == null || dto.getTypes().isEmpty()) && dto.getCreditScore() == null) {
-            String cacheKey = "job:list:recommend";
+            String cacheKey = "job:list:recommend:" + currentUserId;
             PageDTO<PartTimeVO> cachedList = (PageDTO<PartTimeVO>) redisTemplate.opsForValue().get(cacheKey);
             if (cachedList != null) {
                 log.info("从缓存获取推荐兼职列表");
@@ -148,7 +148,7 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         // 缓存推荐列表，设置10分钟过期
         if (dto.getPage() == 1 && dto.getSize() == 10 && !StringUtils.hasText(dto.getKeyword()) &&
                 (dto.getTypes() == null || dto.getTypes().isEmpty()) && dto.getCreditScore() == null) {
-            String cacheKey = "job:list:recommend";
+            String cacheKey = "job:list:recommend:" + currentUserId;
             redisTemplate.opsForValue().set(cacheKey, result, 10, java.util.concurrent.TimeUnit.MINUTES);
             log.info("缓存推荐兼职列表");
         }
@@ -267,13 +267,11 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         // 发送兼职信息更新消息
         jobMessageProducer.sendJobMessage(partTimePO, "UPDATE");
 
-        // 清除缓存
-        String detailCacheKey = "job:detail:" + id;
-        redisTemplate.delete(detailCacheKey);
         // 清除推荐列表缓存，因为状态变化可能影响推荐
-        String recommendCacheKey = "job:list:recommend";
+        Long currentUserId = UserContext.getUser();
+        String recommendCacheKey = "job:list:recommend:" + currentUserId;
         redisTemplate.delete(recommendCacheKey);
-        log.info("清除兼职缓存: detail={}, recommend={}", id, recommendCacheKey);
+        log.info("清除兼职缓存: recommend={}", recommendCacheKey);
     }
 
     /**
@@ -292,13 +290,11 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         // 发送兼职信息更新消息
         jobMessageProducer.sendJobMessage(partTimePO, "UPDATE");
 
-        // 清除缓存
-        String detailCacheKey = "job:detail:" + partTimeDTO.getId();
-        redisTemplate.delete(detailCacheKey);
         // 清除推荐列表缓存，因为信息变化可能影响推荐
-        String recommendCacheKey = "job:list:recommend";
+        Long currentUserId = UserContext.getUser();
+        String recommendCacheKey = "job:list:recommend:" + currentUserId;
         redisTemplate.delete(recommendCacheKey);
-        log.info("清除兼职缓存: detail={}, recommend={}", partTimeDTO.getId(), recommendCacheKey);
+        log.info("清除兼职缓存: recommend={}", recommendCacheKey);
     }
 
     /**
@@ -311,25 +307,8 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
     public PartTimeDetailVO getJobById(Long partTimeId) {
         Assert.notNull(partTimeId, "兼职ID不能为空");
 
-        // 尝试从缓存获取
-        String cacheKey = "job:detail:" + partTimeId;
-        PartTimeDetailVO cachedDetail = null;
-        try {
-            cachedDetail = (PartTimeDetailVO) redisTemplate.opsForValue().get(cacheKey);
-        } catch (Exception e) {
-            log.error("从缓存获取兼职详情失败: {}", e.getMessage());
-            // 缓存读取失败，直接从数据库获取
-        }
-
         // 获取浏览量最高的3个兼职
         List<PartTimeVO> topViewJobs = this.getTopViewJobs(3);
-
-        if (cachedDetail != null) {
-            log.info("从缓存获取兼职详情: {}", partTimeId);
-            // 更新缓存中的topViewJobs
-            cachedDetail.setTopViewJobs(topViewJobs);
-            return cachedDetail;
-        }
 
         // 浏览量++
         PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, partTimeId).one();
@@ -353,15 +332,6 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         // 设置浏览量最高的兼职
         partTimeDetailVO.setTopViewJobs(topViewJobs);
 
-        // 缓存结果，设置1小时过期
-        try {
-            redisTemplate.opsForValue().set(cacheKey, partTimeDetailVO, 1, java.util.concurrent.TimeUnit.HOURS);
-            log.info("缓存兼职详情: {}", partTimeId);
-        } catch (Exception e) {
-            log.error("缓存兼职详情失败: {}", e.getMessage());
-            // 缓存失败，不影响返回结果
-        }
-
         return partTimeDetailVO;
     }
 
@@ -379,13 +349,11 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
         Assert.notNull(partTimePO, "兼职不存在");
 
         this.removeById(id);
-        // 删除缓存
-        String cacheKey = "job:detail:" + id;
-        redisTemplate.delete(cacheKey);
         // 清除推荐列表缓存，因为删除可能影响推荐
-        String recommendCacheKey = "job:list:recommend";
+        Long currentUserId = UserContext.getUser();
+        String recommendCacheKey = "job:list:recommend:" + currentUserId;
         redisTemplate.delete(recommendCacheKey);
-        log.info("清除兼职缓存: detail={}, recommend={}", id, recommendCacheKey);
+        log.info("清除兼职缓存: recommend={}", recommendCacheKey);
 
         // 发送兼职信息删除消息
         jobMessageProducer.sendJobMessage(partTimePO, "DELETE");

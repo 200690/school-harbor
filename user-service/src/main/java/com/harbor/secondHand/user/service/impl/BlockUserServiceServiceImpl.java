@@ -105,13 +105,13 @@ public class BlockUserServiceServiceImpl extends ServiceImpl<UserBlockUserMapper
         redisTemplate.opsForValue().set(cacheKey, blockIds, 1, TimeUnit.DAYS);
         log.info("重新缓存拉黑用户id集合");
         
-        // 清除兼职缓存
-        String partTimeCacheKey = "job:list:recommend";
+        // 清除当前用户的兼职缓存
+        String partTimeCacheKey = "job:list:recommend:" + userId;
         redisTemplate.delete(partTimeCacheKey);
         log.info("清除兼职缓存: key={}", partTimeCacheKey);
         
-        // 清除二手交易缓存
-        String secondHandCacheKey = "item:list:latest";
+        // 清除当前用户的二手交易缓存
+        String secondHandCacheKey = "item:list:latest:" + userId;
         redisTemplate.delete(secondHandCacheKey);
         log.info("清除二手交易缓存: key={}", secondHandCacheKey);
     }
@@ -169,13 +169,13 @@ public class BlockUserServiceServiceImpl extends ServiceImpl<UserBlockUserMapper
         redisTemplate.opsForValue().set(cacheKey, blockIds, 1, TimeUnit.DAYS);
         log.info("更新拉黑用户id集合缓存: userId={}, size={}", userId, blockIds.size());
         
-        // 清除兼职缓存
-        String partTimeCacheKey = "job:list:recommend";
+        // 清除当前用户的兼职缓存
+        String partTimeCacheKey = "job:list:recommend:" + userId;
         redisTemplate.delete(partTimeCacheKey);
         log.info("清除兼职缓存: key={}", partTimeCacheKey);
         
-        // 清除二手交易缓存
-        String secondHandCacheKey = "item:list:latest";
+        // 清除当前用户的二手交易缓存
+        String secondHandCacheKey = "item:list:latest:" + userId;
         redisTemplate.delete(secondHandCacheKey);
         log.info("清除二手交易缓存: key={}", secondHandCacheKey);
     }

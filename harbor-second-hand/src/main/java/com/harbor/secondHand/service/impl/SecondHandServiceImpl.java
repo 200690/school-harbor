@@ -66,7 +66,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
                 && (itemQueryConditionDTO.getSortOrder() == null
                         || "desc".equalsIgnoreCase(itemQueryConditionDTO.getSortOrder()))) {
             // 缓存逻辑
-            String cacheKey = "item:list:latest";
+            String cacheKey = "item:list:latest:" + currentUserId;
             PageDTO<ItemListItemVO> cachedList = (PageDTO<ItemListItemVO>) redisTemplate.opsForValue().get(cacheKey);
             if (cachedList != null) {
                 log.info("从缓存获取最新商品列表");
@@ -143,7 +143,7 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
                 && (itemQueryConditionDTO.getSortOrder() == null
                         || "desc".equalsIgnoreCase(itemQueryConditionDTO.getSortOrder()))) {
             // 缓存逻辑
-            String cacheKey = "item:list:latest";
+            String cacheKey = "item:list:latest:" + currentUserId;
             redisTemplate.opsForValue().set(cacheKey, result, 10, java.util.concurrent.TimeUnit.MINUTES);
             log.info("缓存最新商品列表");
         }
@@ -200,14 +200,6 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
             throw new RuntimeException("商品不存在");
         }
 
-        // 尝试从缓存获取
-        String cacheKey = "item:detail:" + id;
-        ItemDetailVO cachedDetail = (ItemDetailVO) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedDetail != null) {
-            log.info("从缓存获取商品详情: {}", id);
-            return cachedDetail;
-        }
-
         ItemPO item = this.getById(id);
         if (item == null) {
             throw new RuntimeException("商品不存在");
@@ -241,10 +233,6 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         UserInfoDTO userInfoDTO = userClient.info(itemDetailVO.getSellerId()).getData();
         itemDetailVO.setSellerName(userInfoDTO.getUsername());
         itemDetailVO.setSellerAvatar(userInfoDTO.getImg());
-
-        // 缓存结果，设置1小时过期
-        redisTemplate.opsForValue().set(cacheKey, itemDetailVO, 1, java.util.concurrent.TimeUnit.HOURS);
-        log.info("缓存商品详情: {}", id);
 
         return itemDetailVO;
     }
@@ -301,13 +289,11 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         // 发送二手交易信息更新消息
         itemMessageProducer.sendItemMessage(itemPO, "UPDATE");
 
-        // 清除缓存
-        String detailCacheKey = "item:detail:" + id;
-        redisTemplate.delete(detailCacheKey);
         // 清除最新商品列表缓存，因为状态变化可能影响列表
-        String latestCacheKey = "item:list:latest";
+        Long currentUserId = UserContext.getUser();
+        String latestCacheKey = "item:list:latest:" + currentUserId;
         redisTemplate.delete(latestCacheKey);
-        log.info("清除商品缓存: detail={}, latest={}", id, latestCacheKey);
+        log.info("清除商品缓存: latest={}", latestCacheKey);
     }
 
     @Override
@@ -321,13 +307,11 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         // 发送二手交易信息更新消息
         itemMessageProducer.sendItemMessage(itemPO, "UPDATE");
 
-        // 清除缓存
-        String detailCacheKey = "item:detail:" + item.getId();
-        redisTemplate.delete(detailCacheKey);
         // 清除最新商品列表缓存，因为信息变化可能影响列表
-        String latestCacheKey = "item:list:latest";
+        Long currentUserId = UserContext.getUser();
+        String latestCacheKey = "item:list:latest:" + currentUserId;
         redisTemplate.delete(latestCacheKey);
-        log.info("清除商品缓存: detail={}, latest={}", item.getId(), latestCacheKey);
+        log.info("清除商品缓存: latest={}", latestCacheKey);
     }
 
     @Override
@@ -343,10 +327,6 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, id).one();
         Assert.notNull(itemPO, "商品不存在");
         this.removeById(id);
-        // 删除缓存
-        log.info("删除商品缓存: {}", id);
-        String cacheKey = "item:detail:" + id;
-        redisTemplate.delete(cacheKey);
         //消息队列删除接口
         itemMessageProducer.sendItemMessage(itemPO, "DELETE");
     }

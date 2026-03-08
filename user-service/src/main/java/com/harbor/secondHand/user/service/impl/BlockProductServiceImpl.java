@@ -115,8 +115,8 @@ public class BlockProductServiceImpl extends ServiceImpl<UserBlockProductMapper,
         redisTemplate.opsForValue().set(cacheKey, productIds, 1, java.util.concurrent.TimeUnit.DAYS);
         log.info("重新缓存拉黑商品id集合: userId={}, size={}", userId, productIds.size());
         
-        // 清除二手交易缓存
-        String secondHandCacheKey = "item:list:latest";
+        // 清除当前用户的二手交易缓存
+        String secondHandCacheKey = "item:list:latest:" + userId;
         redisTemplate.delete(secondHandCacheKey);
         log.info("清除二手交易缓存: key={}", secondHandCacheKey);
     }
@@ -175,8 +175,8 @@ public class BlockProductServiceImpl extends ServiceImpl<UserBlockProductMapper,
         redisTemplate.opsForValue().set(cacheKey, productIds, 1, java.util.concurrent.TimeUnit.DAYS);
         log.info("更新拉黑商品id集合缓存: userId={}, size={}", userId, productIds.size());
         
-        // 清除二手交易缓存
-        String secondHandCacheKey = "item:list:latest";
+        // 清除当前用户的二手交易缓存
+        String secondHandCacheKey = "item:list:latest:" + userId;
         redisTemplate.delete(secondHandCacheKey);
         log.info("清除二手交易缓存: key={}", secondHandCacheKey);
     }
