@@ -20,7 +20,7 @@ public class UserBalance {
     /**
      * 当前余额（单位：元）
      */
-    private int balance;
+    private BigDecimal balance;
 
     /**
      * 累计充值总额
@@ -53,5 +53,5 @@ public class UserBalance {
     /**
      * 冻结余额
      */
-    private int frozenBalance;
+    private BigDecimal frozenBalance;
 }

@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -98,7 +99,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 发送用户信息创建消息
         UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
         userMessageProducer.sendUserMessage(messageDTO, "CREATE");
-        messageDTO.setBalance(0);
+        messageDTO.setBalance(BigDecimal.valueOf(0));
         log.info("用户注册成功：{}", user);
     }
 
@@ -146,7 +147,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (userBalance != null) {
             messageDTO.setBalance(userBalance.getBalance());
         } else {
-            messageDTO.setBalance(0);
+            messageDTO.setBalance(BigDecimal.valueOf(0));
         }
         userMessageProducer.sendUserMessage(messageDTO, "UPDATE");
 

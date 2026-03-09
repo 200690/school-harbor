@@ -1,6 +1,7 @@
 package com.harbor.secondHand.user.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.user.domain.dto.RechargeDTO;
 import com.harbor.secondHand.user.domain.dto.UserMessageDTO;
 import com.harbor.secondHand.user.domain.po.User;
@@ -47,19 +48,37 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
             userBalance = new UserBalance()
                     .setUserId(user.getId())
                     .setBalance(rechargeDTO.getAmount())
-                    .setTotalRecharge(BigDecimal.valueOf(rechargeDTO.getAmount()))
+                    .setTotalRecharge(rechargeDTO.getAmount())
                     .setCreateTime(LocalDateTime.now())
                     .setUpdateTime(LocalDateTime.now());
             this.save(userBalance);
         }else{
-            userBalance.setBalance(userBalance.getBalance() + rechargeDTO.getAmount())
+            userBalance.setBalance(userBalance.getBalance().add(rechargeDTO.getAmount()))
                     .setUpdateTime(LocalDateTime.now())
-                    .setTotalRecharge(userBalance.getTotalRecharge().add(BigDecimal.valueOf(rechargeDTO.getAmount())));
+                    .setTotalRecharge(userBalance.getTotalRecharge().add(rechargeDTO.getAmount()));
             this.updateById(userBalance);
         }
         log.info("用户充值成功：{}", userBalance);
         UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
         messageDTO.setBalance(userBalance.getBalance());
+        userMessageProducer.sendUserMessage(messageDTO, "UPDATE");
+    }
+
+    // 消费
+    @Override
+    public void consume(BigDecimal payNo) {
+        UserBalance one = lambdaQuery().eq(UserBalance::getUserId, UserContext.getUser()).one();
+        Assert.notNull(one, "用户不存在");
+        Assert.isTrue(one.getBalance().compareTo(payNo) >= 0, "余额不足");
+        one.setBalance(one.getBalance().subtract(payNo))
+                .setUpdateTime(LocalDateTime.now())
+                .setTotalConsume(one.getTotalConsume().add(payNo))
+                .setFrozenBalance(one.getFrozenBalance().add(payNo));
+        this.updateById(one);
+        // 发送消息通知消息微服务更新用户余额
+        User user = userMapper.selectById(UserContext.getUser());
+        UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
+        messageDTO.setBalance(one.getBalance());
         userMessageProducer.sendUserMessage(messageDTO, "UPDATE");
     }
 }

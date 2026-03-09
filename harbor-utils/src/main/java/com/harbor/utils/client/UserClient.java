@@ -5,11 +5,17 @@ import com.harbor.utils.dto.UserInfoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.math.BigDecimal;
 
 @FeignClient(name = "user-service", path = "/user/user")
 public interface UserClient {
 
     @GetMapping("info/{id}")
     Result<UserInfoDTO> info(@PathVariable Long id);
+
+    @PostMapping("/user/balance/consume")
+    Result consume(BigDecimal payNo);
 }
