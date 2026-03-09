@@ -209,14 +209,12 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useSecondHandStore } from '../stores/secondHand'
-import { useUserStore } from '../stores/user'
 import { getSecondHandDetail, checkSecondHandFavorite } from '@/api/secondHand'
 import request from '@/utils/request'
 
 const route = useRoute()
 const router = useRouter()
 const secondHandStore = useSecondHandStore()
-const userStore = useUserStore()
 
 const itemId = ref(route.params.id || 1)
 const itemDetail = ref(null)
@@ -263,14 +261,18 @@ const toggleFavorite = async () => {
 // 购买商品
 const buyItem = async () => {
   try {
-    await secondHandStore.buyItemAction(Number(itemId.value))
-    await userStore.getUserPurchases()
-    ElMessage.success('购买成功')
-    setTimeout(() => {
-      router.push('/user/purchases')
-    }, 1500)
+    // 跳转到支付页面（余额支付）
+    router.push({
+      path: '/payment',
+      query: {
+        itemId: itemId.value,
+        itemTitle: itemDetail.value?.title,
+        itemPrice: itemDetail.value?.price,
+        paymentType: 'balance'
+      }
+    })
   } catch (error) {
-    ElMessage.error('购买失败，请稍后重试')
+    ElMessage.error('操作失败，请稍后重试')
   }
 }
 

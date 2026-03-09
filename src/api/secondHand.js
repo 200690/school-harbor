@@ -158,13 +158,14 @@ export function getMessageList(params) {
   })
 }
 
-export function getChatHistory(otherUserId, page = 1, size = 20) {
+export function getChatHistory(otherUserId, currentUserId, page = 1, size = 20) {
   return request({
     url: `/second-hand/messages/chat/${otherUserId}`,
     method: 'get',
     params: {
       page,
-      size
+      size,
+      currentUserId
     }
   })
 }

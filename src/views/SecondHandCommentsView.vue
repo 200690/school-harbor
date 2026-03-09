@@ -267,7 +267,8 @@ const submitComment = async () => {
               content: commentForm.value.content,
               rating: commentForm.value.rating,
               images: commentImages.value,
-              userId: userInfo.userId || userInfo.id
+              userId: userInfo.userId || userInfo.id,
+              sellerId: itemDetail.value?.sellerId
             })
     
     if (response.code === 1) {

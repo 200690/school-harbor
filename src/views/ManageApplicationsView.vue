@@ -241,11 +241,18 @@ const rejectApplication = (appId) => {
 
 // 联系申请人
 const contactApplicant = (app) => {
-  if (app.companyPhone) {
-    ElMessage.info(`联系电话: ${app.companyPhone}`)
-  } else {
-    ElMessage.info('暂无联系方式')
-  }
+  // 跳转到聊天界面
+  router.push({
+    path: '/chat',
+    query: {
+      otherUserId: app.applicantId || app.userId || '',
+      otherUserNickname: app.companyName || '申请人',
+      otherUserAvatar: '/default-avatar.png',
+      itemId: app.jobId || route.query.jobId,
+      itemTitle: jobInfo.value?.title || '兼职申请',
+      itemPrice: jobInfo.value?.salaryDesc || ''
+    }
+  })
 }
 
 // 分页处理

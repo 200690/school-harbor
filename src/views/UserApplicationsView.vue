@@ -49,7 +49,7 @@
               <el-button v-if="app.status === 0" size="small" type="warning" @click="cancelApplication(app.id)">
                 取消申请
               </el-button>
-              <el-button v-if="app.status === 1" size="small" type="success" @click="contactEmployer()">
+              <el-button v-if="app.status === 1" size="small" type="success" @click="contactEmployer(app)">
                 联系雇主
               </el-button>
             </div>
@@ -174,9 +174,19 @@ const cancelApplication = (appId) => {
 }
 
 // 联系雇主
-const contactEmployer = () => {
-  ElMessage.info('联系雇主功能')
-  // 这里应该实现联系雇主的功能
+const contactEmployer = (app) => {
+  // 跳转到聊天界面
+  router.push({
+    path: '/chat',
+    query: {
+      otherUserId: app.employerId || '',
+      otherUserNickname: app.employer || '雇主',
+      otherUserAvatar: '/default-avatar.png',
+      itemId: app.partTimeId,
+      itemTitle: app.partTimeTitle,
+      itemPrice: app.salaryDesc
+    }
+  })
 }
 
 // 分页处理
@@ -192,7 +202,24 @@ const handleCurrentChange = (current) => {
 // 获取我的申请
 const fetchMyApplications = async () => {
   try {
-    const userId = userStore.userInfo?.id
+    // 从本地缓存获取 userInfo
+    const userInfoStr = localStorage.getItem('userInfo')
+    let userId = ''
+    
+    if (userInfoStr) {
+      try {
+        const userInfo = JSON.parse(userInfoStr)
+        userId = userInfo.userId || userInfo.id || ''
+      } catch (parseError) {
+        console.error('解析 userInfo 失败:', parseError)
+      }
+    }
+    
+    // 如果本地缓存中没有 userId，尝试从 userStore 获取
+    if (!userId) {
+      userId = userStore.userInfo?.userId || userStore.userInfo?.id || ''
+    }
+    
     if (!userId) {
       ElMessage.error('请先登录')
       router.push('/user/user/login')

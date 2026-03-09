@@ -109,33 +109,33 @@ const loadChatHistory = async () => {
   }
 
   try {
-    const response = await secondHandApi.getChatHistory(otherUserId.value)
+    // 从本地存储获取用户信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    let currentUserId = ''
+    let currentUserAvatar = '/default-avatar.png'
+    
+    if (userInfoStr) {
+      try {
+        const userInfo = JSON.parse(userInfoStr)
+        currentUserId = userInfo.userId || ''
+        currentUserAvatar = userInfo.avatar || '/default-avatar.png'
+        console.log('从userInfo获取的用户ID:', currentUserId)
+        console.log('从userInfo获取的用户头像:', currentUserAvatar)
+      } catch (parseError) {
+        console.error('解析userInfo失败:', parseError)
+      }
+    }
+    
+    // 如果localStorage中没有userId，尝试从单独的userId键获取
+    if (!currentUserId) {
+      currentUserId = localStorage.getItem('userId') || ''
+      console.log('从userId键获取的用户ID:', currentUserId)
+    }
+    
+    const response = await secondHandApi.getChatHistory(otherUserId.value, currentUserId)
     if (response.code === 1 && response.data && response.data.list && response.data.list.length > 0) {
       // 清空现有消息
       messages.value = []
-      
-      // 从本地存储获取用户信息
-      const userInfoStr = localStorage.getItem('userInfo')
-      let currentUserId = ''
-      let currentUserAvatar = '/default-avatar.png'
-      
-      if (userInfoStr) {
-        try {
-          const userInfo = JSON.parse(userInfoStr)
-          currentUserId = userInfo.userId || ''
-          currentUserAvatar = userInfo.avatar || '/default-avatar.png'
-          console.log('从userInfo获取的用户ID:', currentUserId)
-          console.log('从userInfo获取的用户头像:', currentUserAvatar)
-        } catch (parseError) {
-          console.error('解析userInfo失败:', parseError)
-        }
-      }
-      
-      // 如果localStorage中没有userId，尝试从单独的userId键获取
-      if (!currentUserId) {
-        currentUserId = localStorage.getItem('userId') || ''
-        console.log('从userId键获取的用户ID:', currentUserId)
-      }
       
       // 添加历史消息并按时间排序
       const messageItems = []

@@ -62,6 +62,11 @@ const routes = [
     component: ChatView
   },
   {
+    path: '/payment',
+    name: 'payment',
+    component: () => import('../views/PaymentView.vue')
+  },
+  {
     path: '/user/user/login',
     name: 'login',
     component: () => import('../views/LoginView.vue')
