@@ -64,10 +64,7 @@
                     <i :class="evaluation.isLiked ? 'el-icon-star-on' : 'el-icon-star-off'" />
                     <span>{{ evaluation.likeCount }} 点赞</span>
                   </el-button>
-                  <el-button size="small" type="text" @click="replyEvaluation()">
-                    <i class="el-icon-chat-line-round" />
-                    <span>{{ evaluation.replyCount }} 回复</span>
-                  </el-button>
+
                 </div>
               </div>
             </div>
@@ -150,11 +147,6 @@ const formatTime = (timeString) => {
   })
 }
 
-// 回复评价
-const replyEvaluation = () => {
-  ElMessage.info('回复评价功能')
-  // 这里应该实现回复评价的功能
-}
 
 // 切换点赞状态
 const toggleLike = async (evaluation) => {

@@ -39,11 +39,11 @@
               <span class="order-id">订单号：{{ purchase.orderNo }}</span>
             </div>
             <div class="item-content">
-              <div class="item-image">
-                <img :src="purchase.itemCoverImage" :alt="purchase.itemTitle" />
+              <div class="item-image" @click="navigateToEvaluation(purchase)">
+                <img :src="purchase.itemCoverImage" :alt="purchase.itemTitle" style="cursor: pointer;" />
               </div>
               <div class="item-info">
-                <h3 class="item-title">{{ purchase.itemTitle }}</h3>
+                <h3 class="item-title" @click="navigateToEvaluation(purchase)" style="cursor: pointer;">{{ purchase.itemTitle }}</h3>
                 <div class="item-details">
                   <span v-if="purchase.tradeLocation" class="item-location"><i class="el-icon-location"></i> {{ purchase.tradeLocation }}</span>
                 </div>
@@ -286,8 +286,24 @@ const confirmReceipt = (id) => {
 
 // 评价商品
 const evaluateItem = (id) => {
-  ElMessage.info(`评价商品功能: ${id}`)
-  // 这里应该导航到评价页面
+  // 查找购买记录
+  const purchase = purchases.value.find(p => p.id === id)
+  if (purchase) {
+    // 跳转到商品评价详情页面
+    router.push({
+      path: `/second-hand/comments/${purchase.itemId}`
+    })
+  }
+}
+
+// 导航到评价页面
+const navigateToEvaluation = (purchase) => {
+  if (purchase) {
+    // 跳转到商品评价详情页面
+    router.push({
+      path: `/second-hand/comments/${purchase.itemId}`
+    })
+  }
 }
 
 // 取消订单

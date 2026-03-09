@@ -74,10 +74,6 @@
             <span class="balance-label">可用余额</span>
             <span class="balance-value">¥{{ userInfo?.balance || 0 }}</span>
           </div>
-          <div class="balance-item">
-            <span class="balance-label">冻结资金</span>
-            <span class="balance-value frozen">{{ userInfo?.frozenBalance || 0 }}</span>
-          </div>
         </div>
       </div>
       

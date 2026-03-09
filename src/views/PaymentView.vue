@@ -28,6 +28,15 @@
           </div>
         </div>
 
+        <!-- 余额信息 -->
+        <div class="balance-info">
+          <h3 class="info-title">余额信息</h3>
+          <div class="info-item">
+            <span class="info-label">账户余额：</span>
+            <span class="info-value balance">¥{{ userInfo?.balance || 0 }}</span>
+          </div>
+        </div>
+
         <!-- 支付方式 -->
         <div class="payment-method">
           <h3 class="method-title">支付方式</h3>
@@ -46,9 +55,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
+import request from '@/utils/request'
+
+const userStore = useUserStore()
+const userInfo = computed(() => userStore.userInfo)
 
 const route = useRoute()
 const router = useRouter()
@@ -57,6 +71,7 @@ const router = useRouter()
 const itemId = ref(route.query.itemId || '')
 const itemTitle = ref(route.query.itemTitle || '')
 const itemPrice = ref(route.query.itemPrice || '')
+const sellerId = ref(route.query.sellerId || '')
 const paymentType = ref(route.query.paymentType || 'balance')
 
 // 支付方式
@@ -65,11 +80,35 @@ const paymentMethod = ref(paymentType.value)
 // 确认支付
 const confirmPayment = async () => {
   try {
-    // 这里应该实现支付逻辑
-    ElMessage.success('支付成功')
-    setTimeout(() => {
-      router.push('/user/user/purchases')
-    }, 1500)
+    // 检查是否有卖家ID
+    if (!sellerId.value) {
+      ElMessage.error('缺少卖家信息')
+      return
+    }
+    
+    // 准备支付数据
+    const paymentData = {
+      buyerId: userInfo.value?.id,
+      sellerId: Number(sellerId.value),
+      totalAmount: Number(itemPrice.value),
+      payAmount: Number(itemPrice.value)
+    }
+    
+    // 发送支付请求
+    const response = await request({
+      url: '/pay/create',
+      method: 'post',
+      data: paymentData
+    })
+    
+    if (response.code === 200) {
+      ElMessage.success('支付成功')
+      setTimeout(() => {
+        router.push('/user/user/purchases')
+      }, 1500)
+    } else {
+      ElMessage.error(response.message || '支付失败')
+    }
   } catch (error) {
     console.error('支付失败:', error)
     ElMessage.error('支付失败，请稍后重试')
@@ -78,7 +117,7 @@ const confirmPayment = async () => {
 
 onMounted(() => {
   // 检查是否有商品信息
-  if (!itemId.value || !itemTitle.value || !itemPrice.value) {
+  if (!itemId.value || !itemTitle.value || !itemPrice.value || !sellerId.value) {
     ElMessage.error('缺少商品信息')
     router.push('/second-hand')
   }
@@ -117,6 +156,18 @@ onMounted(() => {
   margin-bottom: 30px;
   padding-bottom: 20px;
   border-bottom: 1px solid #f0f0f0;
+}
+
+.balance-info {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-value.balance {
+  font-size: 18px;
+  font-weight: bold;
+  color: #409EFF;
 }
 
 .info-title {
