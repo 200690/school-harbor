@@ -23,9 +23,6 @@ public class PayOrderDto implements Serializable {
     /** 支付订单号 */
     private String payOrderNo;
 
-    /** 业务类型 */
-    private String bizType;
-
     /** 业务订单号 */
     private String bizOrderNo;
 
