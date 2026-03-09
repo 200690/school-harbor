@@ -7,7 +7,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(name = "part-time")
 public interface PartTimeClient {
-    
-    @GetMapping("/part-time/getPublisherId/{id}")
-    Result<Long> getPublisherId(@PathVariable Long id);
+
 }

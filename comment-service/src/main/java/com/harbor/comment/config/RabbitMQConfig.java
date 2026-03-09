@@ -19,6 +19,7 @@ public class RabbitMQConfig {
     
     // 路由键
     public static final String COMMENT_NOTIFICATION_ROUTING_KEY = "harbor.comment.notification";
+    public static final String CREDIT_SCORE_CHANGE_ROUTING_KEY = "harbor.credit.score.change";
 
     // 创建交换机
     @Bean

@@ -44,7 +44,9 @@ public class CommentCreateDTO {
 
     private Long rootId;
 
-    private Integer score;
+    private Integer rating;
+
+    private Long sellerId;
 
     /**
      * 被回复用户名称（回复时必填）

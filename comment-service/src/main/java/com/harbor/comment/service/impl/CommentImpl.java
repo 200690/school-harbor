@@ -13,15 +13,13 @@ import com.harbor.comment.domain.po.CommentLikesPO;
 import com.harbor.comment.domain.po.CommentsPO;
 import com.harbor.comment.domain.vo.CommentVO;
 import com.harbor.comment.mapper.CommentsLikes;
-import com.harbor.comment.mapper.CommentsLikes;
 import com.harbor.comment.mapper.commentMapper;
 import com.harbor.comment.service.ICommentService;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.utils.UserContext;
-import com.harbor.utils.client.PartTimeClient;
-import com.harbor.utils.client.SecondHandClient;
 import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.CommentMessageDTO;
+import com.harbor.utils.dto.CreditScoreChangeDTO;
 import com.harbor.utils.dto.UserInfoDTO;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +40,6 @@ public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implemen
     private final UserClient userClient;
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
-    private final PartTimeClient partTimeClient;
-    private final SecondHandClient secondHandClient;
 
     @Override
     public PageDTO<CommentVO> showMyCommentsGiven(CommentQueryDTO queryDTO) {
@@ -221,13 +217,17 @@ public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implemen
             comment.setParentId(0L);
             comment.setLevel(1);
             comment.setRootId(null);
-            comment.setScore(commentDTO.getScore());
+            comment.setScore(commentDTO.getRating());
         }
         
         // 保存评论
         this.save(comment);
         log.info("发表评论成功: userId={}, targetType={}, targetId={}", currentUserId, commentDTO.getTargetType(), commentDTO.getTargetId());
         
+        // 处理信誉分变动
+        if (commentDTO.getTargetId() != null) {
+            handleCreditScoreChange(commentDTO.getTargetId(), commentDTO.getRating() , commentDTO.getSellerId());
+        }
         // 发送消息通知
         sendCommentNotification(comment, commentDTO);
     }
@@ -258,7 +258,7 @@ public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implemen
             } else {
                 // 评论通知 - 需要获取业务发布者ID
                 messageDTO.setMessage("您收到了一条" + targetTypeName + "评论");
-                Long targetUserId = getTargetUserId(commentDTO.getTargetType(), commentDTO.getTargetId());
+                Long targetUserId = commentDTO.getSellerId();
                 if (targetUserId != null && !targetUserId.equals(comment.getUserId())) {
                     messageDTO.setToUserId(targetUserId);
                     rabbitTemplate.convertAndSend(
@@ -274,22 +274,56 @@ public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implemen
     }
     
     /**
-     * 获取业务发布者ID
+     * 处理信誉分变动
      */
-    private Long getTargetUserId(Integer targetType, Long targetId) {
-        // targetType: 0-兼职, 1-商品
+    private void handleCreditScoreChange(Long targetId, Integer score , Long sellerId) {
         try {
-            if (targetType == 0) {
-                // 兼职
-                return partTimeClient.getPublisherId(targetId).getData();
-            } else if (targetType == 1) {
-                // 商品
-                return secondHandClient.getSellerId(targetId).getData();
+            Long currentUserId = UserContext.getUser();
+            // 检查是否是24小时内的第一次好评
+            if (score >= 4) { // 假设4分及以上为好评
+                LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
+                
+                // 检查当前用户在24小时内是否第一次给这个商家好评
+                long count = this.lambdaQuery()
+                        .eq(CommentsPO::getUserId, currentUserId) // 当前用户
+                        .eq(CommentsPO::getTargetId, targetId) // 给这个商家
+                        .eq(CommentsPO::getLevel, 1) // 只考虑一级评论
+                        .ge(CommentsPO::getScore, 4) // 好评
+                        .gt(CommentsPO::getCreateTime, twentyFourHoursAgo) // 24小时内
+                        .count();
+                
+                // 如果是24小时内的第一次好评，商家信誉分+1
+                if (count == 1) { // 因为刚保存了一条，所以count为1表示是第一次
+                    sendCreditScoreChangeMessage(sellerId, 1);
+                    log.info("处理信誉分增加: sellerId={}, score={}", sellerId, score);
+                }
+            } else if (score <= 2) { // 假设2分及以下为差评
+                // 差评直接给商家减1分
+                sendCreditScoreChangeMessage(sellerId, -1);
+                log.info("处理信誉分减少: sellerId={}, score={}", sellerId, score);
             }
         } catch (Exception e) {
-            log.error("获取业务发布者ID失败: targetType={}, targetId={}, error={}", targetType, targetId, e.getMessage());
+            log.error("处理信誉分变动失败: sellerId={}, score={}, error={}", sellerId, score, e.getMessage(), e);
         }
-        return null;
+    }
+    
+    /**
+     * 发送信誉分变动消息
+     */
+    private void sendCreditScoreChangeMessage(Long userId, Integer changeValue) {
+        try {
+            CreditScoreChangeDTO messageDTO = new CreditScoreChangeDTO();
+            messageDTO.setUserId(userId);
+            messageDTO.setChangeValue(changeValue);
+            
+            rabbitTemplate.convertAndSend(
+                    "harbor.exchange",
+                    "harbor.credit.score.change",
+                    messageDTO);
+            log.info("发送信誉分变动消息成功: userId={}, changeValue={}", userId, changeValue);
+        } catch (Exception e) {
+            log.error("发送信誉分变动消息失败: userId={}, changeValue={}, error={}", userId, changeValue, e.getMessage(), e);
+        }
     }
 
 }
