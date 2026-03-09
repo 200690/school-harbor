@@ -143,7 +143,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
         userMessageProducer.sendUserMessage(messageDTO, "CREATE");
         UserBalance userBalance = balanceMapper.selectOne(new QueryWrapper<UserBalance>().eq("user_id", user.getId()));
-        messageDTO.setBalance(userBalance.getBalance());
+        if (userBalance != null) {
+            messageDTO.setBalance(userBalance.getBalance());
+        } else {
+            messageDTO.setBalance(0);
+        }
         userMessageProducer.sendUserMessage(messageDTO, "UPDATE");
 
         // 清除缓存

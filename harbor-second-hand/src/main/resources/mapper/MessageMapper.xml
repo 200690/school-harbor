@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.harbor.secondHand.mapper.MessageMapper">
+    
+    <!-- 统计用户的未读消息数量 -->
+    <select id="countUnreadMessages" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM second_hand_message
+        WHERE receiver_id = #{userId} AND status = 0 AND is_delete = 0
+    </select>
+    
+    <!-- 标记消息为已读 -->
+    <update id="markMessagesAsRead">
+        UPDATE second_hand_message
+        SET status = 1, read_time = NOW()
+        WHERE receiver_id = #{userId} AND sender_id = #{senderId} AND status = 0 AND is_delete = 0
+    </update>
+
+    <!-- 统计用户聊天会话数量 -->
+    <select id="countDistinctSession" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id))
+        FROM second_hand_message
+        WHERE is_delete = 0
+        AND (sender_id = #{userId} OR receiver_id = #{userId})
+    </select>
+
+    <!-- 查询每个聊天会话的最新消息 -->
+    <select id="selectLatestMessagePerSession" resultType="com.harbor.secondHand.domain.po.MessagePO">
+        SELECT * FROM (
+            SELECT *,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id)
+                       ORDER BY send_time DESC
+                   ) as row_num
+            FROM second_hand_message
+            WHERE is_delete = 0
+            AND (sender_id = #{userId} OR receiver_id = #{userId})
+        ) as t
+        WHERE row_num = 1
+        ORDER BY send_time DESC
+        LIMIT #{size} OFFSET #{page}
+    </select>
+
+    <!-- 统计指定会话的未读消息数量 -->
+    <select id="countUnreadMessagesBySession" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM second_hand_message
+        WHERE is_delete = 0
+        AND status = 0
+        AND receiver_id = #{userId}
+        AND sender_id = #{otherUserId}
+    </select>
+
+</mapper>
