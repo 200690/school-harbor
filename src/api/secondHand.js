@@ -140,3 +140,52 @@ export function cancelOrder(id) {
     method: 'post'
   })
 }
+
+// 消息相关接口
+export function sendMessage(data) {
+  return request({
+    url: '/second-hand/messages/send',
+    method: 'post',
+    data
+  })
+}
+
+export function getMessageList(params) {
+  return request({
+    url: '/second-hand/messages/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getChatHistory(otherUserId, page = 1, size = 20) {
+  return request({
+    url: `/second-hand/messages/chat/${otherUserId}`,
+    method: 'get',
+    params: {
+      page,
+      size
+    }
+  })
+}
+
+export function getUnreadCount() {
+  return request({
+    url: '/second-hand/messages/unread/count',
+    method: 'get'
+  })
+}
+
+export function markAsRead(senderId) {
+  return request({
+    url: `/second-hand/messages/read/${senderId}`,
+    method: 'put'
+  })
+}
+
+export function deleteMessage(messageId) {
+  return request({
+    url: `/second-hand/messages/${messageId}`,
+    method: 'delete'
+  })
+}

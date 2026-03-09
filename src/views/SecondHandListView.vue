@@ -75,11 +75,6 @@
               <span class="location"><i class="el-icon-s-position"></i> {{ item.school }} - {{ item.location }}</span>
               <span class="publish-time">{{ item.publishTime }}</span>
             </div>
-            <div class="item-seller">
-              <router-link :to="`/user/profile/${item.sellerId || 1}`" class="seller-link">
-                <i class="el-icon-user"></i> {{ item.sellerName || '卖家' }}
-              </router-link>
-            </div>
             <div class="item-tags">
               <span class="tag tag-primary">{{ getConditionText(item.condition) }}</span>
             </div>
@@ -87,7 +82,7 @@
           <div class="item-actions">
             <router-link :to="`/second-hand/detail/${item.id}?from=list`" class="btn btn-primary">查看详情</router-link>
             <button v-if="isItemSeller(item)" class="btn btn-primary" @click="editItem(item.id)">编辑</button>
-            <button v-else class="btn btn-success" @click="contactSeller(item.id)">联系卖家</button>
+            <button v-else class="btn btn-success" @click="contactSeller(item)">联系卖家</button>
           </div>
         </div>
       </div>
@@ -122,7 +117,7 @@
 </template>
 
 <script>
-import { getSecondHandList, buySecondHandItem } from '@/api/secondHand'
+import { getSecondHandList } from '@/api/secondHand'
 
 export default {
   name: 'SecondHandListView',
@@ -232,15 +227,24 @@ export default {
       this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc'
       this.fetchSecondHandList()
     },
-    async contactSeller(itemId) {
-      try {
-        await buySecondHandItem(itemId)
-        this.$message.success('购买成功，请联系卖家完成交易')
-        this.fetchSecondHandList()
-      } catch (error) {
-        console.error('购买失败:', error)
-        this.$message.error('购买失败')
+    contactSeller(item) {
+      if (!item || !item.id || !item.sellerId) {
+        this.$message.error('无法获取商品或卖家信息')
+        return
       }
+      
+      // 直接跳转到聊天界面
+      this.$router.push({
+        path: '/chat',
+        query: {
+          otherUserId: item.sellerId,
+          otherUserNickname: item.sellerName || '卖家',
+          otherUserAvatar: item.sellerAvatar || '/default-avatar.png',
+          itemId: item.id,
+          itemTitle: item.title,
+          itemPrice: item.price
+        }
+      })
     },
     // 判断当前用户是否是商品的卖家
     isItemSeller(item) {
@@ -482,23 +486,6 @@ export default {
 .publish-time {
   font-size: 12px;
   color: #999;
-}
-
-.item-seller {
-  margin: 8px 0;
-}
-
-.seller-link {
-  font-size: 14px;
-  color: #409EFF;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  
-  &:hover {
-    text-decoration: underline;
-  }
 }
 
 .item-tags {

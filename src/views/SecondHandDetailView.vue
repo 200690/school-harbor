@@ -109,7 +109,7 @@
               <el-button v-if="isSeller" type="primary" class="contact-btn" @click="editItem">
                 <i class="el-icon-edit"></i> 编辑
               </el-button>
-              <el-button v-if="!isSeller" type="primary" class="contact-btn">
+              <el-button v-if="!isSeller" type="primary" class="contact-btn" @click="contactSeller">
                 <i class="el-icon-chat-line-round"></i> 联系卖家
               </el-button>
               <el-button v-if="!isSeller" type="info" class="comment-btn" @click="viewComments">
@@ -272,6 +272,27 @@ const buyItem = async () => {
   } catch (error) {
     ElMessage.error('购买失败，请稍后重试')
   }
+}
+
+// 联系卖家
+const contactSeller = () => {
+  if (!itemDetail.value || !itemDetail.value.id || !itemDetail.value.sellerId) {
+    ElMessage.error('无法获取商品或卖家信息')
+    return
+  }
+  
+  // 直接跳转到聊天界面
+  router.push({
+    path: '/chat',
+    query: {
+      otherUserId: itemDetail.value.sellerId,
+      otherUserNickname: itemDetail.value.sellerName || '卖家',
+      otherUserAvatar: itemDetail.value.sellerAvatar || '/default-avatar.png',
+      itemId: itemDetail.value.id,
+      itemTitle: itemDetail.value.title,
+      itemPrice: itemDetail.value.price
+    }
+  })
 }
 
 // 编辑商品

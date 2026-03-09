@@ -4,6 +4,7 @@ import PartTimeListView from '../views/PartTimeListView.vue'
 import PartTimeDetailView from '../views/PartTimeDetailView.vue'
 import SecondHandListView from '../views/SecondHandListView.vue'
 import SecondHandDetailView from '../views/SecondHandDetailView.vue'
+import ChatView from '../views/ChatView.vue'
 
 const routes = [
   {
@@ -54,6 +55,11 @@ const routes = [
     path: '/second-hand/edit/:id',
     name: 'second-hand-edit',
     component: () => import('../views/SecondHandEditView.vue')
+  },
+  {
+    path: '/chat',
+    name: 'chat',
+    component: ChatView
   },
   {
     path: '/user/user/login',

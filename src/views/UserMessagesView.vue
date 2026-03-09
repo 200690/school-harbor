@@ -16,20 +16,19 @@
       <!-- 消息分类 -->
       <div class="message-tabs">
         <el-tabs v-model="activeTab">
-          <el-tab-pane label="全部" name="all">
-            <!-- 全部消息 -->
+          <el-tab-pane label="通知" name="notification">
             <div class="message-list">
-              <div v-if="allMessages.length === 0" class="empty-state">
-                <el-empty description="暂无消息通知" />
+              <div v-if="notificationMessages.length === 0" class="empty-state">
+                <el-empty description="暂无通知" />
               </div>
               <div v-else class="message-items">
-                <div v-for="msg in allMessages" :key="msg.id" class="message-item">
+                <div v-for="msg in notificationMessages" :key="msg.id" class="message-item">
                   <div class="msg-icon">
                     <i class="el-icon-message"></i>
                   </div>
                   <div class="msg-content">
                     <div class="msg-header">
-                      <h4 class="msg-title">系统消息</h4>
+                      <h4 class="msg-title">系统通知</h4>
                       <span class="msg-time">{{ formatTime(msg.processedTime) }}</span>
                     </div>
                     <p class="msg-body">{{ msg.message }}</p>
@@ -38,25 +37,130 @@
               </div>
             </div>
           </el-tab-pane>
+          <el-tab-pane label="消息" name="message">
+            <div class="message-sub-tabs">
+              <el-tabs v-model="messageSubTab">
+                <el-tab-pane label="收到的消息" name="received">
+                  <div class="message-list">
+                    <el-loading v-if="loading" element-loading-text="加载中..." fullscreen />
+                    <div v-else-if="receivedMessages.length === 0" class="empty-state">
+                      <el-empty description="暂无收到的消息" />
+                    </div>
+                    <div v-else class="message-items">
+                      <div v-for="msg in receivedMessages" :key="msg.id" class="message-item">
+                        <div class="msg-icon">
+                          <img :src="cleanAvatarUrl(msg.avatar)" :alt="msg.senderName" class="msg-avatar" />
+                        </div>
+                        <div class="msg-content">
+                          <div class="msg-header">
+                            <h4 class="msg-title">{{ msg.senderName }}</h4>
+                            <span class="msg-time">{{ formatTime(msg.lastMessageTime) }}</span>
+                          </div>
+                          <p class="msg-body">{{ msg.lastMessage }}</p>
+                          <div class="msg-footer" v-if="msg.itemTitle">
+                            <span class="msg-item-title">{{ msg.itemTitle }}</span>
+                            <span class="msg-item-status" :class="{ 'unread': msg.status === 0 }">{{ msg.status === 0 ? '未读' : '已读' }}</span>
+                          </div>
+                          <div class="msg-footer" v-if="msg.unreadCount > 0">
+                            <span class="msg-unread-count">未读消息: {{ msg.unreadCount }}</span>
+                          </div>
+                          <div class="msg-actions">
+                            <el-button type="primary" size="small" @click="enterChat(msg, 'received')">
+                              <i class="el-icon-chat-dot-round"></i> 进入聊天
+                            </el-button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="receivedMessages.length > 0" class="pagination">
+                      <el-pagination
+                        v-model:current-page="currentPage"
+                        v-model:page-size="pageSize"
+                        :page-sizes="[10, 20, 50]"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total"
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                      />
+                    </div>
+                  </div>
+                </el-tab-pane>
+                <el-tab-pane label="发出的消息" name="sent">
+                  <div class="message-list">
+                    <el-loading v-if="loading" element-loading-text="加载中..." fullscreen />
+                    <div v-else-if="sentMessages.length === 0" class="empty-state">
+                      <el-empty description="暂无发出的消息" />
+                    </div>
+                    <div v-else class="message-items">
+                      <div v-for="msg in sentMessages" :key="msg.id" class="message-item">
+                        <div class="msg-icon">
+                          <img :src="cleanAvatarUrl(msg.otherUserAvatar || '/default-avatar.png')" :alt="msg.otherUserNickname || '对方'" class="msg-avatar" />
+                        </div>
+                        <div class="msg-content">
+                          <div class="msg-header">
+                            <h4 class="msg-title">{{ msg.otherUserNickname || '对方' }}</h4>
+                            <span class="msg-time">{{ formatTime(msg.lastMessageTime) }}</span>
+                          </div>
+                          <p class="msg-body">{{ msg.lastMessage }}</p>
+                          <div class="msg-footer" v-if="msg.itemTitle">
+                            <span class="msg-item-title">{{ msg.itemTitle }}</span>
+                          </div>
+                          <div class="msg-actions">
+                            <el-button type="primary" size="small" @click="enterChat(msg, 'sent')">
+                              <i class="el-icon-chat-dot-round"></i> 进入聊天
+                            </el-button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="sentMessages.length > 0" class="pagination">
+                      <el-pagination
+                        v-model:current-page="currentPage"
+                        v-model:page-size="pageSize"
+                        :page-sizes="[10, 20, 50]"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total"
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                      />
+                    </div>
+                  </div>
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+          </el-tab-pane>
         </el-tabs>
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useUserStore } from '../stores/user'
+import { useRouter } from 'vue-router'
 import { getMyMessage } from '../api/user'
+import * as secondHandApi from '@/api/secondHand'
 
 const userStore = useUserStore()
-const activeTab = ref('all')
+const router = useRouter()
+const activeTab = ref('notification')
+const messageSubTab = ref('received')
+const notificationMessages = ref([])
+const chatMessages = ref([])
+const receivedMessages = ref([])
+const sentMessages = ref([])
+const currentPage = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
+const loading = ref(false)
 
-// 获取所有消息
-const allMessages = ref([])
+// 清理头像URL（去除多余的反引号和引号）
+const cleanAvatarUrl = (url) => {
+  if (!url) return '/default-avatar.png'
+  return url.toString().replace(/`/g, '').replace(/"/g, '').trim() || '/default-avatar.png'
+}
 
-// 格式化时间
 const formatTime = (timeStr) => {
   if (!timeStr) return ''
   const date = new Date(timeStr)
@@ -69,39 +173,144 @@ const formatTime = (timeStr) => {
   })
 }
 
+// 获取聊天消息列表
+const getChatMessages = async (page, size) => {
+  loading.value = true
+  try {
+    const response = await secondHandApi.getMessageList({ page, size })
+    if (response.code === 1 && response.data) {
+      const allMessages = response.data.list || []
+      total.value = parseInt(response.data.total) || 0
+      
+      // 从本地存储获取用户ID
+      const userInfoStr = localStorage.getItem('userInfo')
+      let currentUserId = ''
+      
+      if (userInfoStr) {
+        try {
+          const userInfo = JSON.parse(userInfoStr)
+          currentUserId = userInfo.userId || ''
+        } catch (parseError) {
+          console.error('解析userInfo失败:', parseError)
+        }
+      }
+      
+      // 如果localStorage中没有userId，尝试从单独的userId键获取
+      if (!currentUserId) {
+        currentUserId = localStorage.getItem('userId') || ''
+      }
+      
+      // 根据数据结构分类消息
+      receivedMessages.value = allMessages.filter(msg => String(msg.receiverId) === String(currentUserId))
+      sentMessages.value = allMessages.filter(msg => String(msg.senderId) === String(currentUserId))
+      
+      console.log('消息分类:', {
+        currentUserId: currentUserId,
+        totalMessages: allMessages.length,
+        receivedMessages: receivedMessages.value.length,
+        sentMessages: sentMessages.value.length
+      })
+    } else {
+      chatMessages.value = []
+      receivedMessages.value = []
+      sentMessages.value = []
+      total.value = 0
+    }
+  } catch (error) {
+    console.error('获取聊天消息失败:', error)
+    chatMessages.value = []
+    receivedMessages.value = []
+    sentMessages.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+// 进入聊天
+const enterChat = async (msg, type) => {
+  try {
+    // 根据消息类型决定使用的ID
+    let otherUserId = ''
+    let otherUserNickname = ''
+    let otherUserAvatar = ''
+    
+    if (type === 'received') {
+      // 收到的消息：使用senderId作为otherUserId
+      otherUserId = msg.senderId
+      otherUserNickname = msg.senderName
+      otherUserAvatar = cleanAvatarUrl(msg.avatar || '/default-avatar.png')
+    } else if (type === 'sent') {
+      // 发出的消息：使用otherUserId
+      otherUserId = msg.otherUserId
+      otherUserNickname = msg.otherUserNickname || '对方'
+      otherUserAvatar = cleanAvatarUrl(msg.otherUserAvatar || '/default-avatar.png')
+    }
+    
+    // 跳转到聊天界面
+    router.push({
+      path: '/chat',
+      query: {
+        otherUserId: otherUserId,
+        otherUserNickname: otherUserNickname,
+        otherUserAvatar: otherUserAvatar,
+        itemId: msg.itemId,
+        itemTitle: msg.itemTitle || '',
+        itemPrice: msg.itemPrice || ''
+      }
+    })
+  } catch (error) {
+    console.error('进入聊天失败:', error)
+  }
+}
+
+// 处理分页大小变化
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  getChatMessages(1, size)
+}
+
+// 处理页码变化
+const handleCurrentChange = (page) => {
+  currentPage.value = page
+  getChatMessages(page, pageSize.value)
+}
+
+// 监听标签切换
+watch(activeTab, (newTab) => {
+  if (newTab === 'message') {
+    // 默认显示收到的消息
+    messageSubTab.value = 'received'
+    getChatMessages(currentPage.value, pageSize.value)
+  }
+})
+
+// 监听消息子标签切换
+watch(messageSubTab, () => {
+  // 切换子标签时重新加载消息
+  currentPage.value = 1
+  getChatMessages(1, pageSize.value)
+})
+
 onMounted(async () => {
-  // 从 localStorage 获取用户信息，优先于 store 中的默认值
   const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
   const userId = storedUserInfo.userId || storedUserInfo.id || userStore.userInfo?.userId || userStore.userInfo?.id
   
-  console.log('store中的userInfo:', userStore.userInfo)
-  console.log('localStorage中的userInfo:', storedUserInfo)
-  console.log('最终使用的用户ID:', userId)
-  
   if (!userId) {
-    console.error('用户未登录')
     return
   }
   
-  // 发送请求获取消息列表
   try {
-    console.log('开始获取消息列表, 用户ID:', userId)
     const res = await getMyMessage(userId)
-    console.log('消息列表API响应:', res)
-    
-    // 处理响应数据，res 可能是 {data: {code, msg, data}} 或者直接是 {code, msg, data}
     const responseData = res.data?.data ? res.data : res
     
     if (responseData && responseData.code == 1) {
-      allMessages.value = responseData.data || []
-      console.log('消息列表获取成功:', allMessages.value)
+      notificationMessages.value = responseData.data || []
     } else {
-      allMessages.value = []
-      console.log('消息列表为空或API返回错误, code:', responseData?.code, 'data:', responseData)
+      notificationMessages.value = []
     }
   } catch (error) {
-    console.error('获取消息列表失败:', error)
-    allMessages.value = []
+    notificationMessages.value = []
   }
 })
 </script>
@@ -130,16 +339,15 @@ onMounted(async () => {
   color: #333;
 }
 
-.page-actions {
-  display: flex;
-  gap: 10px;
-}
-
 .message-tabs {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   padding: 20px;
+}
+
+.message-sub-tabs {
+  margin-top: 20px;
 }
 
 .message-list {
@@ -164,15 +372,11 @@ onMounted(async () => {
   padding: 15px;
   border-radius: 8px;
   transition: all 0.3s;
-  cursor: pointer;
+  border: 1px solid #ebeef5;
   
   &:hover {
     background-color: #f5f7fa;
-  }
-  
-  &.unread {
-    background-color: #ecf5ff;
-    border-left: 4px solid #409EFF;
+    border-color: #409eff;
   }
 }
 
@@ -187,6 +391,13 @@ onMounted(async () => {
   font-size: 20px;
   color: #67c23a;
   flex-shrink: 0;
+  overflow: hidden;
+  
+  .msg-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .msg-content {
@@ -217,90 +428,53 @@ onMounted(async () => {
   color: #666;
   margin: 0;
   line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.msg-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.msg-item-title {
+  font-size: 12px;
+  color: #666;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-item-status {
+  font-size: 12px;
+  color: #67c23a;
+  
+  &.unread {
+    color: #f56c6c;
+    font-weight: bold;
+  }
+}
+
+.msg-unread-count {
+  font-size: 12px;
+  color: #f56c6c;
+  font-weight: bold;
 }
 
 .msg-actions {
   display: flex;
-  align-items: center;
-  pointer-events: none;
-  
-  .el-button {
-    pointer-events: auto;
-  }
+  justify-content: flex-end;
 }
 
-// 消息详情弹窗样式
-.message-detail-content {
-  min-height: 200px;
-}
-
-.detail-wrapper {
-  .detail-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #ebeef5;
-  }
-
-  .detail-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #f0f9eb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: #67c23a;
-    flex-shrink: 0;
-  }
-
-  .detail-info {
-    flex: 1;
-  }
-
-  .detail-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    margin: 0 0 8px 0;
-  }
-
-  .detail-time {
-    font-size: 13px;
-    color: #999;
-  }
-
-  .detail-body {
-    .detail-content {
-      font-size: 15px;
-      color: #606266;
-      line-height: 1.8;
-      margin: 0;
-      white-space: pre-wrap;
-    }
-  }
-
-  .detail-extra {
-    margin-top: 20px;
-
-    .extra-data {
-      pre {
-        background-color: #f5f7fa;
-        padding: 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        color: #666;
-        overflow-x: auto;
-      }
-    }
-  }
-}
-
-.detail-empty {
-  padding: 40px 0;
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
 }
 
 @media (max-width: 768px) {
@@ -308,11 +482,6 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
-  }
-  
-  .page-actions {
-    width: 100%;
-    justify-content: space-between;
   }
   
   .message-tabs {
@@ -331,6 +500,12 @@ onMounted(async () => {
   
   .msg-time {
     align-self: flex-end;
+  }
+  
+  .msg-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
   }
 }
 </style>
