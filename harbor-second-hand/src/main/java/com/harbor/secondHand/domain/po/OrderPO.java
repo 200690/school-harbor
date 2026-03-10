@@ -18,16 +18,10 @@ public class OrderPO {
     private BigDecimal price;                 // 成交价格
     private Integer quantity;                 // 购买数量
     private BigDecimal totalAmount;           // 总金额
-    private String tradeMethod;               // 交易方式（face:面交, delivery:快递）
-    private String tradeLocation;             // 面交地点
-    private String deliveryNo;                // 快递单号
     private Integer status;                   // 订单状态（1:待付款, 2:待发货, 3:待收货, 0:已完成, 4:已取消, 5:退款中）
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime orderTime;          // 下单时间
     private LocalDateTime payTime;            // 付款时间
-    private String payOrderId;                // 支付系统订单ID
-    private String payOrderNo;                // 支付网关流水号
-    private String payChannel;                 // 支付渠道
     private Integer payStatus;                 // 支付状态：0-未支付，1-支付成功，2-支付失败，3-退款中，4-已退款
     private LocalDateTime deliveryTime;        // 发货时间
     private LocalDateTime receiveTime;         // 收货时间
@@ -35,7 +29,6 @@ public class OrderPO {
     private LocalDateTime cancelTime;          // 取消时间
     private String cancelReason;               // 取消原因
     private String buyerMessage;               // 买家留言
-    private String sellerRemark;                // 卖家备注
     @TableLogic
     private Integer isDelete;                  // 是否删除
     @TableField(fill = FieldFill.INSERT_UPDATE)
