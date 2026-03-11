@@ -30,11 +30,6 @@ public class UserFollow {
     private Long followId;
 
     /**
-     * 关注状态（0取消关注，1关注中，2互相关注）
-     */
-    private Integer status;
-
-    /**
      * 是否删除（0未删除，1已删除）
      */
     private Integer isDelete;

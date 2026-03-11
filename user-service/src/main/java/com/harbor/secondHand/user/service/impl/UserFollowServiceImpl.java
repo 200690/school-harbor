@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +31,7 @@ public class UserFollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFol
         Page<UserFollow> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
 
         LambdaQueryWrapper<UserFollow> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserFollow::getUserId, pageQuery.getId());
-        wrapper.ge(UserFollow::getStatus, 0);
+        wrapper.eq(UserFollow::getUserId, UserContext.getUser());
         wrapper.eq(UserFollow::getIsDelete, 0);
         wrapper.orderByDesc(UserFollow::getCreateTime);
 
@@ -43,7 +41,11 @@ public class UserFollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFol
             FollowVO followVO = new FollowVO();
             followVO.setFollowId(userFollow.getFollowId());
             followVO.setUserId(userFollow.getUserId());
-            followVO.setStatus(userFollow.getStatus());
+
+            UserFollow one = lambdaQuery().eq(UserFollow::getUserId, userFollow.getFollowId())
+                    .eq(UserFollow::getFollowId, UserContext.getUser())
+                    .eq(UserFollow::getIsDelete, 0).one();
+            followVO.setStatus(one == null ? 1 : 2);
 
             User user = userMapper.selectById(userFollow.getFollowId());
             followVO.setUsername(user.getUsername())
@@ -64,10 +66,5 @@ public class UserFollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFol
         lambdaUpdate().eq(UserFollow::getFollowId, followId)
                 .eq(UserFollow::getUserId, UserContext.getUser())
                         .remove();
-        //取消互关状态
-        lambdaUpdate().eq(UserFollow::getUserId, followId)
-                .eq(UserFollow::getFollowId, UserContext.getUser())
-                .eq(UserFollow::getStatus, 2)
-                .set(UserFollow::getStatus, 1).update();
     }
 }
