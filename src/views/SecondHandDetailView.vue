@@ -268,6 +268,7 @@ const buyItem = async () => {
         itemId: itemId.value,
         itemTitle: itemDetail.value?.title,
         itemPrice: itemDetail.value?.price,
+        sellerId: itemDetail.value?.sellerId,
         paymentType: 'balance'
       }
     })

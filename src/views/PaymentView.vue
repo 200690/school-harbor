@@ -88,26 +88,26 @@ const confirmPayment = async () => {
     
     // 准备支付数据
     const paymentData = {
-      buyerId: userInfo.value?.id,
+      itemId: Number(itemId.value),
       sellerId: Number(sellerId.value),
-      totalAmount: Number(itemPrice.value),
-      payAmount: Number(itemPrice.value)
+      price: Number(itemPrice.value),
+      totalAmount: Number(itemPrice.value)
     }
     
     // 发送支付请求
     const response = await request({
-      url: '/pay/create',
+      url: 'http://localhost:8080/api/second-hand/order/create',
       method: 'post',
       data: paymentData
     })
     
-    if (response.code === 200) {
+    if (response.code === 1) {
       ElMessage.success('支付成功')
       setTimeout(() => {
         router.push('/user/user/purchases')
       }, 1500)
     } else {
-      ElMessage.error(response.message || '支付失败')
+      ElMessage.error(response.msg || '支付失败')
     }
   } catch (error) {
     console.error('支付失败:', error)
