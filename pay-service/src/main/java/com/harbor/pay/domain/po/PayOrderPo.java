@@ -18,6 +18,9 @@ public class PayOrderPo {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 支付订单号 */
+    private String payOrderNo;
+
     /** 业务订单号 */
     private String bizOrderNo;
 

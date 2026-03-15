@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.math.BigDecimal;
 
-@FeignClient(name = "user-service", path = "/user/user")
+@FeignClient(name = "user-service", path = "/user")
 public interface UserClient {
 
-    @GetMapping("info/{id}")
+    @GetMapping("user/info/{id}")
     Result<UserInfoDTO> info(@PathVariable Long id);
 
-    @PostMapping("/user/balance/consume")
-    Result consume(BigDecimal payNo);
+    @PostMapping("/balance/consume/{payNo}/{userId}")
+    Result consume(@PathVariable BigDecimal payNo, @PathVariable Long userId);
 }

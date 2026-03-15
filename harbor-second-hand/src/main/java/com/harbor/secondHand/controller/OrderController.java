@@ -3,6 +3,7 @@ package com.harbor.secondHand.controller;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
+import com.harbor.secondHand.domain.dto.CreateOrderDTO;
 import com.harbor.secondHand.domain.vo.OrderListItemVO;
 import com.harbor.secondHand.service.IOrder;
 import io.swagger.annotations.Api;
@@ -40,6 +41,13 @@ public class OrderController {
     public Result<Void> cancelOrder(@PathVariable Long id) {
         log.info("取消订单, id: {}", id);
         order.cancelOrder(id);
+        return Result.success();
+    }
+
+    @ApiOperation("创建订单")
+    @PostMapping("create")
+    public Result createOrder(@RequestBody CreateOrderDTO createOrderDTO) {
+        order.createOrder(createOrderDTO);
         return Result.success();
     }
 }

@@ -15,14 +15,5 @@ import org.springframework.web.bind.annotation.RestController;
 @ApiOperation(value = "支付订单服务")
 @RequestMapping("/pay")
 public class PayOrderController {
-    private final IPayOrderService payOrderService;
 
-    @ApiOperation(value = "创建支付订单")
-    @RequestMapping("/create")
-    public Result createPayOrder(CreateDTO createDTO) {
-        log.info("创建支付订单");
-        // TODO 调用service创建支付订单
-        payOrderService.createPayOrder(createDTO);
-        return Result.success();
-    }
 }

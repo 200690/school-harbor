@@ -66,17 +66,18 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
 
     // 消费
     @Override
-    public void consume(BigDecimal payNo) {
-        UserBalance one = lambdaQuery().eq(UserBalance::getUserId, UserContext.getUser()).one();
+    public void consume(BigDecimal payNo, Long userId) {
+        UserBalance one = lambdaQuery().eq(UserBalance::getUserId, userId).one();
         Assert.notNull(one, "用户不存在");
         Assert.isTrue(one.getBalance().compareTo(payNo) >= 0, "余额不足");
+//        更新余额和冻结金额
         one.setBalance(one.getBalance().subtract(payNo))
                 .setUpdateTime(LocalDateTime.now())
                 .setTotalConsume(one.getTotalConsume().add(payNo))
                 .setFrozenBalance(one.getFrozenBalance().add(payNo));
         this.updateById(one);
         // 发送消息通知消息微服务更新用户余额
-        User user = userMapper.selectById(UserContext.getUser());
+        User user = userMapper.selectById(userId);
         UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
         messageDTO.setBalance(one.getBalance());
         userMessageProducer.sendUserMessage(messageDTO, "UPDATE");

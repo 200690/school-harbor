@@ -34,6 +34,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
 //        浏览时间
         this.strictInsertFill(metaObject, "browseTime", LocalDateTime.class, LocalDateTime.now());
 
+        // 订单时间
+        this.strictInsertFill(metaObject, "orderTime", LocalDateTime.class, LocalDateTime.now());
+        this.strictInsertFill(metaObject, "payTime", LocalDateTime.class, LocalDateTime.now());
+
+
         // 其他通用字段
         this.strictInsertFill(metaObject, "isDelete", Integer.class, 0);
         this.strictInsertFill(metaObject, "viewCount", Integer.class, 0);

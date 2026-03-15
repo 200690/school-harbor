@@ -10,5 +10,5 @@ public interface IbalanceService extends IService<UserBalance> {
 
     void recharge(RechargeDTO rechargeDTO);
 
-    void consume(BigDecimal payNo);
+    void consume(BigDecimal payNo, Long userId);
 }
