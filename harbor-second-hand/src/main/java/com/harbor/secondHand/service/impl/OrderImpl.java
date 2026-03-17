@@ -25,6 +25,7 @@ import org.springframework.util.Assert;
 import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.domain.dto.OrderMessageDTO;
 import com.harbor.secondHand.producer.OrderMessageProducer;
+import com.harbor.secondHand.producer.PublishNotificationProducer;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class OrderImpl extends ServiceImpl<OrderMapper, OrderPO> implements IOrd
     private final SecondHandMapper secondHandMapper;
     private final UserClient userClient;
     private final OrderMessageProducer orderMessageProducer;
+    private final PublishNotificationProducer publishNotificationProducer;
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
@@ -146,6 +148,33 @@ public class OrderImpl extends ServiceImpl<OrderMapper, OrderPO> implements IOrd
         // 清除二手商品Redis缓存
         clearItemCache(createOrderDTO.getItemId());
 
+        // 发送订单创建成功通知
+        sendOrderCreateNotification(orderPO, itemPO);
+
+    }
+
+    /**
+     * 发送订单创建成功通知
+     *
+     * @param orderPO 订单信息
+     * @param itemPO 商品信息
+     */
+    private void sendOrderCreateNotification(OrderPO orderPO, ItemPO itemPO) {
+        if (itemPO != null) {
+            // 为买家发送通知
+            publishNotificationProducer.sendItemPublishNotification(
+                    orderPO.getId(),
+                    orderPO.getBuyerId(),
+                    String.format("订单已创建成功，商品：%s，订单号：%s", itemPO.getTitle(), orderPO.getOrderNo())
+            );
+
+            // 为卖家发送通知
+            publishNotificationProducer.sendItemPublishNotification(
+                    orderPO.getId(),
+                    orderPO.getSellerId(),
+                    String.format("您的商品 %s 已被购买，订单号：%s", itemPO.getTitle(), orderPO.getOrderNo())
+            );
+        }
     }
 
     /**
