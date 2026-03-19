@@ -2,8 +2,12 @@ package com.harbor.secondHand.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.harbor.common.domain.PageDTO;
+import com.harbor.common.domain.PageQuery;
 import com.harbor.common.exception.ForbiddenException;
+import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.user.config.JwtProperties;
 import com.harbor.secondHand.user.domain.dto.LoginFormDTO;
 import com.harbor.secondHand.user.domain.dto.UserMessageDTO;
@@ -14,6 +18,7 @@ import com.harbor.utils.dto.UserInfoDTO;
 import com.harbor.secondHand.user.domain.dto.UserRegisterDTO;
 import com.harbor.secondHand.user.domain.po.User;
 import com.harbor.secondHand.user.domain.vo.UserLoginVO;
+import com.harbor.secondHand.user.domain.vo.UserVO;
 import com.harbor.secondHand.user.mapper.UserMapper;
 import com.harbor.secondHand.user.service.IUserService;
 import com.harbor.secondHand.user.utils.JwtTool;
@@ -26,6 +31,7 @@ import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -169,5 +175,65 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new ForbiddenException("用户状态异常");
         }
         return user;
+    }
+
+    /**
+     * 获取用户列表
+     *
+     * @param pageQuery 分页参数
+     * @return 用户列表
+     */
+    @Override
+    public PageDTO<UserVO> getUserList(PageQuery pageQuery) {
+        Page<User> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
+        Page<User> userPage = this.page(page);
+        
+        List<UserVO> userVOs = userPage.getRecords().stream().map(user -> {
+            UserVO userVO = new UserVO();
+            BeanUtil.copyProperties(user, userVO);
+            return userVO;
+        }).toList();
+        
+        return new PageDTO<>(userPage.getTotal(), userPage.getPages(), userVOs);
+    }
+
+    /**
+     * 封禁用户
+     *
+     * @param id 用户ID
+     */
+    @Override
+    public void banUser(Long id) {
+        if(id == UserContext.getUser()){
+            throw new RuntimeException("不能封禁自己");
+        }
+        User user = checkUserById(id);
+        user.setStatus(0);
+        this.updateById(user);
+        log.info("封禁用户成功，userId: {}", id);
+        
+        // 清除用户信息缓存
+        String cacheKey = "user:info:" + id;
+        redisTemplate.delete(cacheKey);
+        log.info("清除用户信息缓存: {}", id);
+    }
+
+    /**
+     * 解封用户
+     *
+     * @param id 用户ID
+     */
+    @Override
+    public void unbanUser(Long id) {
+        User user = lambdaQuery().eq(User::getId, id).one();
+        Assert.notNull(user, "用户不存在");
+        user.setStatus(1);
+        this.updateById(user);
+        log.info("解封用户成功，userId: {}", id);
+        
+        // 清除用户信息缓存
+        String cacheKey = "user:info:" + id;
+        redisTemplate.delete(cacheKey);
+        log.info("清除用户信息缓存: {}", id);
     }
 }

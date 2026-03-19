@@ -67,5 +67,8 @@ public class UserVO {
      */
     private LocalDateTime createTime;
 
+    private Integer status;
+    private String role;
+
     // 不返回密码、isDelete等敏感字段
 }
