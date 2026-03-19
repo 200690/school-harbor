@@ -145,4 +145,8 @@ request.interceptors.response.use(
   }
 )
 
+// 暴露axios的CancelToken和isCancel方法
+request.CancelToken = axios.CancelToken
+request.isCancel = axios.isCancel
+
 export default request

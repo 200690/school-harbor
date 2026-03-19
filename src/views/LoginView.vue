@@ -59,7 +59,7 @@ export default {
           this.loading = true;
           try {
             const response = await login(this.loginForm);
-            const { token, userId, username } = response.data || {};
+            const { token, userId, username, role } = response.data || {};
             
             // 存储token和用户信息
             if (token) {
@@ -73,13 +73,14 @@ export default {
                 localStorage.setItem('userInfo', JSON.stringify({
                   userId,
                   username,
+                  role,
                   phone: userInfo.phone || '',
                   ...userInfo
                 }));
               } catch (error) {
                 console.error('获取用户信息失败:', error);
                 // 如果获取用户信息失败，至少存储基本信息
-                localStorage.setItem('userInfo', JSON.stringify({ userId, username }));
+                localStorage.setItem('userInfo', JSON.stringify({ userId, username, role }));
               }
               
               // 获取黑名单数据

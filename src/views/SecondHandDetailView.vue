@@ -121,6 +121,9 @@
               <el-button v-if="!isSeller" type="danger" class="block-btn" @click="blockItem">
                 <i class="el-icon-circle-close"></i> 拉黑商品
               </el-button>
+              <el-button v-if="!isSeller" type="danger" class="report-btn" @click="reportItem">
+                <i class="el-icon-warning-outline"></i> 举报
+              </el-button>
             </div>
             <div class="item-actions">
               <el-button v-if="!isSeller" type="primary" size="large" class="buy-btn" @click="buyItem">
@@ -623,6 +626,24 @@ const handleClearCache = () => {
   isPublisherBanned.value = false
   itemDetail.value = null
   secondHandStore.clearCache()
+}
+
+// 举报商品
+const reportItem = () => {
+  if (!itemDetail.value || !itemDetail.value.id) {
+    ElMessage.error('无法获取商品信息')
+    return
+  }
+  
+  // 跳转到举报页面
+  router.push({
+    path: '/report',
+    query: {
+      targetId: itemDetail.value.id,
+      targetType: 'second-hand',
+      targetTitle: itemDetail.value.title
+    }
+  })
 }
 </script>
 

@@ -28,20 +28,6 @@
         <div class="user-info">
           <h3 class="user-name">{{ userProfile.username }}</h3>
           <p class="user-bio" v-if="userProfile.bio">{{ userProfile.bio }}</p>
-          <div class="user-stats">
-            <div class="stat-item">
-              <span class="stat-value">{{ userProfile.totalItems || 0 }}</span>
-              <span class="stat-label">在售商品</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-value">{{ userProfile.totalSales || 0 }}</span>
-              <span class="stat-label">累计成交</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-value">{{ userProfile.positiveReviews || 0 }}%</span>
-              <span class="stat-label">好评率</span>
-            </div>
-          </div>
           <p class="user-details">注册时间：{{ userProfile.createTime }}</p>
           <p class="user-details user-credit">
             <span class="credit-label">信誉分：</span>
@@ -152,10 +138,7 @@ const userProfile = ref({
   updateTime: '',
   school: '',
   bio: '',
-  creditScore: 60,
-  totalItems: 0,
-  totalSales: 0,
-  positiveReviews: 0
+  creditScore: 60
 })
 
 const userSecondHandItems = ref([])
@@ -237,10 +220,7 @@ onMounted(async () => {
         updateTime: data.updateTime || '',
         school: data.school || '',
         bio: data.bio || '',
-        creditScore: data.creditScore || 60,
-        totalItems: data.items?.length || 0,
-        totalSales: data.totalSales || 0,
-        positiveReviews: data.positiveReviews || 0
+        creditScore: data.creditScore || 60
       }
       
       // 更新二手商品列表
@@ -341,33 +321,6 @@ onMounted(async () => {
   color: #666;
   margin-bottom: 12px;
   line-height: 1.5;
-}
-
-.user-stats {
-  display: flex;
-  gap: 30px;
-  margin-bottom: 12px;
-  padding: 12px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.stat-value {
-  font-size: 18px;
-  font-weight: bold;
-  color: #409EFF;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #666;
 }
 
 .user-details {

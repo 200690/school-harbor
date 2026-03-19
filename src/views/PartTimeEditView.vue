@@ -153,8 +153,7 @@ const rules = {
     { max: 50, message: '联系人不能超过50个字符', trigger: 'blur' }
   ],
   contactPhone: [
-    { required: true, message: '联系电话不能为空', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '联系电话格式不正确', trigger: 'blur' }
+    { required: true, message: '联系电话不能为空', trigger: 'blur' }
   ]
 }
 

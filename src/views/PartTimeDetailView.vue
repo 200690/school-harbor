@@ -151,6 +151,9 @@
             <el-button type="info" size="large" class="comment-btn" @click="viewComments">
               <i class="el-icon-chat-dot-round"></i> 查看评论
             </el-button>
+            <el-button type="danger" size="large" class="report-btn" @click="reportJob">
+              <i class="el-icon-warning-outline"></i> 举报
+            </el-button>
           </template>
         </div>
       </div>
@@ -624,6 +627,23 @@ export default {
     },
     editJob() {
       this.$router.push(`/item/edit/${this.jobId}`)
+    },
+    // 举报兼职
+    reportJob() {
+      if (!this.jobDetail || !this.jobDetail.id) {
+        this.$message.error('无法获取兼职信息')
+        return
+      }
+      
+      // 跳转到举报页面
+      this.$router.push({
+        path: '/report',
+        query: {
+          targetId: this.jobDetail.id,
+          targetType: 'part-time',
+          targetTitle: this.jobDetail.title
+        }
+      })
     },
     manageApplications() {
       console.log('跳转到管理申请页面，jobId:', this.jobId)

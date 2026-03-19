@@ -152,34 +152,49 @@ const routes = [
     component: () => import('../views/UserSellerAfterSalesView.vue')
   },
   {
+    path: '/report',
+    name: 'report',
+    component: () => import('../views/ReportView.vue')
+  },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: () => import('../views/AdminView.vue')
+  },
+  {
+    path: '/admin/users',
+    name: 'admin-users',
+    component: () => import('../views/AdminUsersView.vue')
+  },
+  {
+    path: '/admin/part-time',
+    name: 'admin-part-time',
+    component: () => import('../views/AdminPartTimeView.vue')
+  },
+  {
+    path: '/admin/second-hand',
+    name: 'admin-second-hand',
+    component: () => import('../views/AdminSecondHandView.vue')
+  },
+  {
+    path: '/admin/reports',
+    name: 'admin-reports',
+    component: () => import('../views/AdminReportsView.vue')
+  },
+  {
+    path: '/admin/blacklist',
+    name: 'admin-blacklist',
+    component: () => import('../views/AdminBlacklistView.vue')
+  },
+  {
+    path: '/admin/statistics',
+    name: 'admin-statistics',
+    component: () => import('../views/AdminStatisticsView.vue')
+  },
+  {
     path: '/user/profile/:id',
     name: 'user-profile',
     component: () => import('../views/UserProfileView.vue')
-  },
-  {
-    path: '/user/admin',
-    name: 'user-admin',
-    component: () => import('../views/UserAdminView.vue')
-  },
-  {
-    path: '/user/admin/order/:id',
-    name: 'admin-order-detail',
-    component: () => import('../views/AdminOrderDetailView.vue')
-  },
-  {
-    path: '/user/admin/user/:id',
-    name: 'admin-user-detail',
-    component: () => import('../views/AdminUserDetailView.vue')
-  },
-  {
-    path: '/user/admin/goods/:id',
-    name: 'admin-goods-detail',
-    component: () => import('../views/AdminGoodsDetailView.vue')
-  },
-  {
-    path: '/user/admin/dispute/:id',
-    name: 'admin-dispute-detail',
-    component: () => import('../views/AdminDisputeDetailView.vue')
   },
   {
     path: '/about',

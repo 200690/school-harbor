@@ -13,6 +13,7 @@
         <router-link to="/part-time" class="nav-item">兼职</router-link>
         <router-link to="/second-hand" class="nav-item">二手交易</router-link>
         <router-link to="/user/user/center" class="nav-item">个人中心</router-link>
+        <router-link v-if="isAdmin" to="/admin" class="nav-item">管理员</router-link>
       </div>
       
       <!-- 搜索框 -->
@@ -64,6 +65,7 @@
           <router-link to="/part-time" class="mobile-nav-item" @click="closeMobileMenu">兼职</router-link>
           <router-link to="/second-hand" class="mobile-nav-item" @click="closeMobileMenu">二手交易</router-link>
           <router-link to="/user/user/center" class="mobile-nav-item" @click="closeMobileMenu">个人中心</router-link>
+          <router-link v-if="isAdmin" to="/admin" class="mobile-nav-item" @click="closeMobileMenu">管理员</router-link>
           <template v-if="!isLoggedIn">
             <router-link to="/user/user/login" class="mobile-nav-item" @click="closeMobileMenu">登录</router-link>
             <router-link to="/user/user/register" class="mobile-nav-item mobile-nav-item-primary" @click="closeMobileMenu">注册</router-link>
@@ -101,6 +103,10 @@ export default {
     },
     isLoggedIn() {
       return this.userStore.isLoggedIn
+    },
+    isAdmin() {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+      return userInfo.role === 'admin'
     }
   },
   mounted() {

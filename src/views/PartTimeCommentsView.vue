@@ -99,6 +99,10 @@
                     <i class="el-icon-chat-line-round" />
                     <span>{{ comment.replyCount }} 回复</span>
                   </el-button>
+                  <el-button size="small" type="text" @click="reportComment(comment)" style="color: #F56C6C;">
+                    <i class="el-icon-warning-outline" />
+                    <span>举报</span>
+                  </el-button>
                 </div>
               </div>
               
@@ -128,6 +132,10 @@
                     <el-button size="small" type="text" @click="showReplyForm(reply)">
                       <i class="el-icon-chat-line-round" />
                       <span>回复</span>
+                    </el-button>
+                    <el-button size="small" type="text" @click="reportComment(reply)" style="color: #F56C6C;">
+                      <i class="el-icon-warning-outline" />
+                      <span>举报</span>
                     </el-button>
                   </div>
                   
@@ -485,6 +493,24 @@ const handleSizeChange = (size) => {
 const handleCurrentChange = (current) => {
   currentPage.value = current
   fetchComments()
+}
+
+// 举报评论
+const reportComment = (comment) => {
+  if (!comment || !comment.id) {
+    ElMessage.error('无法获取评论信息')
+    return
+  }
+  
+  // 跳转到举报页面
+  router.push({
+    path: '/report',
+    query: {
+      targetId: comment.id,
+      targetType: 'comment',
+      targetContent: comment.content
+    }
+  })
 }
 
 onMounted(async () => {
