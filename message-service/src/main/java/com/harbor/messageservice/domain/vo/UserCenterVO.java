@@ -21,6 +21,8 @@ public class UserCenterVO extends UserProfileVO{
     private Integer buyCounnt;
     private Integer favCount;
 
+    private String role;
+
     private List<String> tags;
 
     public static UserCenterVO countCpToVo(UserCenterVO vo, UserStatisticsPO po){

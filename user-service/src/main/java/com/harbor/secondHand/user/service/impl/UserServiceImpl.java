@@ -60,7 +60,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Assert.notNull(user, "用户名错误");
         // 3.校验是否禁用
         if (user.getStatus() != 1) {
-            throw new ForbiddenException("用户被冻结");
+            throw new ForbiddenException("用户被冻结，禁止登录");
         }
         // 4.校验密码 TODO
         // if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -75,7 +75,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         vo.setUserId(user.getId());
         vo.setUsername(user.getUsername());
         vo.setToken(token);
-        log.info("user2:{}", vo);
+        vo.setRole(user.getRole());
         return vo;
     }
 

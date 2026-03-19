@@ -10,4 +10,6 @@ public class UserLoginVO {
     private Long userId;
     private String username;
     private Integer balance;
+    // 角色身份
+    private String role;
 }
