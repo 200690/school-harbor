@@ -20,4 +20,7 @@ public class MyItem {
     private Integer applicantCount;
 
     private int status;
+
+    private Long buyerId;
+    private Long orderId;
 }

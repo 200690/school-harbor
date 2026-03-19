@@ -13,11 +13,13 @@ import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
 import com.harbor.secondHand.domain.po.FavoritePO;
 import com.harbor.secondHand.domain.po.ItemPO;
+import com.harbor.secondHand.domain.po.OrderPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
 import com.harbor.secondHand.domain.vo.MyItem;
 import com.harbor.secondHand.mapper.BrowseHistoryMapper;
 import com.harbor.secondHand.mapper.FavoriteMapper;
+import com.harbor.secondHand.mapper.OrderMapper;
 import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.producer.ItemMessageProducer;
 import com.harbor.secondHand.producer.PublishNotificationProducer;
@@ -43,6 +45,7 @@ import java.util.stream.Collectors;
 public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO> implements ISecondHandService {
     private final BrowseHistoryMapper browerHistory;
     private final FavoriteMapper favoriteMapper;
+    private final OrderMapper orderMapper;
 
     private final UserClient userClient;
 
@@ -275,7 +278,21 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
         // 转换数据
         List<MyItem> myItemList = itemPOPage.getRecords().stream()
-                .map(item -> BeanUtil.copyProperties(item, MyItem.class))
+                .map(item ->
+                        {
+                            MyItem myItem = BeanUtil.copyProperties(item, MyItem.class);
+                            if (myItem.getStatus() == 2 || myItem.getStatus() == 3) {
+                                OrderPO orderPO = orderMapper.selectOne(new LambdaQueryWrapper<OrderPO>()
+                                        .eq(OrderPO::getItemId, item.getId())
+                                        .orderByDesc(OrderPO::getOrderTime)
+                                        .last("LIMIT 1"));
+                                myItem.setBuyerId(orderPO.getBuyerId());
+                                myItem.setOrderId(orderPO.getId());
+                            }
+                            return myItem;
+                        }
+
+                )
                 .collect(Collectors.toList());
 
         // 封装为PageDTO
