@@ -1,0 +1,5 @@
+harbor:
+  db:
+    host: 115.190.252.109
+    database: report
+    pw: 123

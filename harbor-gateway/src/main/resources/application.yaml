@@ -63,6 +63,13 @@ spring:
           filters:
             # 去掉 /api，保留 /user/**
             - RewritePath=/api/(?<segment>.*), /$\{segment}
+        - id: report
+          uri: lb://report-service
+          predicates:
+            - Path=/api/report/**
+          filters:
+            # 去掉 /api，保留 /user/**
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
 
 #      config:
 #        file-extension: yaml
