@@ -147,6 +147,11 @@ const routes = [
     component: () => import('../views/UserAfterSalesView.vue')
   },
   {
+    path: '/user/user/seller-after-sales/:id',
+    name: 'user-seller-after-sales',
+    component: () => import('../views/UserSellerAfterSalesView.vue')
+  },
+  {
     path: '/user/profile/:id',
     name: 'user-profile',
     component: () => import('../views/UserProfileView.vue')

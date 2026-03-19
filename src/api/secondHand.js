@@ -141,6 +141,13 @@ export function cancelOrder(id) {
   })
 }
 
+export function cancelTradeItem(id) {
+  return request({
+    url: `/second-hand/order/cancelItem/${id}`,
+    method: 'post'
+  })
+}
+
 // 消息相关接口
 export function sendMessage(data) {
   return request({

@@ -106,16 +106,13 @@ const form = reactive({
 
 const rules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 2, max: 20, message: '用户名长度在 2 到 20 个字符', trigger: 'blur' }
+    { required: true, message: '请输入用户名', trigger: 'blur' }
   ],
   phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+    { required: true, message: '请输入手机号', trigger: 'blur' }
   ],
   email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    { required: true, message: '请输入邮箱', trigger: 'blur' }
   ]
 }
 

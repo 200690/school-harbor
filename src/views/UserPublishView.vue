@@ -59,13 +59,28 @@
                     <el-button size="small" type="primary" @click="viewDetail(post)">
                       查看详情
                     </el-button>
-                    <el-button size="small" type="success" @click="editPost(post)">
-                        编辑
-                      </el-button>
-                    <el-button size="small" type="warning" @click="toggleStatus(post)">
-                      {{ post.status == 1 ? '下架' : '上架' }}
+                    <!-- 编辑按钮只在未交易状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1" size="small" type="success" @click="editPost(post)">
+                      编辑
                     </el-button>
-                    <el-button size="small" type="danger" @click="deletePost(post)">
+                    <!-- 上架/下架按钮只在未交易状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1" size="small" type="warning" @click="toggleStatus(post)">
+                      {{ post.status === 1 ? '下架' : '上架' }}
+                    </el-button>
+                    <!-- 交易中状态可以取消交易 -->
+                    <el-button v-if="post.status === 2" size="small" type="danger" @click="cancelTrade(post)">
+                      取消交易
+                    </el-button>
+                    <!-- 非上架和下架的二手交易可以联系买家 -->
+                    <el-button v-if="post.type === 'second-hand' && post.status !== 0 && post.status !== 1" size="small" type="info" @click="contactBuyer(post)">
+                      联系买家
+                    </el-button>
+                    <!-- 二手交易可以售后 -->
+                    <el-button v-if="post.type === 'second-hand' && (post.status === 0 || post.status === 3 || post.status === 4)" size="small" type="warning" @click="sellerAfterSales(post.id)">
+                      售后
+                    </el-button>
+                    <!-- 删除按钮只在未交易或交易取消状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1 || post.status === 4" size="small" type="danger" @click="deletePost(post)">
                       删除
                     </el-button>
                   </div>
@@ -111,16 +126,31 @@
                     <el-button size="small" type="primary" @click="viewDetail(post)">
                       查看详情
                     </el-button>
-                    <el-button size="small" type="success" @click="editPost(post)">
+                    <!-- 编辑按钮只在未交易状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1" size="small" type="success" @click="editPost(post)">
                       编辑
                     </el-button>
                     <el-button v-if="post.type === 'part-time'" size="small" type="info" @click="manageApplications(post)">
                       管理申请
                     </el-button>
-                    <el-button size="small" type="warning" @click="toggleStatus(post)">
-                      {{ post.status == 1 ? '下架' : '上架' }}
+                    <!-- 上架/下架按钮只在未交易状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1" size="small" type="warning" @click="toggleStatus(post)">
+                      {{ post.status === 1 ? '下架' : '上架' }}
                     </el-button>
-                    <el-button size="small" type="danger" @click="deletePost(post)">
+                    <!-- 交易中状态可以取消交易 -->
+                    <el-button v-if="post.status === 2" size="small" type="danger" @click="cancelTrade(post)">
+                      取消交易
+                    </el-button>
+                    <!-- 非上架和下架的二手交易可以联系买家 -->
+                    <el-button v-if="post.type === 'second-hand' && post.status !== 0 && post.status !== 1" size="small" type="info" @click="contactBuyer(post)">
+                      联系买家
+                    </el-button>
+                    <!-- 二手交易可以售后 -->
+                    <el-button v-if="post.type === 'second-hand' && (post.status === 0 || post.status === 3 || post.status === 4)" size="small" type="warning" @click="sellerAfterSales(post.id)">
+                      售后
+                    </el-button>
+                    <!-- 删除按钮只在未交易或交易取消状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1 || post.status === 4" size="small" type="danger" @click="deletePost(post)">
                       删除
                     </el-button>
                   </div>
@@ -166,16 +196,31 @@
                     <el-button size="small" type="primary" @click="viewDetail(post)">
                       查看详情
                     </el-button>
-                    <el-button size="small" type="success" @click="editPost(post)">
+                    <!-- 编辑按钮只在未交易状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1" size="small" type="success" @click="editPost(post)">
                       编辑
                     </el-button>
                     <el-button v-if="post.type === 'part-time'" size="small" type="info" @click="manageApplications(post)">
                       管理申请
                     </el-button>
-                    <el-button size="small" type="warning" @click="toggleStatus(post)">
-                      {{ post.status == 1 ? '下架' : '上架' }}
+                    <!-- 上架/下架按钮只在未交易状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1" size="small" type="warning" @click="toggleStatus(post)">
+                      {{ post.status === 1 ? '下架' : '上架' }}
                     </el-button>
-                    <el-button size="small" type="danger" @click="deletePost(post)">
+                    <!-- 交易中状态可以取消交易 -->
+                    <el-button v-if="post.status === 2" size="small" type="danger" @click="cancelTrade(post)">
+                      取消交易
+                    </el-button>
+                    <!-- 非上架和下架的二手交易可以联系买家 -->
+                    <el-button v-if="post.type === 'second-hand' && post.status !== 0 && post.status !== 1" size="small" type="info" @click="contactBuyer(post)">
+                      联系买家
+                    </el-button>
+                    <!-- 二手交易可以售后 -->
+                    <el-button v-if="post.type === 'second-hand' && (post.status === 0 || post.status === 3 || post.status === 4)" size="small" type="warning" @click="sellerAfterSales(post.id)">
+                      售后
+                    </el-button>
+                    <!-- 删除按钮只在未交易或交易取消状态显示 -->
+                    <el-button v-if="post.status === 0 || post.status === 1 || post.status === 4" size="small" type="danger" @click="deletePost(post)">
                       删除
                     </el-button>
                   </div>
@@ -205,7 +250,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getMySecondHandItems, updateSecondHandStatus, deleteSecondHandItem } from '@/api/secondHand'
+import { getMySecondHandItems, updateSecondHandStatus, deleteSecondHandItem, cancelTradeItem } from '@/api/secondHand'
 import { getMyPartTimeJobs, updatePartTimeStatus, deletePartTimeJob } from '@/api/partTime'
 
 const router = useRouter()
@@ -320,6 +365,33 @@ const deletePost = async (post) => {
   })
 }
 
+// 取消交易
+const cancelTrade = async (post) => {
+  ElMessageBox.confirm('确定要取消这个交易吗？', '取消交易', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      // 调用取消交易API
+      const response = await cancelTradeItem(post.id)
+      
+      if (response.code === 1) {
+        ElMessage.success('交易已取消')
+        // 刷新页面，重新加载数据
+        location.reload()
+      } else {
+        ElMessage.error(response.msg || '取消交易失败')
+      }
+    } catch (error) {
+      console.error('取消交易失败:', error)
+      ElMessage.error('取消交易失败，请重试')
+    }
+  }).catch(() => {
+    // 取消操作
+  })
+}
+
 // 管理申请
 const manageApplications = (post) => {
   console.log('跳转到管理申请页面，jobId:', post.id)
@@ -345,6 +417,38 @@ const manageApplications = (post) => {
   .catch(error => {
     console.error('获取申请列表失败:', error)
   })
+}
+
+// 联系买家
+const contactBuyer = (post) => {
+  if (!post) {
+    ElMessage.error('无法获取商品信息')
+    return
+  }
+  
+  if (!post.buyerId) {
+    ElMessage.error('无法获取买家信息')
+    return
+  }
+  
+  // 跳转到聊天界面
+  router.push({
+    path: '/chat',
+    query: {
+      otherUserId: post.buyerId,
+      otherUserNickname: post.buyerName || '买家',
+      otherUserAvatar: post.buyerAvatar || '/default-avatar.png',
+      itemId: post.id,
+      itemTitle: post.title,
+      itemPrice: post.price
+    }
+  })
+}
+
+// 卖家售后
+const sellerAfterSales = (id) => {
+  // 跳转到卖家售后页面
+  router.push(`/user/user/seller-after-sales/${id}`)
 }
 
 // 分页处理
@@ -448,7 +552,11 @@ onMounted(async () => {
         status: item.status !== undefined ? parseInt(item.status) : 1,
         publishTime: item.createTime || item.publishTime,
         viewCount: item.viewCount || 0,
-        applicantCount: item.applicantCount || 0
+        applicantCount: item.applicantCount || 0,
+        // 买家信息
+        buyerId: item.buyerId,
+        buyerName: item.buyerName,
+        buyerAvatar: item.buyerAvatar
       })),
       ...transformedPartTimeItems
     ]

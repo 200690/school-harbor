@@ -17,12 +17,11 @@
       <div class="status-filter">
         <el-button-group>
           <el-button :type="activeStatus === 'all' ? 'primary' : 'default'" @click="activeStatus = 'all'">全部</el-button>
-          <el-button :type="activeStatus === 'pending' ? 'primary' : 'default'" @click="activeStatus = 'pending'">待付款</el-button>
-          <el-button :type="activeStatus === 'shipped' ? 'primary' : 'default'" @click="activeStatus = 'shipped'">待发货</el-button>
-          <el-button :type="activeStatus === 'paid' ? 'primary' : 'default'" @click="activeStatus = 'paid'">待收货</el-button>
-          <el-button :type="activeStatus === 'delivered' ? 'primary' : 'default'" @click="activeStatus = 'delivered'">待评价</el-button>
-          <el-button :type="activeStatus === 'completed' ? 'primary' : 'default'" @click="activeStatus = 'completed'">已完成</el-button>
-          <el-button :type="activeStatus === 'canceled' ? 'primary' : 'default'" @click="activeStatus = 'canceled'">已取消</el-button>
+          <el-button :type="activeStatus === '0' ? 'primary' : 'default'" @click="activeStatus = '0'">交易成功</el-button>
+          <el-button :type="activeStatus === '1' ? 'primary' : 'default'" @click="activeStatus = '1'">上架</el-button>
+          <el-button :type="activeStatus === '2' ? 'primary' : 'default'" @click="activeStatus = '2'">交易中</el-button>
+          <el-button :type="activeStatus === '3' ? 'primary' : 'default'" @click="activeStatus = '3'">交易完成</el-button>
+          <el-button :type="activeStatus === '4' ? 'primary' : 'default'" @click="activeStatus = '4'">交易取消</el-button>
         </el-button-group>
       </div>
 
@@ -58,25 +57,31 @@
               <el-button size="small" type="primary" @click="viewOrderDetail(purchase.id)">
                 查看订单详情
               </el-button>
+              <!-- 上架状态可以付款 -->
               <el-button v-if="purchase.status === 1" size="small" type="success" @click="payOrder(purchase.id)">
                 立即付款
               </el-button>
-              <el-button v-if="purchase.status === 3" size="small" type="warning" @click="confirmReceipt(purchase.id)">
+              <!-- 交易中状态可以确认收货和取消订单 -->
+              <el-button v-if="purchase.status === 2" size="small" type="warning" @click="confirmReceipt(purchase.id)">
                 确认收货
               </el-button>
-              <el-button v-if="purchase.status === 4" size="small" type="info" @click="evaluateItem(purchase.id)">
-                评价商品
-              </el-button>
-              <el-button v-if="purchase.status === 1" size="small" type="danger" @click="cancelOrder(purchase.id)">
+              <el-button v-if="purchase.status === 2" size="small" type="danger" @click="cancelOrder(purchase.id)">
                 取消订单
               </el-button>
+              <!-- 交易完成状态可以评价 -->
+              <el-button v-if="purchase.status === 3" size="small" type="info" @click="evaluateItem(purchase.id)">
+                评价商品
+              </el-button>
+              <!-- 举报按钮始终显示 -->
               <el-button size="small" type="danger" @click="reportOrder(purchase.id)">
                 举报
               </el-button>
-              <el-button v-if="purchase.status === 1 || purchase.status === 2" size="small" type="warning" @click="contactSeller(purchase.id)">
+              <!-- 上架和交易中状态可以联系卖家 -->
+              <el-button v-if="purchase.status === 1 || purchase.status === 2" size="small" type="warning" @click="contactSeller(purchase)">
                 联系卖家
               </el-button>
-              <el-button v-if="purchase.status !== 1 && purchase.status !== 2" size="small" type="warning" @click="afterSales(purchase.id)">
+              <!-- 交易成功、交易完成和交易取消状态可以售后 -->
+              <el-button v-if="purchase.status === 0 || purchase.status === 3 || purchase.status === 4" size="small" type="warning" @click="afterSales(purchase.id)">
                 售后
               </el-button>
             </div>
@@ -167,32 +172,22 @@ const filteredPurchases = computed(() => {
   if (activeStatus.value === 'all') {
     return purchases.value
   }
-  // 映射状态值
-  const statusMap = {
-    'pending': 1, // 待付款
-    'shipped': 2, // 待发货
-    'paid': 3, // 待收货
-    'delivered': 4, // 待评价
-    'completed': 5, // 已完成
-    'canceled': 6 // 已取消
-  }
-  return purchases.value.filter(purchase => purchase.status === statusMap[activeStatus.value])
+  // 直接使用状态码进行筛选
+  return purchases.value.filter(purchase => purchase.status === parseInt(activeStatus.value))
 })
 
 // 根据状态获取标签类型
 const getStatusType = (status) => {
   switch (status) {
-    case 1:
-      return 'warning'
-    case 2:
-      return 'info'
-    case 3:
-      return 'primary'
-    case 4:
-      return 'info'
-    case 5:
+    case 0:
       return 'success'
-    case 6:
+    case 1:
+      return 'success'
+    case 2:
+      return 'warning'
+    case 3:
+      return 'success'
+    case 4:
       return 'danger'
     default:
       return 'default'
@@ -202,18 +197,16 @@ const getStatusType = (status) => {
 // 根据状态获取文本
 const getStatusText = (status) => {
   switch (status) {
+    case 0:
+      return '交易成功'
     case 1:
-      return '待付款'
+      return '上架'
     case 2:
-      return '待发货'
+      return '交易中'
     case 3:
-      return '待收货'
+      return '交易完成'
     case 4:
-      return '待评价'
-    case 5:
-      return '已完成'
-    case 6:
-      return '已取消'
+      return '交易取消'
     default:
       return '未知状态'
   }
@@ -345,15 +338,29 @@ const reportOrder = (id) => {
 
 // 售后
 const afterSales = (id) => {
-  ElMessage.info('跳转到售后页面')
-  // 这里应该导航到售后页面
-  router.push(`/user/user/after-sales/${id}`)
+  // 跳转到售后页面，不带聊天区域
+  router.push(`/user/user/after-sales/${id}?chat=false`)
 }
 
 // 联系卖家
-const contactSeller = (id) => {
-  ElMessage.info(`联系卖家功能: ${id}`)
-  // 这里应该实现联系卖家功能
+const contactSeller = (purchase) => {
+  if (!purchase || !purchase.sellerId) {
+    ElMessage.error('无法获取卖家信息')
+    return
+  }
+  
+  // 跳转到聊天界面,与商品详情页保持一致
+  router.push({
+    path: '/chat',
+    query: {
+      otherUserId: purchase.sellerId,
+      otherUserNickname: purchase.sellerName || '卖家',
+      otherUserAvatar: purchase.sellerAvatar || '/default-avatar.png',
+      itemId: purchase.itemId,
+      itemTitle: purchase.itemTitle,
+      itemPrice: purchase.price
+    }
+  })
 }
 
 // 分页处理

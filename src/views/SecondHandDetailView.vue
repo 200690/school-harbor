@@ -92,6 +92,9 @@
               <span class="meta-item"><i class="el-icon-view"></i> {{ itemDetail.viewCount || 0 }} 浏览</span>
               <span class="meta-item"><i class="el-icon-star-off"></i> {{ itemDetail.favoriteCount || 0 }} 收藏</span>
               <span class="meta-item"><i class="el-icon-time"></i> {{ itemDetail.publishTime }}</span>
+              <span class="meta-item status-item">
+                <el-tag :type="getStatusType(itemDetail.status)">{{ getStatusText(itemDetail.status) }}</el-tag>
+              </span>
             </div>
             <div class="item-location">
               <i class="el-icon-location"></i>
@@ -106,7 +109,7 @@
                   <h4>{{ itemDetail.sellerName || '卖家' }}</h4>
                 </div>
               </router-link>
-              <el-button v-if="isSeller" type="primary" class="contact-btn" @click="editItem">
+              <el-button v-if="isSeller && itemDetail.status !== 3" type="primary" class="contact-btn" @click="editItem">
                 <i class="el-icon-edit"></i> 编辑
               </el-button>
               <el-button v-if="!isSeller" type="primary" class="contact-btn" @click="contactSeller">
@@ -242,8 +245,48 @@ const isSeller = computed(() => {
 
 // 计算是否已收藏
 const isFavorite = computed(() => {
+  // 优先使用itemDetail中的isFavorite字段
+  if (itemDetail.value && itemDetail.value.isFavorite !== undefined) {
+    return itemDetail.value.isFavorite
+  }
   return isFavorited.value
 })
+
+// 根据状态获取标签类型
+const getStatusType = (status) => {
+  switch (status) {
+    case 0:
+      return 'info'
+    case 1:
+      return 'success'
+    case 2:
+      return 'warning'
+    case 3:
+      return 'success'
+    case 4:
+      return 'danger'
+    default:
+      return 'default'
+  }
+}
+
+// 根据状态获取文本
+const getStatusText = (status) => {
+  switch (status) {
+    case 0:
+      return '下架'
+    case 1:
+      return '上架'
+    case 2:
+      return '交易中'
+    case 3:
+      return '交易完成'
+    case 4:
+      return '交易取消'
+    default:
+      return '未知状态'
+  }
+}
 
 // 切换收藏状态
 const toggleFavorite = async () => {
@@ -251,10 +294,18 @@ const toggleFavorite = async () => {
     await secondHandStore.removeFavorite(Number(itemId.value))
     ElMessage.success('已取消收藏')
     isFavorited.value = false
+    // 更新itemDetail中的isFavorite字段
+    if (itemDetail.value) {
+      itemDetail.value.isFavorite = false
+    }
   } else {
     await secondHandStore.addFavorite(itemDetail.value)
     ElMessage.success('收藏成功')
     isFavorited.value = true
+    // 更新itemDetail中的isFavorite字段
+    if (itemDetail.value) {
+      itemDetail.value.isFavorite = true
+    }
   }
 }
 
@@ -887,6 +938,15 @@ const handleClearCache = () => {
 .meta-item i {
   margin-right: 6px;
   color: #409EFF;
+}
+
+.status-item {
+  margin-left: 10px;
+}
+
+.status-item .el-tag {
+  font-size: 12px;
+  padding: 2px 8px;
 }
 
 .item-location {

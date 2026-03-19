@@ -55,16 +55,13 @@ export default {
       loading: false,
       rules: {
         username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 3, max: 20, message: '用户名长度在3-20位之间', trigger: 'blur' }
+          { required: true, message: '请输入用户名', trigger: 'blur' }
         ],
         phone: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+          { required: true, message: '请输入手机号', trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 6, message: '密码长度至少为6位', trigger: 'blur' }
+          { required: true, message: '请输入密码', trigger: 'blur' }
         ],
         confirmPassword: [
           { required: true, message: '请确认密码', trigger: 'blur' },
