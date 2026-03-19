@@ -62,6 +62,60 @@ public class PublishNotificationProducer {
     }
 
     /**
+     * 发送订单创建成功通知（用于买家）
+     *
+     * @param orderId  订单ID
+     * @param userId   用户ID
+     * @param message  消息内容
+     */
+    public void sendOrderCreateNotificationForBuyer(Long orderId, Long userId, String message) {
+        sendCustomNotification(orderId, userId, message, BusinessType.ITEM);
+    }
+
+    /**
+     * 发送订单创建成功通知（用于卖家）
+     *
+     * @param orderId  订单ID
+     * @param userId   用户ID
+     * @param message  消息内容
+     */
+    public void sendOrderCreateNotificationForSeller(Long orderId, Long userId, String message) {
+        sendCustomNotification(orderId, userId, message, BusinessType.ITEM);
+    }
+
+    /**
+     * 发送自定义通知消息
+     *
+     * @param businessId   业务ID
+     * @param userId       用户ID
+     * @param message      消息内容
+     * @param businessType 业务类型
+     */
+    private void sendCustomNotification(Long businessId, Long userId, String message, BusinessType businessType) {
+        try {
+            PublishNotificationMessageDTO messageDTO = new PublishNotificationMessageDTO();
+            messageDTO.setMessageId(generateMessageId(businessId, businessType));
+            messageDTO.setBusinessId(businessId);
+            messageDTO.setUserId(userId);
+            messageDTO.setTitle("");
+            messageDTO.setBusinessType(businessType.name());
+            messageDTO.setMessage(message);
+            messageDTO.setStatus(0);
+            messageDTO.setCreateTime(LocalDateTime.now());
+
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE_NAME,
+                    RabbitMQConfig.PUBLISH_NOTIFICATION_ROUTING_KEY,
+                    messageDTO);
+            log.info("发送{}自定义通知消息成功，businessId: {}, userId: {}",
+                    businessType.getDisplayName(), businessId, userId);
+        } catch (Exception e) {
+            log.error("发送{}自定义通知消息失败，businessId: {}, error: {}",
+                    businessType.getDisplayName(), businessId, e.getMessage(), e);
+        }
+    }
+
+    /**
      * 发送发布成功通知消息
      *
      * @param businessId   业务ID

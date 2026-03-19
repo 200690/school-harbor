@@ -13,4 +13,6 @@ public interface IPayOrderService extends IService<PayOrderPo> {
      * @param orderMessageDTO 订单消息
      */
     void createPayOrderFromMessage(OrderMessageDTO orderMessageDTO);
+
+    void updateOrderStatus(Long itemId, Integer status);
 }

@@ -20,6 +20,11 @@ import java.time.LocalDateTime;
 public class PayOrderImpl extends ServiceImpl<PayOrderMapper, PayOrderPo> implements IPayOrderService {
     private final UserClient userClient;
 
+    /**
+     * 根据订单消息创建支付订单
+     *
+     * @param orderMessageDTO 订单消息
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createPayOrderFromMessage(OrderMessageDTO orderMessageDTO) {
@@ -37,14 +42,25 @@ public class PayOrderImpl extends ServiceImpl<PayOrderMapper, PayOrderPo> implem
         payOrderPo.setSellerId(orderMessageDTO.getSellerId());
         payOrderPo.setTotalAmount(orderMessageDTO.getTotalAmount());
         payOrderPo.setPayAmount(orderMessageDTO.getTotalAmount()); // 实付金额等于总金额
-        payOrderPo.setPayStatus(2); // 支付成功状态（因为扣款已经在second-hand服务完成）
-        payOrderPo.setPayTime(LocalDateTime.now());
-        payOrderPo.setRefundStatus(0); // 无退款
+        payOrderPo.setStatus(1);
 
         // 保存支付订单到数据库
         this.save(payOrderPo);
 
         log.info("支付订单创建成功，支付订单号: {}, 业务订单号: {}", payOrderNo, orderMessageDTO.getOrderNo());
+    }
+
+    /**
+     * 更新订单状态
+     *
+     * @param itemId   商品ID
+     * @param status   订单状态
+     */
+    @Override
+    public void updateOrderStatus(Long itemId, Integer status) {
+        PayOrderPo payOrderPo = lambdaQuery().eq(PayOrderPo::getBizOrderId, itemId).one();
+        payOrderPo.setStatus(status == 0 ? 0 : 2);
+        this.updateById(payOrderPo);
     }
 
     /**

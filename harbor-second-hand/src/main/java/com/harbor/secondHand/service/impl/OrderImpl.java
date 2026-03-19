@@ -15,6 +15,7 @@ import com.harbor.secondHand.domain.vo.OrderListItemVO;
 import com.harbor.secondHand.mapper.OrderMapper;
 import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.service.IOrder;
+import com.harbor.utils.client.PayClient;
 import com.harbor.utils.client.UserClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import com.harbor.secondHand.producer.OrderMessageProducer;
 import com.harbor.secondHand.producer.PublishNotificationProducer;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -35,11 +37,19 @@ import java.util.List;
 @Slf4j
 public class OrderImpl extends ServiceImpl<OrderMapper, OrderPO> implements IOrder {
     private final SecondHandMapper secondHandMapper;
-    private final UserClient userClient;
     private final OrderMessageProducer orderMessageProducer;
     private final PublishNotificationProducer publishNotificationProducer;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private final UserClient userClient;
+    private final PayClient payClient;
+
+    /**
+     * 获取当前用户的订单列表
+     *
+     * @param pageQuery 分页参数
+     * @return 订单列表
+     */
     @Override
     public PageDTO<OrderListItemVO> getMyOrders(PageQuery pageQuery) {
         Long userId = UserContext.getUser();
@@ -67,32 +77,55 @@ public class OrderImpl extends ServiceImpl<OrderMapper, OrderPO> implements IOrd
     /**
      * 确认收货
      *
-     * @param ItemId 订单ID
+     * @param id 订单ID
      */
     @Override
-    public void confirmReceipt(Long ItemId) {
-        Assert.notNull(ItemId, "订单ID不能为空");
-        OrderPO orderPO = this.getById(ItemId);
+    @Transactional(rollbackFor = Exception.class)
+    public void confirmReceipt(Long id) {
+        // 修改订单状态
+        Assert.notNull(id, "订单ID不能为空");
+        OrderPO orderPO = this.getById(id);
         Assert.notNull(orderPO, "订单不存在");
-        Assert.isTrue(orderPO.getStatus() == 3, "订单状态错误");
-        orderPO.setStatus(4);
-        //消息队列发送TODO
+        Assert.isTrue(orderPO.getStatus() == 2, "订单状态错误");
+        orderPO.setStatus(0);
+        this.updateById(orderPO);
+        // 修改商品状态
+        ItemPO itemPO = secondHandMapper.selectById(orderPO.getItemId());
+        itemPO.setStatus(3);
+        secondHandMapper.updateById(itemPO);
+        // 消息队列发送给商家交易完成
+        sendOrderCompleteNotification(orderPO, itemPO);
+
+        //pay微服务修改订单状态
+        payClient.updateOrderStatus(orderPO.getId(), 0);
+        //user微服务扣减和增加冻结资金
+        userClient.orderComplete(orderPO.getBuyerId(), orderPO.getTotalAmount(), orderPO.getSellerId());
     }
 
+    /**
+     * 取消订单
+     *
+     * @param id 订单ID
+     */
     @Override
-    public void cancelOrder(Long ItemId) {
-        Assert.notNull(ItemId, "订单ID不能为空");
-        OrderPO orderPO = lambdaQuery().eq(OrderPO::getItemId, ItemId).one();
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelOrder(Long id) {
+        Assert.notNull(id, "订单ID不能为空");
+        OrderPO orderPO = this.getById(id);
         Assert.notNull(orderPO, "订单不存在");
-        Assert.isTrue(orderPO.getStatus() == 1 || orderPO.getStatus() == 2, "订单状态错误");
-        if(orderPO.getStatus() == 1){
-            orderPO.setStatus(4);
-            this.updateById(orderPO);
-        }else {
-            orderPO.setStatus(5);
-            this.updateById(orderPO);
-            //TODO 消息队列退款
-        }
+        Assert.isTrue(orderPO.getStatus() == 2, "订单状态错误");
+        orderPO.setStatus(4);
+        this.updateById(orderPO);
+        // 修改商品状态
+        ItemPO itemPO = secondHandMapper.selectById(orderPO.getItemId());
+        itemPO.setStatus(1);
+        secondHandMapper.updateById(itemPO);
+        // 消息队列通知卖家订单取消
+        sendOrderCancelNotification(orderPO, itemPO);
+
+        //pay微服务修改订单状态
+        payClient.updateOrderStatus(orderPO.getId(), 4);
+        userClient.refund(orderPO.getTotalAmount(), orderPO.getBuyerId());
     }
 
     /**
@@ -154,6 +187,43 @@ public class OrderImpl extends ServiceImpl<OrderMapper, OrderPO> implements IOrd
     }
 
     /**
+     * 取消商品
+     *
+     * @param itemId 商品ID
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelItem(Long itemId) {
+        // 根据商品ID获取最新的下单时间的订单
+        LambdaQueryWrapper<OrderPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderPO::getItemId, itemId);
+        queryWrapper.eq(OrderPO::getStatus, 2); // 只处理待发货状态的订单
+        queryWrapper.orderByDesc(OrderPO::getOrderTime);
+        OrderPO orderPO = this.getOne(queryWrapper);
+        
+        Assert.notNull(orderPO, "未找到待发货状态的订单");
+        
+        // 取消订单
+        orderPO.setStatus(4);
+        orderPO.setCancelTime(LocalDateTime.now());
+        orderPO.setCancelReason("卖家取消");
+        this.updateById(orderPO);
+        
+        // 修改商品状态为在售
+        ItemPO itemPO = secondHandMapper.selectById(itemId);
+        itemPO.setStatus(1);
+        secondHandMapper.updateById(itemPO);
+        
+        // 发送订单取消通知
+        sendOrderCancelNotification(orderPO, itemPO);
+        
+        //pay微服务修改订单状态
+        payClient.updateOrderStatus(orderPO.getId(), 4);
+        //user微服务退款
+        userClient.refund(orderPO.getTotalAmount(), orderPO.getBuyerId());
+    }
+
+    /**
      * 发送订单创建成功通知
      *
      * @param orderPO 订单信息
@@ -162,17 +232,87 @@ public class OrderImpl extends ServiceImpl<OrderMapper, OrderPO> implements IOrd
     private void sendOrderCreateNotification(OrderPO orderPO, ItemPO itemPO) {
         if (itemPO != null) {
             // 为买家发送通知
-            publishNotificationProducer.sendItemPublishNotification(
+            publishNotificationProducer.sendOrderCreateNotificationForBuyer(
                     orderPO.getId(),
                     orderPO.getBuyerId(),
                     String.format("订单已创建成功，商品：%s，订单号：%s", itemPO.getTitle(), orderPO.getOrderNo())
             );
 
             // 为卖家发送通知
-            publishNotificationProducer.sendItemPublishNotification(
+            publishNotificationProducer.sendOrderCreateNotificationForSeller(
                     orderPO.getId(),
                     orderPO.getSellerId(),
                     String.format("您的商品 %s 已被购买，订单号：%s", itemPO.getTitle(), orderPO.getOrderNo())
+            );
+        }
+    }
+
+    /**
+     * 发送订单完成通知
+     *
+     * @param orderPO 订单信息
+     * @param itemPO 商品信息
+     */
+    private void sendOrderCompleteNotification(OrderPO orderPO, ItemPO itemPO) {
+        if (itemPO != null) {
+            // 发送订单状态变更消息到消息队列
+            OrderMessageDTO orderMessageDTO = new OrderMessageDTO();
+            orderMessageDTO.setOrderId(orderPO.getId());
+            orderMessageDTO.setOrderNo(orderPO.getOrderNo());
+            orderMessageDTO.setItemId(orderPO.getItemId());
+            orderMessageDTO.setSellerId(orderPO.getSellerId());
+            orderMessageDTO.setBuyerId(orderPO.getBuyerId());
+            orderMessageDTO.setPrice(orderPO.getPrice());
+            orderMessageDTO.setTotalAmount(orderPO.getTotalAmount());
+            orderMessageProducer.sendOrderMessage(orderMessageDTO, "UPDATE");
+
+            // 为卖家发送通知
+            publishNotificationProducer.sendOrderCreateNotificationForSeller(
+                    orderPO.getId(),
+                    orderPO.getSellerId(),
+                    String.format("交易完成！您的商品 %s 已被确认收货，订单号：%s", itemPO.getTitle(), orderPO.getOrderNo())
+            );
+
+            // 为买家发送通知
+            publishNotificationProducer.sendOrderCreateNotificationForBuyer(
+                    orderPO.getId(),
+                    orderPO.getBuyerId(),
+                    String.format("交易完成！您购买的商品 %s 已确认收货，订单号：%s", itemPO.getTitle(), orderPO.getOrderNo())
+            );
+        }
+    }
+
+    /**
+     * 发送订单取消通知
+     *
+     * @param orderPO 订单信息
+     * @param itemPO 商品信息
+     */
+    private void sendOrderCancelNotification(OrderPO orderPO, ItemPO itemPO) {
+        if (itemPO != null) {
+            // 发送订单状态变更消息到消息队列
+            OrderMessageDTO orderMessageDTO = new OrderMessageDTO();
+            orderMessageDTO.setOrderId(orderPO.getId());
+            orderMessageDTO.setOrderNo(orderPO.getOrderNo());
+            orderMessageDTO.setItemId(orderPO.getItemId());
+            orderMessageDTO.setSellerId(orderPO.getSellerId());
+            orderMessageDTO.setBuyerId(orderPO.getBuyerId());
+            orderMessageDTO.setPrice(orderPO.getPrice());
+            orderMessageDTO.setTotalAmount(orderPO.getTotalAmount());
+            orderMessageProducer.sendOrderMessage(orderMessageDTO, "CANCEL");
+
+            // 为卖家发送通知
+            publishNotificationProducer.sendOrderCreateNotificationForSeller(
+                    orderPO.getId(),
+                    orderPO.getSellerId(),
+                    String.format("订单已取消！您的商品 %s 订单已取消，订单号：%s", itemPO.getTitle(), orderPO.getOrderNo())
+            );
+
+            // 为买家发送通知
+            publishNotificationProducer.sendOrderCreateNotificationForBuyer(
+                    orderPO.getId(),
+                    orderPO.getBuyerId(),
+                    String.format("订单已取消！您购买的商品 %s 订单已取消，订单号：%s", itemPO.getTitle(), orderPO.getOrderNo())
             );
         }
     }

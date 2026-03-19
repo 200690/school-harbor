@@ -18,4 +18,10 @@ public interface UserClient {
 
     @PostMapping("/balance/consume/{payNo}/{userId}")
     Result consume(@PathVariable BigDecimal payNo, @PathVariable Long userId);
+
+    @PostMapping("balance/refund/{payNo}/{userId}")
+    Result refund(@PathVariable BigDecimal payNo, @PathVariable Long userId);
+
+    @PostMapping("balance/orderComplete/{buyerId}/{sellerId}/{payNo}")
+    Result orderComplete(@PathVariable Long buyerId , @PathVariable BigDecimal payNo, @PathVariable Long sellerId);
 }

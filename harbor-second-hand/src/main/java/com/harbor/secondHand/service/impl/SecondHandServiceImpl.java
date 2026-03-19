@@ -11,11 +11,13 @@ import com.harbor.common.domain.PageQuery;
 import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
+import com.harbor.secondHand.domain.po.FavoritePO;
 import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
 import com.harbor.secondHand.domain.vo.MyItem;
 import com.harbor.secondHand.mapper.BrowseHistoryMapper;
+import com.harbor.secondHand.mapper.FavoriteMapper;
 import com.harbor.secondHand.mapper.SecondHandMapper;
 import com.harbor.secondHand.producer.ItemMessageProducer;
 import com.harbor.secondHand.producer.PublishNotificationProducer;
@@ -40,6 +42,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO> implements ISecondHandService {
     private final BrowseHistoryMapper browerHistory;
+    private final FavoriteMapper favoriteMapper;
 
     private final UserClient userClient;
 
@@ -233,6 +236,12 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         UserInfoDTO userInfoDTO = userClient.info(itemDetailVO.getSellerId()).getData();
         itemDetailVO.setSellerName(userInfoDTO.getUsername());
         itemDetailVO.setSellerAvatar(userInfoDTO.getImg());
+
+        itemDetailVO.setStatus(item.getStatus());
+        FavoritePO favorite = favoriteMapper.selectOne(new LambdaQueryWrapper<FavoritePO>()
+                .eq(FavoritePO::getUserId, UserContext.getUser())
+                .eq(FavoritePO::getItemId, id));
+        itemDetailVO.setIsFavorite(favorite != null);
 
         return itemDetailVO;
     }

@@ -73,10 +73,49 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
 //        更新余额和冻结金额
         one.setBalance(one.getBalance().subtract(payNo))
                 .setUpdateTime(LocalDateTime.now())
-                .setTotalConsume(one.getTotalConsume().add(payNo))
                 .setFrozenBalance(one.getFrozenBalance().add(payNo));
         this.updateById(one);
-        // 发送消息通知消息微服务更新用户余额
+        this.sendUserMessage(userId, one);
+    }
+
+    // 退款
+    @Override
+    public void refund(BigDecimal payNo, Long userId) {
+        Assert.notNull(payNo, "支付金额不能为空");
+        Assert.notNull(userId, "用户id不能为空");
+        UserBalance one = lambdaQuery().eq(UserBalance::getUserId, userId).one();
+        Assert.notNull(one, "用户不存在或已被封禁");
+        Assert.isTrue(one.getFrozenBalance().compareTo(payNo) >= 0, "冻结金额不足");
+        one.setBalance(one.getBalance().add(payNo))
+                .setUpdateTime(LocalDateTime.now())
+                .setFrozenBalance(one.getFrozenBalance().subtract(payNo));
+        this.updateById(one);
+        this.sendUserMessage(userId, one);
+    }
+
+    // 订单完成
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void orderComplete(Long buyerId, BigDecimal payNo, Long sellerId) {
+        UserBalance buyerBalance = this.getById(buyerId);
+        UserBalance sellerBalance = this.getById(sellerId);
+        Assert.notNull(buyerBalance, "买家不存在");
+        Assert.notNull(sellerBalance, "卖家不存在");
+        buyerBalance.setBalance(buyerBalance.getBalance().subtract(payNo))
+                .setUpdateTime(LocalDateTime.now())
+                .setTotalConsume(buyerBalance.getTotalConsume().add(payNo))
+                .setFrozenBalance(buyerBalance.getFrozenBalance().subtract(payNo));
+        sellerBalance.setBalance(sellerBalance.getBalance().add(payNo))
+                .setUpdateTime(LocalDateTime.now())
+                .setTotalRecharge(sellerBalance.getTotalRecharge().add(payNo));
+        this.updateById(buyerBalance);
+        this.updateById(sellerBalance);
+        this.sendUserMessage(buyerId, buyerBalance);
+        this.sendUserMessage(sellerId, sellerBalance);
+    }
+
+    // 发送消息通知消息微服务更新用户余额
+    private void sendUserMessage(Long userId, UserBalance one) {
         User user = userMapper.selectById(userId);
         UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
         messageDTO.setBalance(one.getBalance());

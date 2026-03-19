@@ -42,17 +42,8 @@ public class PayOrderPo {
     /** 优惠金额 */
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
-    /** 支付状态（0:待支付, 1:支付中, 2:支付成功, 3:支付失败, 4:已退款） */
-    private Integer payStatus;
-
-    /** 支付时间 */
-    private LocalDateTime payTime;
-
-    /** 退款状态（0:无退款, 1:退款中, 2:已退款） */
-    private Integer refundStatus = 0;
-
-    /** 退款金额 */
-    private BigDecimal refundAmount = BigDecimal.ZERO;
+    /** 订单状态(1-交易中。0-交易完成，2-取消交易） */
+    private Integer status = 0;
 
     /** 退款时间 */
     private LocalDateTime refundTime;

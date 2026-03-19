@@ -44,6 +44,14 @@ public class OrderController {
         return Result.success();
     }
 
+    @ApiOperation(("商家取消订单"))
+    @PostMapping("cancelItem/{id}")
+    public Result<Void> cancelItem(@PathVariable Long id) {
+        log.info("商家取消订单, id: {}", id);
+        order.cancelItem(id);
+        return Result.success();
+    }
+
     @ApiOperation("创建订单")
     @PostMapping("create")
     public Result createOrder(@RequestBody CreateOrderDTO createOrderDTO) {

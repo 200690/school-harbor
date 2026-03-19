@@ -10,9 +10,11 @@ import com.harbor.secondHand.domain.vo.OrderListItemVO;
 public interface IOrder extends IService<OrderPO> {
     PageDTO<OrderListItemVO> getMyOrders(PageQuery pageQuery);
 
-    void confirmReceipt(Long ItemId);
+    void confirmReceipt(Long id);
 
-    void cancelOrder(Long ItemId);
+    void cancelOrder(Long id);
 
     void createOrder(CreateOrderDTO createOrderDTO);
+
+    void cancelItem(Long itemId);
 }

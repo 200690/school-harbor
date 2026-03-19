@@ -32,7 +32,7 @@ public class ItemPO {
     private String location;              // 具体位置
     private Integer viewCount = 0;            // 浏览次数
     private Integer favoriteCount = 0;        // 收藏次数
-    private Integer status;               // 状态：0-下架，1-上架，2-已售出，3-审核中，4-审核不通过
+    private Integer status;               // 状态：0-下架，1-上架，2-交易中，3-交易完成，4-交易取消
     private String auditRemark;           // 审核备注
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime publishTime;    // 发布时间

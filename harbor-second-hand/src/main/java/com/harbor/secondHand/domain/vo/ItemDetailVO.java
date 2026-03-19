@@ -40,7 +40,8 @@ public class ItemDetailVO {
     private LocalDateTime updateTime;
 
     // 交互状态
-//    private Boolean isFavorite;                     // 当前用户是否收藏
+    private Boolean isFavorite;                     // 当前用户是否收藏
+    private Integer status;
 
     // 关联信息
     private List<ItemListItemVO> relatedItems;      // 相关商品推荐
