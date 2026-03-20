@@ -58,7 +58,7 @@ public class PublishNotificationProducer {
      * @param title    商品标题
      */
     public void sendItemDeleteNotification(Long itemId, Long userId, String title) {
-        sendPublishNotification(itemId, userId, title, BusinessType.ITEM);
+        sendDeleteNotification(itemId, userId, title, BusinessType.ITEM);
     }
 
     /**
@@ -172,6 +172,50 @@ public class PublishNotificationProducer {
      */
     private String buildMessage(String title, BusinessType businessType) {
         return String.format("恭喜！您的%s【%s】已成功发布，请耐心等待审核或买家联系。",
+                businessType.getDisplayName(), title);
+    }
+
+    /**
+     * 发送删除通知消息
+     *
+     * @param businessId   业务ID
+     * @param userId       发布者用户ID
+     * @param title        标题
+     * @param businessType 业务类型
+     */
+    private void sendDeleteNotification(Long businessId, Long userId, String title, BusinessType businessType) {
+        try {
+            PublishNotificationMessageDTO message = new PublishNotificationMessageDTO();
+            message.setMessageId(generateMessageId(businessId, businessType));
+            message.setBusinessId(businessId);
+            message.setUserId(userId);
+            message.setTitle(title);
+            message.setBusinessType(businessType.name());
+            message.setMessage(buildDeleteMessage(title, businessType));
+            message.setStatus(0);
+            message.setCreateTime(LocalDateTime.now());
+
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE_NAME,
+                    RabbitMQConfig.PUBLISH_NOTIFICATION_ROUTING_KEY,
+                    message);
+            log.info("发送{}删除通知消息成功，businessId: {}, userId: {}",
+                    businessType.getDisplayName(), businessId, userId);
+        } catch (Exception e) {
+            log.error("发送{}删除通知消息失败，businessId: {}, error: {}",
+                    businessType.getDisplayName(), businessId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 构建删除消息内容
+     *
+     * @param title        标题
+     * @param businessType 业务类型
+     * @return 消息内容
+     */
+    private String buildDeleteMessage(String title, BusinessType businessType) {
+        return String.format("您发布的%s【%s】已被管理员下架。",
                 businessType.getDisplayName(), title);
     }
 }

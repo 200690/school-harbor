@@ -78,4 +78,18 @@ public class PartTimeController {
         log.info("获取兼职详情: {}", id);
         return Result.success(partTimeService.getJobById(id));
     }
+
+    @ApiOperation("获取所有兼职列表接口")
+    @PostMapping("/getAll")
+    public Result<PageDTO<PartTimeVO>> getAll(PageQuery pageQuery){
+        return Result.success(partTimeService.getAll(pageQuery));
+    }
+
+    @ApiOperation("删除已发布的兼职")
+    @DeleteMapping("/deleteItem/{id}")
+    public Result<Void> deleteItem(@PathVariable Long id){
+        log.info("删除已发布的兼职: {}", id);
+        partTimeService.deleteItem(id);
+        return Result.success();
+    }
 }

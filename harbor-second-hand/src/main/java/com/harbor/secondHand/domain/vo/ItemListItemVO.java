@@ -17,6 +17,7 @@ public class ItemListItemVO {
     private String conditionDesc;               // 成色描述（如"95新"）
     private String school;                      // 所在学校
     private String location;                     // 具体位置
+    private Integer status;                     // 状态（0:已下架, 1:招聘中, 2:已招满, 3:已截止）
 
     // 卖家信息
     private Long sellerId;

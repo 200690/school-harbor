@@ -29,9 +29,7 @@ public class PartTimeVO extends BaseJobStatusVO{
 
     private String salaryDesc;                  // 薪资说明
 
-    private Integer type;                       // 兼职类型
-
-    private String typeName;                    // 兼职类型名称（前端展示用）
+    private Integer type;                       // 兼职类型（1:校内, 2:校外, 3:实习）
 
     private String description;                 // 兼职描述
 
@@ -45,9 +43,7 @@ public class PartTimeVO extends BaseJobStatusVO{
 
     private String publisherName;                // 发布者名称
 
-    private Integer status;                      // 状态
-
-    private String statusName;                   // 状态名称（前端展示用）
+    private Integer status;                      // 状态（0:已下架, 1:招聘中, 2:已招满, 3:已截止）
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishTime;          // 发布时间

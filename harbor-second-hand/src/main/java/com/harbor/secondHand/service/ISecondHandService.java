@@ -28,4 +28,8 @@ public interface ISecondHandService extends IService<ItemPO> {
     ItemMainDTO getItemMain(Long id);
 
     void removeItemById(Long id);
+
+    PageDTO<ItemListItemVO> getAll(PageQuery pageQuery);
+
+    void deleteItem(Long id);
 }

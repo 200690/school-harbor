@@ -432,4 +432,62 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
             vo.setIsFavorite(false);
         }
     }
+
+    /**
+     * 获取所有兼职列表（管理员用）
+     *
+     * @param pageQuery 分页参数
+     * @return 兼职列表
+     */
+    @Override
+    public PageDTO<PartTimeVO> getAll(PageQuery pageQuery) {
+        Page<PartTimePO> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
+        Page<PartTimePO> partTimePage = this.page(page);
+
+        List<PartTimeVO> voList = partTimePage.getRecords().stream().map(partTimePO -> {
+            PartTimeVO partTimeVO = new PartTimeVO();
+            BeanUtil.copyProperties(partTimePO, partTimeVO, CopyOptions.create().ignoreNullValue());
+            this.setBaseJobStatusVO(partTimeVO, partTimeVO.getId(), partTimePO);
+            return partTimeVO;
+        }).toList();
+
+        return new PageDTO<>(partTimePage.getTotal(), partTimePage.getPages(), voList);
+    }
+
+    /**
+     * 删除已发布的兼职（管理员用）
+     *
+     * @param id 兼职ID
+     */
+    @Override
+    public void deleteItem(Long id) {
+        Assert.notNull(id, "兼职ID不能为空");
+        
+        // 查询兼职信息
+        PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, id).one();
+        Assert.notNull(partTimePO, "兼职不存在");
+        
+        // 删除兼职
+        this.removeById(id);
+        
+        // 发送兼职信息删除消息
+        jobMessageProducer.sendJobMessage(partTimePO, "DELETE");
+        
+        // 发送通知给发布者
+        publishNotificationProducer.sendJobDeleteNotification(
+                partTimePO.getId(),
+                partTimePO.getPublisherId(),
+                partTimePO.getTitle()
+        );
+        
+        // 清除推荐列表缓存
+        String recommendCacheKey = "job:list:recommend:*";
+        var keys = redisTemplate.keys(recommendCacheKey);
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+            log.info("清除兼职推荐列表缓存，数量: {}", keys.size());
+        }
+        
+        log.info("管理员删除兼职成功，jobId: {}, title: {}", id, partTimePO.getTitle());
+    }
 }

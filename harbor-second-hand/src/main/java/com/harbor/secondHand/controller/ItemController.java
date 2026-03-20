@@ -100,4 +100,18 @@ public class ItemController {
         log.info("获取商品大致信息接口: {}", id);
         return Result.success(secondHandService.getItemMain(id));
     }
+
+    @ApiOperation("获取所有商品列表接口")
+    @PostMapping("/getAll")
+    public Result<PageDTO<ItemListItemVO>> getAll(PageQuery pageQuery){
+        return Result.success(secondHandService.getAll(pageQuery));
+    }
+
+    @ApiOperation("删除已发布的商品")
+    @DeleteMapping("/delete/{id}")
+    public Result<Void> delete(@PathVariable Long id){
+        log.info("删除已发布的商品: {}", id);
+        secondHandService.deleteItem(id);
+        return Result.success();
+    }
 }

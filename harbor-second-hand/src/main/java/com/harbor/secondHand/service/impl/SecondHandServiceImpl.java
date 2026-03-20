@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
+import com.harbor.common.result.Result;
 import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
@@ -362,4 +363,88 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         this.updateById(itemPO);
     }
 
+    /**
+     * 获取所有商品列表（管理员用）
+     *
+     * @param pageQuery 分页参数
+     * @return 商品列表
+     */
+    @Override
+    public PageDTO<ItemListItemVO> getAll(PageQuery pageQuery) {
+        Page<ItemPO> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
+        Page<ItemPO> itemPage = this.page(page);
+
+        List<ItemListItemVO> voList = itemPage.getRecords().stream().map(itemPO -> {
+            ItemListItemVO itemListItemVO = new ItemListItemVO();
+            BeanUtil.copyProperties(itemPO, itemListItemVO, CopyOptions.create().ignoreNullValue());
+            Result<UserInfoDTO> info = userClient.info(itemPO.getSellerId());
+            itemListItemVO.setSellerName(info.getData().getUsername());
+            itemListItemVO.setSellerAvatar(info.getData().getImg());
+            return itemListItemVO;
+        }).toList();
+
+        return new PageDTO<>(itemPage.getTotal(), itemPage.getPages(), voList);
+    }
+
+    /**
+     * 删除已发布的商品（管理员用）
+     *
+     * @param id 商品ID
+     */
+    @Override
+    public void deleteItem(Long id) {
+        Assert.notNull(id, "商品ID不能为空");
+        
+        // 查询商品信息
+        ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, id).one();
+        Assert.notNull(itemPO, "商品不存在");
+        
+        // 删除商品
+        this.removeById(id);
+        
+        // 发送商品信息删除消息
+        itemMessageProducer.sendItemMessage(itemPO, "DELETE");
+        
+        // 发送通知给发布者
+        publishNotificationProducer.sendItemDeleteNotification(
+                itemPO.getId(),
+                itemPO.getSellerId(),
+                itemPO.getTitle()
+        );
+        
+        // 清除相关缓存
+        clearItemCache(id);
+        
+        log.info("管理员删除商品成功，itemId: {}, title: {}", id, itemPO.getTitle());
+    }
+
+    /**
+     * 清除二手商品相关缓存
+     *
+     * @param itemId 商品ID
+     */
+    private void clearItemCache(Long itemId) {
+        try {
+            // 清除商品详情缓存
+            String detailCacheKey = "item:detail:" + itemId;
+            redisTemplate.delete(detailCacheKey);
+            log.info("清除商品详情缓存: {}", detailCacheKey);
+
+            // 清除商品列表缓存（匹配所有用户的列表缓存）
+            String listCachePattern = "item:list:latest:*";
+            var keys = redisTemplate.keys(listCachePattern);
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+                log.info("清除商品列表缓存，数量: {}", keys.size());
+            }
+
+            // 清除推荐列表缓存
+            String recommendCacheKey = "item:list:recommend";
+            redisTemplate.delete(recommendCacheKey);
+            log.info("清除商品推荐列表缓存: {}", recommendCacheKey);
+
+        } catch (Exception e) {
+            log.error("清除商品缓存失败，itemId: {}, error: {}", itemId, e.getMessage());
+        }
+    }
 }
