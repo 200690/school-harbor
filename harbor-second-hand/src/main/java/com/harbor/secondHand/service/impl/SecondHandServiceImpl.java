@@ -11,6 +11,7 @@ import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
 import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
+import com.harbor.secondHand.domain.dto.ItemPageDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
 import com.harbor.secondHand.domain.po.FavoritePO;
 import com.harbor.secondHand.domain.po.ItemPO;
@@ -366,13 +367,19 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
     /**
      * 获取所有商品列表（管理员用）
      *
-     * @param pageQuery 分页参数
+     * @param itemPageDTO 分页参数
      * @return 商品列表
      */
     @Override
-    public PageDTO<ItemListItemVO> getAll(PageQuery pageQuery) {
-        Page<ItemPO> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
-        Page<ItemPO> itemPage = this.page(page);
+    public PageDTO<ItemListItemVO> getAll(ItemPageDTO itemPageDTO) {
+        Page<ItemPO> page = new Page<>(itemPageDTO.getPageNum(), itemPageDTO.getPageSize());
+        
+        Page<ItemPO> itemPage = lambdaQuery()
+                .like(StringUtils.hasText(itemPageDTO.getTitle()), ItemPO::getTitle, itemPageDTO.getTitle())
+                .eq(itemPageDTO.getStatus() != null, ItemPO::getStatus, itemPageDTO.getStatus())
+                .eq(itemPageDTO.getCondition() != null, ItemPO::getCondition, itemPageDTO.getCondition())
+                .orderByDesc(ItemPO::getPublishTime)
+                .page(page);
 
         List<ItemListItemVO> voList = itemPage.getRecords().stream().map(itemPO -> {
             ItemListItemVO itemListItemVO = new ItemListItemVO();

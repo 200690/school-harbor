@@ -5,6 +5,7 @@ import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
+import com.harbor.secondHand.domain.dto.ItemPageDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
 import com.harbor.secondHand.domain.vo.ItemListItemVO;
@@ -103,8 +104,8 @@ public class ItemController {
 
     @ApiOperation("获取所有商品列表接口")
     @PostMapping("/getAll")
-    public Result<PageDTO<ItemListItemVO>> getAll(PageQuery pageQuery){
-        return Result.success(secondHandService.getAll(pageQuery));
+    public Result<PageDTO<ItemListItemVO>> getAll(@RequestBody ItemPageDTO itemPageDTO){
+        return Result.success(secondHandService.getAll(itemPageDTO));
     }
 
     @ApiOperation("删除已发布的商品")

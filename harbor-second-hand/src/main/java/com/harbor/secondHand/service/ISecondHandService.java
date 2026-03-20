@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.secondHand.domain.dto.ItemCreateDTO;
+import com.harbor.secondHand.domain.dto.ItemPageDTO;
 import com.harbor.secondHand.domain.dto.ItemQueryConditionDTO;
 import com.harbor.secondHand.domain.po.ItemPO;
 import com.harbor.secondHand.domain.vo.ItemDetailVO;
@@ -29,7 +30,7 @@ public interface ISecondHandService extends IService<ItemPO> {
 
     void removeItemById(Long id);
 
-    PageDTO<ItemListItemVO> getAll(PageQuery pageQuery);
+    PageDTO<ItemListItemVO> getAll(ItemPageDTO itemPageDTO);
 
     void deleteItem(Long id);
 }
