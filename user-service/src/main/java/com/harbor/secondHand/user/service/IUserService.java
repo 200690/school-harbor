@@ -2,8 +2,8 @@ package com.harbor.secondHand.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.harbor.common.domain.PageDTO;
-import com.harbor.common.domain.PageQuery;
 import com.harbor.secondHand.user.domain.dto.LoginFormDTO;
+import com.harbor.secondHand.user.domain.dto.UserPageDTO;
 import com.harbor.utils.dto.UserInfoDTO;
 import com.harbor.secondHand.user.domain.dto.UserRegisterDTO;
 import com.harbor.secondHand.user.domain.po.User;
@@ -20,7 +20,7 @@ public interface IUserService extends IService<User> {
 
     void updateUserInfo(UserInfoDTO userInfoDTO);
 
-    PageDTO<UserVO> getUserList(PageQuery pageQuery);
+    PageDTO<UserVO> getUserList(UserPageDTO userPageDTO);
 
     void banUser(Long id);
 

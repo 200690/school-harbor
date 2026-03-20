@@ -11,6 +11,7 @@ import com.harbor.common.utils.UserContext;
 import com.harbor.secondHand.user.config.JwtProperties;
 import com.harbor.secondHand.user.domain.dto.LoginFormDTO;
 import com.harbor.secondHand.user.domain.dto.UserMessageDTO;
+import com.harbor.secondHand.user.domain.dto.UserPageDTO;
 import com.harbor.secondHand.user.domain.po.UserBalance;
 import com.harbor.secondHand.user.mapper.BalanceMapper;
 import com.harbor.secondHand.user.producer.UserMessageProducer;
@@ -28,6 +29,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -180,13 +182,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     /**
      * 获取用户列表
      *
-     * @param pageQuery 分页参数
+     * @param userPageDTO 分页参数
      * @return 用户列表
      */
     @Override
-    public PageDTO<UserVO> getUserList(PageQuery pageQuery) {
-        Page<User> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
-        Page<User> userPage = this.page(page);
+    public PageDTO<UserVO> getUserList(UserPageDTO userPageDTO) {
+        Page<User> page = new Page<>(userPageDTO.getPageNum(), userPageDTO.getPageSize());
+        
+        Page<User> userPage = lambdaQuery()
+                .like(StringUtils.hasText(userPageDTO.getUserName()), User::getUsername, userPageDTO.getUserName())
+                .like(StringUtils.hasText(userPageDTO.getPhone()), User::getPhone, userPageDTO.getPhone())
+                .eq(StringUtils.hasText(userPageDTO.getRole()), User::getRole, userPageDTO.getRole())
+                .eq(userPageDTO.getStatus() != null, User::getStatus, userPageDTO.getStatus())
+                .page(page);
         
         List<UserVO> userVOs = userPage.getRecords().stream().map(user -> {
             UserVO userVO = new UserVO();

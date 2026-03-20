@@ -1,8 +1,9 @@
 package com.harbor.secondHand.user.controller.admin;
 
 import com.harbor.common.domain.PageDTO;
-import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
+import com.harbor.secondHand.user.domain.dto.UserPageDTO;
+import com.harbor.secondHand.user.domain.vo.UserVO;
 import com.harbor.secondHand.user.service.IUserService;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,9 @@ public class AdminController {
 
     @ApiOperation("获取用户列表")
     @PostMapping("/list")
-    public Result<PageDTO> getUserList(@RequestBody PageQuery pageQuery) {
+    public Result<PageDTO<UserVO>> getUserList(@RequestBody UserPageDTO userPageDTO) {
         log.info("获取用户列表");
-        return Result.success(userService.getUserList(pageQuery));
+        return Result.success(userService.getUserList(userPageDTO));
     }
 
     @ApiOperation("封禁用户")
