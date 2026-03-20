@@ -11,6 +11,7 @@ import com.harbor.common.result.Result;
 import com.harbor.common.utils.UserContext;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
+import com.harbor.partTime.domain.dto.adminPageDTO;
 import com.harbor.partTime.domain.po.ApplicationPO;
 import com.harbor.partTime.domain.po.FavoritePO;
 import com.harbor.partTime.domain.po.PartTimePO;
@@ -436,13 +437,19 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
     /**
      * 获取所有兼职列表（管理员用）
      *
-     * @param pageQuery 分页参数
+     * @param adminPageDTO 分页参数
      * @return 兼职列表
      */
     @Override
-    public PageDTO<PartTimeVO> getAll(PageQuery pageQuery) {
-        Page<PartTimePO> page = new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize());
-        Page<PartTimePO> partTimePage = this.page(page);
+    public PageDTO<PartTimeVO> getAll(adminPageDTO adminPageDTO) {
+        Page<PartTimePO> page = new Page<>(adminPageDTO.getPageNum(), adminPageDTO.getPageSize());
+        
+        Page<PartTimePO> partTimePage = lambdaQuery()
+                .like(StringUtils.hasText(adminPageDTO.getTitle()), PartTimePO::getTitle, adminPageDTO.getTitle())
+                .like(StringUtils.hasText(adminPageDTO.getDescription()), PartTimePO::getDescription, adminPageDTO.getDescription())
+                .eq(adminPageDTO.getStatus() != null, PartTimePO::getStatus, adminPageDTO.getStatus())
+                .orderByDesc(PartTimePO::getPublishTime)
+                .page(page);
 
         List<PartTimeVO> voList = partTimePage.getRecords().stream().map(partTimePO -> {
             PartTimeVO partTimeVO = new PartTimeVO();

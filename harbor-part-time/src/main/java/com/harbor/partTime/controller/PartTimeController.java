@@ -5,6 +5,7 @@ import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
+import com.harbor.partTime.domain.dto.adminPageDTO;
 import com.harbor.partTime.domain.vo.MyJobs;
 import com.harbor.partTime.domain.vo.PartTimeDetailVO;
 import com.harbor.partTime.domain.vo.PartTimeVO;
@@ -81,8 +82,8 @@ public class PartTimeController {
 
     @ApiOperation("获取所有兼职列表接口")
     @PostMapping("/getAll")
-    public Result<PageDTO<PartTimeVO>> getAll(PageQuery pageQuery){
-        return Result.success(partTimeService.getAll(pageQuery));
+    public Result<PageDTO<PartTimeVO>> getAll(@RequestBody adminPageDTO adminPageDTO){
+        return Result.success(partTimeService.getAll(adminPageDTO));
     }
 
     @ApiOperation("删除已发布的兼职")

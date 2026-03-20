@@ -5,6 +5,7 @@ import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.partTime.domain.dto.PartTimeCreateDTO;
 import com.harbor.partTime.domain.dto.PartTimeQueryDTO;
+import com.harbor.partTime.domain.dto.adminPageDTO;
 import com.harbor.partTime.domain.po.PartTimePO;
 import com.harbor.partTime.domain.vo.MyJobs;
 import com.harbor.partTime.domain.vo.PartTimeDetailVO;
@@ -32,7 +33,7 @@ public interface IPartTimeService extends IService<PartTimePO> {
 
     List<PartTimeVO> getTopViewJobs(int limit);
 
-    PageDTO<PartTimeVO> getAll(PageQuery pageQuery);
+    PageDTO<PartTimeVO> getAll(adminPageDTO adminPageDTO);
 
     void deleteItem(Long id);
 }
