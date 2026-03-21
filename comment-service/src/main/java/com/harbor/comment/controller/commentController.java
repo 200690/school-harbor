@@ -10,12 +10,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/comment")
@@ -47,5 +42,12 @@ public class commentController {
         log.info("发表评论");
         commentService.addComment(commentDTO);
         return Result.success();
+    }
+
+    @ApiOperation("显示评论内容")
+    @PostMapping("/getComment/{id}")
+    public Result<String> getComment(@PathVariable Long id){
+        log.info("显示评论内容");
+        return Result.success(commentService.getById(id).getContent());
     }
 }

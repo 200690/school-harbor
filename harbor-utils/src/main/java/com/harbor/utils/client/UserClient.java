@@ -24,4 +24,7 @@ public interface UserClient {
 
     @PostMapping("balance/orderComplete/{buyerId}/{sellerId}/{payNo}")
     Result orderComplete(@PathVariable Long buyerId , @PathVariable BigDecimal payNo, @PathVariable Long sellerId);
+
+    @PostMapping("user/deductCredit/{id}")
+    Result deductCredit(@PathVariable Long id);
 }

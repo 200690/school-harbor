@@ -18,7 +18,6 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class ItemConsumer {
-    //TODO 更新status表
 
     private final ItemMapper itemMapper;
 

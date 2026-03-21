@@ -1,58 +1,53 @@
 package com.harbor.reportservice.controller;
 
+import com.harbor.common.domain.PageDTO;
 import com.harbor.common.result.Result;
+import com.harbor.reportservice.domain.dto.ReportCreateDTO;
+import com.harbor.reportservice.domain.dto.ReportHandleDTO;
+import com.harbor.reportservice.domain.dto.ReportQueryDTO;
+import com.harbor.reportservice.domain.vo.MyReportVO;
+import com.harbor.reportservice.domain.vo.ReportHandleVO;
+import com.harbor.reportservice.domain.vo.ReportVO;
 import com.harbor.reportservice.service.IReportHandleService;
 import com.harbor.reportservice.service.IReportService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
-@ApiOperation("举报相关接口")
+@Api(tags = "举报管理")
 @Slf4j
 @RestController
 @RequestMapping("/report")
 @RequiredArgsConstructor
 public class ReportController {
-    private final IReportService reportService;
 
+    private final IReportService reportService;
     private final IReportHandleService reportHandleService;
 
-    @ApiOperation("举报")
-    @RequestMapping("/report")
-    public Result report() {
-
+    @ApiOperation("提交举报")
+    @PostMapping("/submit")
+    public Result<Void> submitReport(@RequestBody @Validated ReportCreateDTO dto) {
+        log.info("提交举报: reportType={}, targetId={}", dto.getReportType(), dto.getTargetId());
+        reportService.createReport(dto);
         return Result.success();
     }
 
     @ApiOperation("处理举报")
-    @RequestMapping("/handle")
-    public Result handle() {
+    @PostMapping("/handle")
+    public Result<Void> handleReport(@RequestBody @Validated ReportHandleDTO dto) {
+        log.info("处理举报: reportId={}", dto.getReportId());
+        reportHandleService.handleReport(dto);
         return Result.success();
     }
 
-    @ApiOperation("获取举报列表")
-    @RequestMapping("/list")
-    public Result list() {
-        return Result.success();
+    @ApiOperation("获取举报列表（管理员）")
+    @PostMapping("/list")
+    public Result<PageDTO<ReportVO>> getReportList(@RequestBody ReportQueryDTO dto) {
+        log.info("获取举报列表");
+        return Result.success(reportService.queryReportList(dto));
     }
 
-    @ApiOperation("获取举报处理列表")
-    @RequestMapping("/handleList")
-    public Result handleList() {
-        return Result.success();
-    }
-
-    @ApiOperation("获取举报处理详情")
-    @RequestMapping("/handleDetail")
-    public Result handleDetail() {
-        return Result.success();
-    }
-
-    @ApiOperation("获取我的举报列表")
-    @RequestMapping("/myList")
-    public Result myList() {
-        return Result.success();
-    }
 }

@@ -31,13 +31,8 @@ public class ReportHandlePO {
     private Integer action;
 
     /**
-     * 处理说明
-     */
-    private String handleDesc;
-
-    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 }

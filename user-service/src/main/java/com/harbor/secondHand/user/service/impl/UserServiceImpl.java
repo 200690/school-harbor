@@ -205,6 +205,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return new PageDTO<>(userPage.getTotal(), userPage.getPages(), userVOs);
     }
 
+    @Override
+    public void deductCredit(Long userId) {
+        User user = checkUserById(userId);
+        user.setCreditScore(user.getCreditScore() - 5);
+        this.updateById(user);
+        log.info("扣除用户信用分成功，userId: {}", userId);
+
+        // 发送用户信息更新消息
+        UserMessageDTO messageDTO = UserMessageDTO.userToUserMessageDTO(user);
+        userMessageProducer.sendUserMessage(messageDTO, "UPDATE");
+    }
+
     /**
      * 封禁用户
      *

@@ -494,6 +494,8 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
             redisTemplate.delete(keys);
             log.info("清除兼职推荐列表缓存，数量: {}", keys.size());
         }
+
+        userClient.deductCredit(partTimePO.getPublisherId());
         
         log.info("管理员删除兼职成功，jobId: {}, title: {}", id, partTimePO.getTitle());
     }

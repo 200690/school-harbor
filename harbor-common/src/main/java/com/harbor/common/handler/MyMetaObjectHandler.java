@@ -27,9 +27,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         // 创建时间（LocalDateTime类型）
         this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
         this.strictInsertFill(metaObject, "publishTime", LocalDateTime.class, LocalDateTime.now());
+        this.strictInsertFill(metaObject, "createdAt", LocalDateTime.class, LocalDateTime.now());
 
         // 更新时间
         this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
+        this.strictInsertFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
 
 //        浏览时间
         this.strictInsertFill(metaObject, "browseTime", LocalDateTime.class, LocalDateTime.now());

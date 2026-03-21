@@ -421,6 +421,8 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         
         // 清除相关缓存
         clearItemCache(id);
+
+        userClient.deductCredit(itemPO.getSellerId());
         
         log.info("管理员删除商品成功，itemId: {}, title: {}", id, itemPO.getTitle());
     }

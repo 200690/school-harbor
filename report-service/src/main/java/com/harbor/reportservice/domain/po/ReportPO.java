@@ -42,7 +42,7 @@ public class ReportPO {
     private String reasonDesc;
 
     /**
-     * 证据图片（JSON数组格式）
+     * 证据图片URL（逗号分隔）
      */
     private String evidenceImages;
 

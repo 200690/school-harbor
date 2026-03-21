@@ -49,4 +49,12 @@ public class UserController {
         userService.updateUserInfo(userInfoDTO);
         return Result.success();
     }
+
+    @ApiOperation("扣减信誉分")
+    @PostMapping("deductCredit/{id}")
+    public Result deductCredit(@PathVariable Long id){
+        log.info("开始扣减信誉分");
+        userService.deductCredit(id);
+        return Result.success();
+    }
 }

@@ -26,5 +26,7 @@ public interface IUserService extends IService<User> {
 
     void unbanUser(Long id);
 
+    void deductCredit(Long userId);
+
 //    void deductMoney(String pw, Integer totalFee);
 }
