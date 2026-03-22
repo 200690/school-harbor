@@ -2,6 +2,7 @@ package com.harbor.utils.client;
 
 import com.harbor.common.result.Result;
 import com.harbor.utils.dto.ItemMainDTO;
+import com.harbor.utils.dto.OrderPO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,4 +16,7 @@ public interface SecondHandClient {
 
     @DeleteMapping("/second-hand/delete/{id}")
     Result<Void> delete(@PathVariable Long id);
+
+    @GetMapping("second-hand/order/getOrderDetail/{id}")
+    Result<OrderPO> getOrderDetail(@PathVariable Long id);
 }

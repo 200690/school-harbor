@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface IMsgProcessedService extends IService<MessageProcessedPO> {
     List<MessageVO> getMyMsg(Long userId);
+
+    void saveMsg(Long itemId, String text);
 }

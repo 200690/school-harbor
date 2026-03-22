@@ -1,9 +1,12 @@
 package com.harbor.secondHand.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.domain.PageQuery;
 import com.harbor.common.result.Result;
 import com.harbor.secondHand.domain.dto.CreateOrderDTO;
+import com.harbor.secondHand.domain.po.OrderPO;
 import com.harbor.secondHand.domain.vo.OrderListItemVO;
 import com.harbor.secondHand.service.IOrder;
 import io.swagger.annotations.Api;
@@ -57,5 +60,16 @@ public class OrderController {
     public Result createOrder(@RequestBody CreateOrderDTO createOrderDTO) {
         order.createOrder(createOrderDTO);
         return Result.success();
+    }
+
+    @ApiOperation("获取订单详情")
+    @GetMapping("getOrderDetail/{id}")
+    public Result<OrderPO> getOrderDetail(@PathVariable Long id) {
+        log.info("获取订单详情, id: {}", id);
+        OrderPO orderById = order.getOne(new LambdaQueryWrapper<OrderPO>()
+                .eq(OrderPO::getItemId, id)
+                .orderByDesc(OrderPO::getOrderTime)
+                .last("limit 1"));
+        return Result.success(orderById);
     }
 }
