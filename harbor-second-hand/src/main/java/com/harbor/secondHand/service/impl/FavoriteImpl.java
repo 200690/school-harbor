@@ -35,15 +35,17 @@ public class FavoriteImpl extends ServiceImpl<FavoriteMapper, FavoritePO> implem
         List<FavoriteVO> favoriteVOS = favoritePOS.getRecords().stream().map(favoritePO -> {
             FavoriteVO favoriteVO = new FavoriteVO();
             BeanUtil.copyProperties(favoritePO, favoriteVO);
-//            获取item详情
             ItemPO itemPO = secondHandMapper.selectById(favoritePO.getItemId());
+            if (itemPO == null) {
+                return null;
+            }
             favoriteVO.setItemTitle(itemPO.getTitle())
                     .setItemPrice(itemPO.getPrice())
                     .setItemCoverImage(itemPO.getCoverImage())
                     .setItemSchool(itemPO.getSchool())
                     .setItemLocation(itemPO.getLocation());
             return favoriteVO;
-        }).toList();
+        }).filter(vo -> vo != null).toList();
         return new PageDTO<>( favoritePOS.getTotal(), favoritePOS.getPages(), favoriteVOS );
     }
 

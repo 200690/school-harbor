@@ -13,6 +13,7 @@ public class ApplicationRecordVO {
     private String partTimeTitle;               // 兼职标题
     private String partTimeLocation;            // 兼职地点
     private String employer;                    // 发布者
+    private Integer publisherId;
     private String salaryDesc;                  // 薪资描述
     private LocalDateTime applyTime;        // 申请时间
     private Integer status;                  // 申请状态(状态：0-待审核，1-已通过，2-已拒绝，3-已取消，4-已完成)
