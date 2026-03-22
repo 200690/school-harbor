@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.util.Collections;
 import java.util.List;
 import com.harbor.common.utils.UserContext;
 import com.harbor.partTime.domain.dto.ApplyPartTime;
@@ -57,14 +58,18 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
                 .eq(ApplicationPO::getUserId, pageQuery.getId())
                 .orderByDesc(ApplicationPO::getUpdateTime) // 按更新时间倒序
                 .page(page);
+
+        // 若记录为空，直接返回空分页（避免返回null导致调用方判空）
         if (applicationPage.getRecords().isEmpty()) {
-            return null;
+            return new PageDTO<>(0L, 0L, Collections.emptyList());
         }
-        // 4. 转换为VO列表
+
+        // 4. 转换为VO列表 —— 使用 collect(Collectors.toList()) 生成可变列表
         List<ApplicationRecordVO> recordVOList = applicationPage.getRecords().stream()
                 .map(item -> BeanUtil.copyProperties(item, ApplicationRecordVO.class))
-                .toList();
-        // 5. 获取兼职信息
+                .collect(Collectors.toList());
+
+        // 5. 收集所有兼职ID并查询
         List<Long> jobsId = recordVOList.stream()
                 .map(ApplicationRecordVO::getPartTimeId)
                 .distinct()
@@ -75,23 +80,24 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
         Map<Long, PartTimePO> partTimePOMap = partTimePOS.stream()
                 .collect(Collectors.toMap(PartTimePO::getId, Function.identity()));
-        // 6. 封装兼职信息
+
+        // 6. 过滤掉兼职信息不存在的记录（此时列表可变，removeIf安全）
+        recordVOList.removeIf(item -> partTimePOMap.get(item.getPartTimeId()) == null);
+
+        // 7. 封装兼职信息（过滤后所有item均有对应兼职信息）
         recordVOList.forEach(item -> {
             PartTimePO partTimePO = partTimePOMap.get(item.getPartTimeId());
-            if (partTimePO != null) {
-                item.setPartTimeTitle(partTimePO.getTitle());
-                item.setPartTimeLocation(partTimePO.getLocation());
-                item.setEmployer(partTimePO.getEmployer());
-                item.setSalaryDesc(partTimePO.getSalaryDesc());
-            }
+            item.setPartTimeTitle(partTimePO.getTitle());
+            item.setPartTimeLocation(partTimePO.getLocation());
+            item.setEmployer(partTimePO.getEmployer());
+            item.setSalaryDesc(partTimePO.getSalaryDesc());
         });
 
-        // 7. 返回分页结果
+        // 8. 返回分页结果
         return new PageDTO<>(
                 applicationPage.getTotal(),
                 applicationPage.getPages(),
                 recordVOList);
-
     }
 
     @Override

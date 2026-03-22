@@ -3,7 +3,6 @@ package com.harbor.secondHand.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
@@ -31,6 +30,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -63,14 +63,20 @@ public class OrderImpl extends ServiceImpl<OrderMapper, OrderPO> implements IOrd
 
         Page<OrderPO> orderPOPage = this.page(page, queryWrapper);
 
-        List<OrderListItemVO> listItemVOS = orderPOPage.getRecords().stream().map(orderPO -> {
-            OrderListItemVO orderListItemVO = new OrderListItemVO();
-            BeanUtil.copyProperties(orderPO, orderListItemVO, CopyOptions.create().ignoreNullValue());
-            ItemPO itemPO = secondHandMapper.selectById(orderPO.getItemId());
-            orderListItemVO.setItemTitle(itemPO.getTitle());
-            orderListItemVO.setItemCoverImage(itemPO.getCoverImage());
-            return orderListItemVO;
-        }).toList();
+        List<OrderListItemVO> listItemVOS = orderPOPage.getRecords().stream()
+                .flatMap(orderPO -> {
+                    ItemPO itemPO = secondHandMapper.selectById(orderPO.getItemId());
+                    if (itemPO == null) {
+                        // 商品不存在，跳过该订单
+                        return Stream.empty();
+                    }
+                    OrderListItemVO orderListItemVO = new OrderListItemVO();
+                    BeanUtil.copyProperties(orderPO, orderListItemVO, CopyOptions.create().ignoreNullValue());
+                    orderListItemVO.setItemTitle(itemPO.getTitle());
+                    orderListItemVO.setItemCoverImage(itemPO.getCoverImage());
+                    return Stream.of(orderListItemVO);
+                })
+                .toList();
         return new PageDTO<>(orderPOPage.getTotal(), orderPOPage.getPages(), listItemVOS);
     }
 
