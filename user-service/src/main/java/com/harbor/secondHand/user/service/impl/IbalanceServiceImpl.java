@@ -101,7 +101,7 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
         UserBalance sellerBalance = this.getById(sellerId);
         Assert.notNull(buyerBalance, "买家不存在");
         Assert.notNull(sellerBalance, "卖家不存在");
-        buyerBalance.setBalance(buyerBalance.getBalance().subtract(payNo))
+        buyerBalance.setBalance(buyerBalance.getBalance())
                 .setUpdateTime(LocalDateTime.now())
                 .setTotalConsume(buyerBalance.getTotalConsume().add(payNo))
                 .setFrozenBalance(buyerBalance.getFrozenBalance().subtract(payNo));
@@ -112,6 +112,24 @@ public class IbalanceServiceImpl extends ServiceImpl<BalanceMapper, UserBalance>
         this.updateById(sellerBalance);
         this.sendUserMessage(buyerId, buyerBalance);
         this.sendUserMessage(sellerId, sellerBalance);
+    }
+
+    @Override
+    public void refund(BigDecimal payNo, Long userId, Long sellId) {
+        Assert.notNull(payNo, "支付金额不能为空");
+        Assert.notNull(userId, "用户id不能为空");
+        UserBalance one = lambdaQuery().eq(UserBalance::getUserId, userId).one();
+        Assert.notNull(one, "用户不存在或已被封禁");
+        one.setBalance(one.getBalance().add(payNo))
+                .setUpdateTime(LocalDateTime.now());
+        // 商家扣款
+        UserBalance sellerBalance = lambdaQuery().eq(UserBalance::getUserId, sellId).one();
+        sellerBalance.setBalance(sellerBalance.getBalance().subtract(payNo))
+                .setUpdateTime(LocalDateTime.now());
+        this.updateById(sellerBalance);
+        this.updateById(one);
+        this.sendUserMessage(userId, one);
+        this.sendUserMessage(sellId, sellerBalance);
     }
 
     // 发送消息通知消息微服务更新用户余额

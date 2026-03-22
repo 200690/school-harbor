@@ -230,6 +230,38 @@ public class OrderImpl extends ServiceImpl<OrderMapper, OrderPO> implements IOrd
     }
 
     /**
+     * 退款
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void refund(Long itemId) {
+        // 根据商品ID获取最新的下单时间的订单
+        LambdaQueryWrapper<OrderPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderPO::getItemId, itemId);
+        queryWrapper.in(OrderPO::getStatus, 2,3,0);
+        queryWrapper.orderByDesc(OrderPO::getOrderTime);
+        OrderPO orderPO = this.getOne(queryWrapper);
+        
+        Assert.notNull(orderPO, "未找到订单");
+
+        // 退款处理
+        if(orderPO.getStatus() == 2 || orderPO.getStatus() == 3){
+            orderPO.setStatus(5); // 5-退款状态
+            orderPO.setCancelTime(LocalDateTime.now());
+            orderPO.setCancelReason("商家退款");
+            this.updateById(orderPO);
+            //user微服务退款
+            userClient.refund(orderPO.getTotalAmount(), orderPO.getBuyerId());
+        } else{
+            userClient.refund(orderPO.getTotalAmount(), orderPO.getBuyerId(), orderPO.getSellerId());
+        }
+        
+        //pay微服务修改订单状态
+        payClient.updateOrderStatus(orderPO.getId(), 5);
+
+    }
+
+    /**
      * 发送订单创建成功通知
      *
      * @param orderPO 订单信息

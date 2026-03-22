@@ -15,4 +15,6 @@ public interface IbalanceService extends IService<UserBalance> {
     void refund(BigDecimal payNo, Long userId);
 
     void orderComplete(Long buyerId, BigDecimal payNo, Long sellerId);
+
+    void refund(BigDecimal payNo, Long userId, Long sellId);
 }

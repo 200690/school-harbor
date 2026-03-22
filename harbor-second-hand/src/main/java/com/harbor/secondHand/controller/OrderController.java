@@ -72,4 +72,12 @@ public class OrderController {
                 .last("limit 1"));
         return Result.success(orderById);
     }
+
+    @ApiOperation("商家退款")
+    @PostMapping("refund/{id}")
+    public Result<Void> refund(@PathVariable Long id) {
+        log.info("商家退款, id: {}", id);
+        order.refund(id);
+        return Result.success();
+    }
 }

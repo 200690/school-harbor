@@ -17,4 +17,6 @@ public interface IOrder extends IService<OrderPO> {
     void createOrder(CreateOrderDTO createOrderDTO);
 
     void cancelItem(Long itemId);
+
+    void refund(Long itemId);
 }

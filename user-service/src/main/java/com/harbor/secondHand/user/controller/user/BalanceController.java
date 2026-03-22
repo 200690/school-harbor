@@ -42,6 +42,14 @@ public class BalanceController {
         return Result.success();
     }
 
+    @ApiOperation("已完成退款用户余额接口")
+    @PostMapping("refund/{payNo}/{userId}/{sellId}")
+    public Result refund(@PathVariable BigDecimal payNo, @PathVariable Long userId, @PathVariable Long sellId){
+        log.info("开始退款金额：{}", payNo);
+        balanceService.refund(payNo , userId, sellId);
+        return Result.success();
+    }
+
     @ApiOperation("交易完成接口")
     @PostMapping("orderComplete/{buyerId}/{sellerId}/{payNo}")
     public Result orderComplete(@PathVariable Long buyerId , @PathVariable BigDecimal payNo, @PathVariable Long sellerId){
