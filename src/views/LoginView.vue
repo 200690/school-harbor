@@ -13,7 +13,6 @@
           </el-form-item>
           <el-form-item>
             <div class="login-actions">
-              <el-checkbox v-model="rememberMe">记住我</el-checkbox>
               <router-link to="/user/user/register" class="register-link">立即注册</router-link>
             </div>
           </el-form-item>
@@ -40,7 +39,6 @@ export default {
         phone: '',
         password: ''
       },
-      rememberMe: false,
       loading: false,
       rules: {
         phone: [
@@ -52,7 +50,20 @@ export default {
       }
     }
   },
+  created() {
+    this.loadSavedCredentials()
+  },
   methods: {
+    loadSavedCredentials() {
+      const savedPhone = localStorage.getItem('savedPhone')
+      const savedPassword = localStorage.getItem('savedPassword')
+      if (savedPhone) {
+        this.loginForm.phone = savedPhone
+      }
+      if (savedPassword) {
+        this.loginForm.password = savedPassword
+      }
+    },
     async handleLogin() {
       this.$refs.loginForm.validate(async (valid) => {
         if (valid) {
@@ -64,6 +75,10 @@ export default {
             // 存储token和用户信息
             if (token) {
               localStorage.setItem('token', token);
+              
+              // 保存登录凭据
+              localStorage.setItem('savedPhone', this.loginForm.phone);
+              localStorage.setItem('savedPassword', this.loginForm.password);
               
               // 获取用户详细信息
               try {

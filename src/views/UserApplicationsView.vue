@@ -175,11 +175,10 @@ const cancelApplication = (appId) => {
 
 // 联系雇主
 const contactEmployer = (app) => {
-  // 跳转到聊天界面
   router.push({
     path: '/chat',
     query: {
-      otherUserId: app.employerId || '',
+      otherUserId: app.publisherId || '',
       otherUserNickname: app.employer || '雇主',
       otherUserAvatar: '/default-avatar.png',
       itemId: app.partTimeId,

@@ -4,7 +4,6 @@ import PartTimeListView from '../views/PartTimeListView.vue'
 import PartTimeDetailView from '../views/PartTimeDetailView.vue'
 import SecondHandListView from '../views/SecondHandListView.vue'
 import SecondHandDetailView from '../views/SecondHandDetailView.vue'
-import ChatView from '../views/ChatView.vue'
 
 const routes = [
   {
@@ -55,11 +54,6 @@ const routes = [
     path: '/second-hand/edit/:id',
     name: 'second-hand-edit',
     component: () => import('../views/SecondHandEditView.vue')
-  },
-  {
-    path: '/chat',
-    name: 'chat',
-    component: ChatView
   },
   {
     path: '/payment',
@@ -137,14 +131,14 @@ const routes = [
     component: () => import('../views/UserBlacklistView.vue')
   },
   {
+    path: '/chat',
+    name: 'chat',
+    component: () => import('../views/ChatView.vue')
+  },
+  {
     path: '/user/user/report/:id',
     name: 'user-report',
     component: () => import('../views/UserReportView.vue')
-  },
-  {
-    path: '/user/user/after-sales/:id',
-    name: 'user-after-sales',
-    component: () => import('../views/UserAfterSalesView.vue')
   },
   {
     path: '/user/user/seller-after-sales/:id',
@@ -181,16 +175,7 @@ const routes = [
     name: 'admin-reports',
     component: () => import('../views/AdminReportsView.vue')
   },
-  {
-    path: '/admin/blacklist',
-    name: 'admin-blacklist',
-    component: () => import('../views/AdminBlacklistView.vue')
-  },
-  {
-    path: '/admin/statistics',
-    name: 'admin-statistics',
-    component: () => import('../views/AdminStatisticsView.vue')
-  },
+
   {
     path: '/user/profile/:id',
     name: 'user-profile',

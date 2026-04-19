@@ -77,12 +77,8 @@
                 举报
               </el-button>
               <!-- 上架和交易中状态可以联系卖家 -->
-              <el-button v-if="purchase.status === 1 || purchase.status === 2" size="small" type="warning" @click="contactSeller(purchase)">
+              <el-button size="small" type="warning" @click="contactSeller(purchase)">
                 联系卖家
-              </el-button>
-              <!-- 交易成功、交易完成和交易取消状态可以售后 -->
-              <el-button v-if="purchase.status === 0 || purchase.status === 3 || purchase.status === 4" size="small" type="warning" @click="afterSales(purchase.id)">
-                售后
               </el-button>
             </div>
           </div>
@@ -334,12 +330,6 @@ const reportOrder = (id) => {
   ElMessage.info('跳转到举报页面')
   // 这里应该导航到举报页面
   router.push(`/user/user/report/${id}`)
-}
-
-// 售后
-const afterSales = (id) => {
-  // 跳转到售后页面，不带聊天区域
-  router.push(`/user/user/after-sales/${id}?chat=false`)
 }
 
 // 联系卖家

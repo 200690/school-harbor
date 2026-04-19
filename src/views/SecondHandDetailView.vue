@@ -215,7 +215,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useSecondHandStore } from '../stores/secondHand'
-import { getSecondHandDetail, checkSecondHandFavorite } from '@/api/secondHand'
+import { getSecondHandDetail } from '@/api/secondHand'
 import request from '@/utils/request'
 
 const route = useRoute()
@@ -418,18 +418,10 @@ const fetchItemDetail = async () => {
       isPublisherBanned.value = false
       
       // 检查是否从"我的发布"、"首页"、"收藏"或"列表"页面导航过来
-      // 如果是从这些页面来的，不需要检查收藏状态
       const fromMyPublish = route.query.from === 'myPublish'
-      const fromHome = route.query.from === 'home'
       const fromFavorites = route.query.from === 'favorites'
-      const fromList = route.query.from === 'list'
       isFromMyPublish.value = fromMyPublish
       isFromFavorites.value = fromFavorites
-      
-      if (!fromMyPublish && !fromHome && !fromFavorites && !fromList) {
-        // 检查收藏状态
-        await checkFavoriteStatus()
-      }
     } catch (error) {
       console.error('获取商品详情失败:', error)
       console.log('错误详情:', {
@@ -492,17 +484,6 @@ const fetchItemDetail = async () => {
   }
 }
 
-// 检查收藏状态
-const checkFavoriteStatus = async () => {
-  try {
-    const response = await checkSecondHandFavorite(itemId.value)
-    isFavorited.value = response.data || false
-  } catch (error) {
-    console.error('检查收藏状态失败:', error)
-    isFavorited.value = false
-  }
-}
-
 // 清理图片URL（去除多余的反引号和引号，并解析嵌套的JSON字符串）
 const cleanImageUrl = (url) => {
   if (!url) return '/default-image.png'
@@ -521,8 +502,13 @@ const cleanImageUrl = (url) => {
     }
   }
   
-  // 去除多余的反引号和引号
-  cleanedUrl = cleanedUrl.toString().replace(/`/g, '').replace(/"/g, '').trim()
+  // 如果已经是完整URL，直接返回
+  if (typeof cleanedUrl === 'string' && (cleanedUrl.startsWith('http://') || cleanedUrl.startsWith('https://'))) {
+    return cleanedUrl.trim()
+  }
+  
+  // 去除多余的反引号
+  cleanedUrl = cleanedUrl.toString().replace(/`/g, '').trim()
   
   return cleanedUrl || '/default-image.png'
 }
@@ -531,7 +517,10 @@ const cleanImageUrl = (url) => {
 const parseImages = (images) => {
   if (!images || !Array.isArray(images)) return []
   
-  return images.map(img => {
+  const result = images.map(img => {
+    if (!img) return null
+    
+    // 如果是字符串形式的JSON数组，先解析
     if (typeof img === 'string' && img.startsWith('[')) {
       try {
         const parsed = JSON.parse(img)
@@ -542,17 +531,38 @@ const parseImages = (images) => {
         console.log('解析图片URL失败，使用原始值:', e)
       }
     }
+    
+    // 如果是对象，尝试获取url或image字段
+    if (typeof img === 'object' && (img.url || img.image)) {
+      return cleanImageUrl(img.url || img.image)
+    }
+    
     return cleanImageUrl(img)
-  }).filter(url => url && url !== '/default-image.png')
+  })
+  
+  // 返回非空且非默认图片的结果
+  return result.filter(url => url && url !== '/default-image.png' && url !== '/')
 }
 
 // 获取当前显示的大图片
 const getCurrentImage = () => {
-  const images = parseImages(itemDetail.value?.images)
-  if (images.length === 0) {
-    return cleanImageUrl(itemDetail.value?.coverImage)
+  if (!itemDetail.value) return '/default-image.png'
+  
+  // 先尝试从images数组获取图片
+  const images = parseImages(itemDetail.value.images)
+  if (images.length > 0) {
+    const validIndex = currentImageIndex.value < images.length ? currentImageIndex.value : 0
+    return images[validIndex] || '/default-image.png'
   }
-  return images[currentImageIndex.value] || images[0]
+  
+  // 如果images数组为空，尝试使用coverImage
+  const coverImage = cleanImageUrl(itemDetail.value.coverImage)
+  if (coverImage && coverImage !== '/default-image.png') {
+    return coverImage
+  }
+  
+  // 返回默认图片
+  return '/default-image.png'
 }
 
 // 切换大图片

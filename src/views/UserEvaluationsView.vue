@@ -128,9 +128,11 @@ const filteredEvaluations = computed(() => {
   if (activeCategory.value === 'all') {
     return allEvaluations.value
   } else if (activeCategory.value === 'partTime') {
-    return allEvaluations.value.filter(item => item.targetTypeDesc === '兼职')
+    // targetType=0表示兼职，显示在全部和兼职下
+    return allEvaluations.value.filter(item => item.targetType === 0 || item.targetTypeDesc === '兼职')
   } else if (activeCategory.value === 'secondHand') {
-    return allEvaluations.value.filter(item => item.targetTypeDesc === '商品')
+    // targetType=1表示二手交易，显示在全部和二手交易下
+    return allEvaluations.value.filter(item => item.targetType === 1 || item.targetTypeDesc === '商品')
   }
   return allEvaluations.value
 })
@@ -260,13 +262,12 @@ const fetchEvaluations = async () => {
       return
     }
     
-    // 根据 activeCategory 设置 targetType
-    let targetType = 2 // 默认全部
-    if (activeCategory.value === 'partTime') {
-      targetType = 0 // 兼职
-    } else if (activeCategory.value === 'secondHand') {
-      targetType = 1 // 商品
-    }
+    // 始终请求全部数据，前端进行过滤
+    // targetType=2表示全部，targetType=0表示兼职，targetType=1表示二手交易
+    // 评价根据targetType值显示在多个分类下：
+    // - targetType=0：显示在全部和兼职下
+    // - targetType=1：显示在全部和二手交易下
+    const targetType = 2 // 始终获取全部数据
     
     // 根据 activeType 设置 type
     const type = activeType.value === 'given' ? 1 : 2

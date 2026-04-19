@@ -55,25 +55,7 @@
           </div>
         </div>
 
-        <div class="admin-card" @click="goToBlacklist">
-          <div class="card-icon blacklist-icon">
-            <i class="el-icon-close"></i>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">黑名单管理</h3>
-            <p class="card-desc">管理平台黑名单，包括用户和物品</p>
-          </div>
-        </div>
 
-        <div class="admin-card" @click="goToStatistics">
-          <div class="card-icon statistics-icon">
-            <i class="el-icon-data-analysis"></i>
-          </div>
-          <div class="card-content">
-            <h3 class="card-title">数据统计</h3>
-            <p class="card-desc">查看平台数据统计和分析</p>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -121,15 +103,7 @@ const goToReports = () => {
   router.push('/admin/reports')
 }
 
-// 跳转到黑名单管理
-const goToBlacklist = () => {
-  router.push('/admin/blacklist')
-}
 
-// 跳转到数据统计
-const goToStatistics = () => {
-  router.push('/admin/statistics')
-}
 
 onMounted(() => {
   getUserInfo()
@@ -211,14 +185,6 @@ onMounted(() => {
 
     &.report-icon {
       background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
-
-    &.blacklist-icon {
-      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    }
-
-    &.statistics-icon {
-      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
     }
   }
 

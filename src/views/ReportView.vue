@@ -16,23 +16,23 @@
       <!-- 举报表单 -->
       <div class="report-form">
         <el-form :model="reportForm" :rules="rules" ref="formRef" label-width="100px">
-          <el-form-item label="举报类型" prop="reportType">
-            <el-select v-model="reportForm.reportType" placeholder="请选择举报类型">
-              <el-option label="虚假信息" value="false_info" />
-              <el-option label="诈骗行为" value="fraud" />
-              <el-option label="色情内容" value="porn" />
-              <el-option label="暴力内容" value="violence" />
-              <el-option label="违法违规" value="illegal" />
-              <el-option label="其他" value="other" />
+          <el-form-item label="举报原因" prop="reasonType">
+            <el-select v-model="reportForm.reasonType" placeholder="请选择举报原因">
+              <el-option label="虚假信息" :value="1" />
+              <el-option label="诈骗行为" :value="2" />
+              <el-option label="色情内容" :value="3" />
+              <el-option label="暴力内容" :value="4" />
+              <el-option label="违法违规" :value="5" />
+              <el-option label="其他" :value="6" />
             </el-select>
           </el-form-item>
 
-          <el-form-item label="举报内容" prop="content">
+          <el-form-item label="原因描述" prop="reasonDesc">
             <el-input
-              v-model="reportForm.content"
+              v-model="reportForm.reasonDesc"
               type="textarea"
               :rows="5"
-              placeholder="请详细描述您的举报内容"
+              placeholder="请详细描述您的举报原因"
               maxlength="500"
               show-word-limit
             />
@@ -40,7 +40,7 @@
 
           <el-form-item label="上传证据">
             <div class="image-uploader">
-              <div v-for="(image, index) in reportImages" :key="index" class="uploaded-image">
+              <div v-for="(image, index) in reportForm.evidenceImages" :key="index" class="uploaded-image">
                 <img :src="image" alt="证据图片" />
                 <div class="image-actions">
                   <el-button type="danger" size="small" @click="removeImage(index)">删除</el-button>
@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
@@ -86,12 +86,10 @@ const fileInput = ref(null)
 
 // 举报表单数据
 const reportForm = ref({
-  reportType: '',
-  content: ''
+  reasonType: null,
+  reasonDesc: '',
+  evidenceImages: []
 })
-
-// 举报图片
-const reportImages = ref([])
 
 // 路由参数
 const targetId = ref(route.query.targetId)
@@ -99,15 +97,30 @@ const targetType = ref(route.query.targetType)
 const targetTitle = ref(route.query.targetTitle)
 const targetContent = ref(route.query.targetContent)
 
+// 根据 targetType 计算 reportType
+// reportType: 1-评论，2-商品，3-兼职，4-用户
+const reportType = computed(() => {
+  switch (targetType.value) {
+    case 'comment':
+      return 1
+    case 'second-hand':
+      return 2
+    case 'part-time':
+      return 3
+    case 'user':
+      return 4
+    default:
+      return null
+  }
+})
+
 // 验证规则
 const rules = {
-  reportType: [
-    { required: true, message: '请选择举报类型', trigger: 'change' }
+  reasonType: [
+    { required: true, message: '请选择举报原因', trigger: 'change' }
   ],
-  content: [
-    { required: true, message: '请输入举报内容', trigger: 'blur' },
-    { min: 10, message: '举报内容至少10个字符', trigger: 'blur' },
-    { max: 500, message: '举报内容不能超过500个字符', trigger: 'blur' }
+  reasonDesc: [
+    { max: 500, message: '原因描述不能超过500个字符', trigger: 'blur' }
   ]
 }
 
@@ -120,6 +133,8 @@ const getReportTitle = () => {
       return `举报商品：${targetTitle.value || '未知商品'}`
     case 'comment':
       return `举报评论：${targetContent.value ? targetContent.value.substring(0, 20) + '...' : '未知评论'}`
+    case 'user':
+      return `举报用户：${targetTitle.value || '未知用户'}`
     default:
       return '举报'
   }
@@ -168,7 +183,7 @@ const handleImageUpload = async (event) => {
 
       const result = await response.json()
       if (result.code === 1) {
-        reportImages.value.push(result.data)
+        reportForm.value.evidenceImages.push(result.data)
         ElMessage.success('图片上传成功')
       } else {
         ElMessage.error(result.msg || '上传失败')
@@ -185,7 +200,7 @@ const handleImageUpload = async (event) => {
 
 // 移除图片
 const removeImage = (index) => {
-  reportImages.value.splice(index, 1)
+  reportForm.value.evidenceImages.splice(index, 1)
 }
 
 // 提交举报
@@ -195,18 +210,15 @@ const submitReport = async () => {
   try {
     await formRef.value.validate()
 
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
     const reportData = {
-      targetId: targetId.value,
-      targetType: targetType.value,
-      reportType: reportForm.value.reportType,
-      content: reportForm.value.content,
-      images: reportImages.value,
-      userId: userInfo.userId || userInfo.id,
-      userName: userInfo.username
+      reportType: reportType.value,
+      targetId: Number(targetId.value),
+      reasonType: reportForm.value.reasonType,
+      reasonDesc: reportForm.value.reasonDesc || null,
+      evidenceImages: reportForm.value.evidenceImages.length > 0 ? reportForm.value.evidenceImages : null
     }
 
-    const response = await request.post('/report/addReport', reportData)
+    const response = await request.post('/report/submit', reportData)
 
     if (response.code === 1) {
       ElMessage.success('举报成功，我们会尽快处理')

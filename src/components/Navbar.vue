@@ -16,20 +16,6 @@
         <router-link v-if="isAdmin" to="/admin" class="nav-item">管理员</router-link>
       </div>
       
-      <!-- 搜索框 -->
-      <div class="search-box">
-        <input 
-          type="text" 
-          placeholder="搜索兼职或二手物品" 
-          class="search-input"
-          v-model="searchKeyword"
-          @keyup.enter="handleSearch"
-        />
-        <el-button class="search-btn" circle @click="handleSearch">
-          <el-icon><Search /></el-icon>
-        </el-button>
-      </div>
-      
       <!-- 用户操作 -->
       <div class="user-actions" v-if="!isLoggedIn">
         <router-link to="/user/user/login" class="user-btn">登录</router-link>
@@ -48,18 +34,6 @@
     <!-- 移动端菜单 -->
     <div class="mobile-menu" v-if="isMobileMenuOpen">
       <div class="mobile-menu-content">
-        <div class="mobile-search-box">
-          <input 
-            type="text" 
-            placeholder="搜索兼职或二手物品" 
-            class="search-input"
-            v-model="mobileSearchKeyword"
-            @keyup.enter="handleMobileSearch"
-          />
-          <button class="search-btn" @click="handleMobileSearch">
-            <i class="el-icon-search"></i>
-          </button>
-        </div>
         <div class="mobile-nav">
           <router-link to="/" class="mobile-nav-item" @click="closeMobileMenu">首页</router-link>
           <router-link to="/part-time" class="mobile-nav-item" @click="closeMobileMenu">兼职</router-link>
@@ -80,20 +54,12 @@
 </template>
 
 <script>
-import { Search } from '@element-plus/icons-vue'
-import { ElIcon } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
 export default {
   name: 'AppNavbar',
-  components: {
-    ElIcon,
-    Search
-  },
   data() {
     return {
-      searchKeyword: '',
-      mobileSearchKeyword: '',
       isMobileMenuOpen: false
     }
   },
@@ -128,27 +94,6 @@ export default {
     },
     handleTokenExpired() {
       this.userStore.checkLogin()
-    },
-    handleSearch() {
-      if (this.searchKeyword) {
-        // 这里可以根据搜索关键词跳转到相应的列表页
-        // 暂时跳转到兼职列表页
-        this.$router.push({
-          path: '/part-time',
-          query: { keyword: this.searchKeyword }
-        })
-      }
-    },
-    handleMobileSearch() {
-      if (this.mobileSearchKeyword) {
-        // 这里可以根据搜索关键词跳转到相应的列表页
-        // 暂时跳转到兼职列表页
-        this.$router.push({
-          path: '/part-time',
-          query: { keyword: this.mobileSearchKeyword }
-        })
-        this.closeMobileMenu()
-      }
     },
     toggleMobileMenu() {
       this.isMobileMenuOpen = !this.isMobileMenuOpen
@@ -240,43 +185,6 @@ export default {
   }
 }
 
-.search-box {
-  position: relative;
-  width: 300px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 8px 12px;
-  padding-right: 40px;
-  border: 1px solid #DCDFE6;
-  border-radius: 20px;
-  font-size: 14px;
-  transition: all 0.3s;
-  
-  &:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
-  }
-}
-
-.search-btn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #909399;
-  cursor: pointer;
-  font-size: 16px;
-  
-  &:hover {
-    color: var(--primary-color);
-  }
-}
-
 .user-actions {
   display: flex;
   gap: 15px;
@@ -345,10 +253,6 @@ export default {
   padding: 20px;
 }
 
-.mobile-search-box {
-  margin-bottom: 20px;
-}
-
 .mobile-nav {
   display: flex;
   flex-direction: column;
@@ -380,10 +284,6 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 1024px) {
-  .search-box {
-    width: 200px;
-  }
-  
   .navbar-nav {
     gap: 20px;
   }
@@ -398,10 +298,6 @@ export default {
     display: none;
   }
   
-  .search-box {
-    width: 150px;
-  }
-  
   .user-actions {
     display: none;
   }
@@ -412,10 +308,6 @@ export default {
 }
 
 @media (max-width: 576px) {
-  .search-box {
-    display: none;
-  }
-  
   .navbar-brand {
     font-size: 18px;
   }

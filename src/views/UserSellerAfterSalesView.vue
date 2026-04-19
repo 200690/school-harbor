@@ -42,7 +42,7 @@
                   <el-radio label="0">拒绝退款</el-radio>
                 </el-radio-group>
               </el-form-item>
-              <el-form-item label="处理说明">
+              <el-form-item label="处理说明" v-if="form.result === '0'">
                 <el-input
                   v-model="form.description"
                   type="textarea"
@@ -66,6 +66,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { saveRefuseMessage, refundOrder } from '@/api/secondHand'
 
 const route = useRoute()
 const router = useRouter()
@@ -82,13 +83,13 @@ const form = ref({
   description: ''
 })
 
-const submitHandle = () => {
+const submitHandle = async () => {
   if (!form.value.result) {
     ElMessage.error('请选择处理结果')
     return
   }
   
-  if (!form.value.description) {
+  if (form.value.result === '0' && !form.value.description) {
     ElMessage.error('请输入处理说明')
     return
   }
@@ -97,14 +98,24 @@ const submitHandle = () => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    // 这里应该调用API提交处理结果
-    ElMessage.success('处理结果已提交')
-    setTimeout(() => {
-      goBack()
-    }, 1500)
+  }).then(async () => {
+    try {
+      if (form.value.result === '0') {
+        // 拒绝退款，发送消息
+        await saveRefuseMessage(itemId.value, form.value.description)
+      } else if (form.value.result === '1') {
+        // 同意退款
+        await refundOrder(itemId.value)
+      }
+      ElMessage.success('处理结果已提交')
+      setTimeout(() => {
+        goBack()
+      }, 1500)
+    } catch (error) {
+      console.error('提交处理失败:', error)
+      ElMessage.error('提交处理失败，请重试')
+    }
   }).catch(() => {
-    // 取消操作
   })
 }
 

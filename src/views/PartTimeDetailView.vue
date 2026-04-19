@@ -83,8 +83,6 @@
             
             <!-- 兼职类型标签 -->
             <span class="tag tag-primary">{{ getTypeName(jobDetail.type) }}</span>
-            <span class="tag tag-success">状态: {{ jobDetail.statusName || jobDetail.status }}</span>
-            <span class="tag tag-warning">信誉分: {{ jobDetail.creditScore }}</span>
             <span class="tag tag-info">浏览: {{ jobDetail.viewCount }}</span>
             <span class="tag tag-info">申请: {{ jobDetail.applicantCount }}</span>
           </div>
@@ -100,11 +98,6 @@
           <div class="content-section">
             <h3 class="section-title"><i class="el-icon-user"></i> 任职要求</h3>
             <div class="content-text">{{ jobDetail.requirements }}</div>
-          </div>
-
-          <div class="content-section">
-            <h3 class="section-title"><i class="el-icon-time"></i> 发布时间</h3>
-            <p class="content-text">{{ jobDetail.publishTime }}</p>
           </div>
 
           <div class="content-section">

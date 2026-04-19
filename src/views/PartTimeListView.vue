@@ -110,7 +110,8 @@
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"
               :page-sizes="[10, 20, 50, 100]"
-              :total="Number(totalJobs) || Number(jobs.length) || 1"
+              :total="Number(totalJobs) || 0"
+              :page-count="Number(totalPages) || 1"
               layout="total, sizes, prev, pager, next, jumper"
               :hide-on-single-page="false"
               background
@@ -201,6 +202,9 @@ export default {
     },
     totalJobs() {
       return this.partTimeStore.total
+    },
+    totalPages() {
+      return this.partTimeStore.pages
     }
   },
   mounted() {

@@ -17,25 +17,34 @@
       <!-- 搜索和筛选 -->
       <div class="search-filter">
         <el-input
-          v-model="searchKeyword"
-          placeholder="搜索用户ID、用户名或手机号"
+          v-model="searchUserName"
+          placeholder="请输入用户名"
           class="search-input"
+          clearable
           @keyup.enter="fetchUsers"
-        >
-          <template #append>
-            <el-button @click="fetchUsers"><i class="el-icon-search"></i></el-button>
-          </template>
-        </el-input>
-        <el-select v-model="userRole" placeholder="选择用户角色" class="role-select">
+        />
+        <el-input
+          v-model="searchPhone"
+          placeholder="请输入手机号"
+          class="search-input"
+          clearable
+          @keyup.enter="fetchUsers"
+        />
+        <el-select v-model="userRole" placeholder="选择用户角色" class="role-select" clearable>
           <el-option label="全部" value="" />
           <el-option label="普通用户" value="user" />
           <el-option label="管理员" value="admin" />
         </el-select>
-        <el-select v-model="userStatus" placeholder="选择用户状态" class="status-select">
-          <el-option label="全部" value="" />
-          <el-option label="正常" value="active" />
-          <el-option label="封禁" value="banned" />
+        <el-select v-model="userStatus" placeholder="选择用户状态" class="status-select" clearable>
+          <el-option label="全部" :value="null" />
+          <el-option label="正常" :value="1" />
+          <el-option label="冻结" :value="0" />
+          <el-option label="拉黑" :value="2" />
         </el-select>
+        <el-button type="primary" @click="fetchUsers">
+          <el-icon><Search /></el-icon>
+          搜索
+        </el-button>
       </div>
 
       <!-- 用户列表 -->
@@ -101,6 +110,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
 const router = useRouter()
@@ -109,9 +119,10 @@ const router = useRouter()
 let cancelToken = null
 
 // 搜索和筛选参数
-const searchKeyword = ref('')
+const searchUserName = ref('')
+const searchPhone = ref('')
 const userRole = ref('')
-const userStatus = ref('')
+const userStatus = ref(null)
 
 // 状态类型映射
 const getStatusType = (status) => {
@@ -160,7 +171,10 @@ const fetchUsers = async () => {
     cancelToken = request.CancelToken.source()
     
     const response = await request.post('/user/admin/list', {
-      id: null,
+      userName: searchUserName.value || null,
+      phone: searchPhone.value || null,
+      role: userRole.value || null,
+      status: userStatus.value,
       pageNum: currentPage.value,
       pageSize: pageSize.value
     }, {

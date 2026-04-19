@@ -8,6 +8,7 @@ export const usePartTimeStore = defineStore('partTime', {
     myApplications: [],
     loading: false,
     total: 0,
+    pages: 0,
     currentPage: 1,
     pageSize: 10
   }),
@@ -47,6 +48,7 @@ export const usePartTimeStore = defineStore('partTime', {
         const res = await getPartTimeList(params)
         this.jobList = res.data.list || []
         this.total = res.data.total || 0
+        this.pages = res.data.pages || 0
         this.currentPage = res.data.currentPage || 1
         this.pageSize = res.data.pageSize || 10
         

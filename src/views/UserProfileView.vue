@@ -57,21 +57,18 @@
           <div v-if="userSecondHandItems.length === 0" class="empty-state">
             <el-empty description="暂无发布的二手商品" />
           </div>
-          <div v-else class="item-list">
-            <div class="list-item" v-for="item in userSecondHandItems" :key="item.id">
-              <div class="item-image">
-                <img :src="item.image" :alt="item.title" />
-              </div>
-              <div class="item-info">
-                <h4 class="item-title">{{ item.title }}</h4>
-                <p class="item-description">{{ item.description || '暂无描述' }}</p>
-                <div class="item-meta">
-                  <span class="price">¥{{ item.price }}</span>
-                  <span class="location">{{ item.location || '未知' }}</span>
-                  <span class="publish-time">{{ item.publishTime }}</span>
+          <div v-else class="second-hand-list">
+            <div class="second-hand-item" v-for="item in userSecondHandItems" :key="item.id">
+              <div class="second-hand-info">
+                <h4 class="second-hand-title">{{ item.title }}</h4>
+                <p class="second-hand-description">{{ item.description || '暂无描述' }}</p>
+                <div class="second-hand-meta">
+                  <span class="tag tag-danger">¥{{ item.price }}</span>
+                  <span class="meta-text">{{ item.location || '未知' }}</span>
+                  <span class="meta-text">{{ item.publishTime }}</span>
                 </div>
               </div>
-              <div class="item-actions">
+              <div class="second-hand-actions">
                 <router-link :to="`/second-hand/detail/${item.id}`" class="btn btn-primary">
                   查看详情
                 </router-link>
@@ -395,53 +392,40 @@ onMounted(async () => {
 }
 
 /* 二手商品列表样式 */
-.item-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+.second-hand-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.list-item {
+.second-hand-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background-color: #f9f9f9;
   border-radius: 8px;
   padding: 16px;
   transition: all 0.3s;
-  display: flex;
-  flex-direction: column;
 }
 
-.list-item:hover {
+.second-hand-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.item-image {
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
-
-.item-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.item-info {
+.second-hand-info {
   flex: 1;
-  margin-bottom: 16px;
+  margin-right: 20px;
 }
 
-.item-title {
+.second-hand-title {
   font-size: 16px;
   font-weight: bold;
   margin-bottom: 8px;
   color: #333;
 }
 
-.item-description {
+.second-hand-description {
   font-size: 14px;
   color: #666;
   margin-bottom: 12px;
@@ -453,30 +437,19 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.item-meta {
+.second-hand-meta {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
 }
 
-.price {
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--danger-color);
-}
-
-.location {
+.meta-text {
   font-size: 14px;
   color: #666;
 }
 
-.publish-time {
-  font-size: 12px;
-  color: #999;
-}
-
-.item-actions {
+.second-hand-actions {
   display: flex;
   gap: 10px;
 }
@@ -550,12 +523,18 @@ onMounted(async () => {
     justify-content: center;
   }
   
-  .item-list {
-    grid-template-columns: 1fr;
+  .second-hand-item {
+    flex-direction: column;
+    align-items: flex-start;
   }
   
-  .list-item {
-    flex-direction: column;
+  .second-hand-info {
+    margin-right: 0;
+    margin-bottom: 16px;
+  }
+  
+  .second-hand-actions {
+    width: 100%;
   }
   
   .job-info {

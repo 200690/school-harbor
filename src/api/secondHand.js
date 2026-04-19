@@ -197,3 +197,25 @@ export function deleteMessage(messageId) {
     method: 'delete'
   })
 }
+
+export function getAllSecondHandItems(data) {
+  return request({
+    url: '/second-hand/getAll',
+    method: 'post',
+    data
+  })
+}
+
+export function saveRefuseMessage(id, text) {
+  return request({
+    url: `/message/save/${id}/${text}`,
+    method: 'post'
+  })
+}
+
+export function refundOrder(id) {
+  return request({
+    url: `/second-hand/order/refund/${id}`,
+    method: 'post'
+  })
+}

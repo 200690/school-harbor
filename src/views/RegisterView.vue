@@ -27,7 +27,7 @@
           </el-form-item>
           <el-form-item>
             <div class="login-link-container">
-              已有账号？<router-link to="/user/login" class="login-link">立即登录</router-link>
+              已有账号？<router-link to="/user/user/login" class="login-link">立即登录</router-link>
             </div>
           </el-form-item>
         </el-form>

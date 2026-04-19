@@ -21,7 +21,7 @@
         <div v-else class="follow-items">
           <div v-for="follow in userFollows" :key="follow.followId" class="follow-item">
             <div class="user-avatar">
-              <img :src="follow.avatar.replace(/`/g, '')" :alt="follow.username" />
+              <img :src="(follow.avatar || '/default-avatar.png').replace(/`/g, '')" :alt="follow.username" />
             </div>
             <div class="user-info">
               <h3 class="user-name">{{ follow.username }}</h3>

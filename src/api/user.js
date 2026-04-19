@@ -69,6 +69,13 @@ export function getMyFollows(data) {
   })
 }
 
+export function followUser(userId) {
+  return request({
+    url: `/user/follow/add/${userId}`,
+    method: 'post'
+  })
+}
+
 export function unfollowUser(userId) {
   return request({
     url: `/user/follow/unfollow/${userId}`,

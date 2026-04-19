@@ -142,3 +142,18 @@ export function cancelPartTimeApplication(partTimeId) {
     method: 'post'
   })
 }
+
+export function getAllPartTimeJobs(data) {
+  return request({
+    url: '/part-time/getAll',
+    method: 'post',
+    data
+  })
+}
+
+export function deletePartTimeItem(id) {
+  return request({
+    url: `/part-time/deleteItem/${id}`,
+    method: 'delete'
+  })
+}

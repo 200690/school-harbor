@@ -95,7 +95,8 @@
               v-model:current-page="pageNum"
               v-model:page-size="pageSize"
               :page-sizes="[10, 20, 50, 100]"
-              :total="Number(totalItems) || Number(items.length) || 1"
+              :total="Number(totalItems) || 0"
+              :page-count="Number(totalPages) || 1"
               layout="total, sizes, prev, pager, next, jumper"
               :hide-on-single-page="false"
               background
@@ -134,6 +135,7 @@ export default {
       pageNum: 1,
       pageSize: 10,
       totalItems: 0,
+      totalPages: 0,
       items: [],
       loading: false,
       isRequesting: false // 添加请求锁，防止重复请求
@@ -208,9 +210,10 @@ export default {
         
         const response = await getSecondHandList(params)
         
-        const { list, total } = response.data
+        const { list, total, pages } = response.data
         this.items = list || []
         this.totalItems = total || 0
+        this.totalPages = pages || 0
       } catch (error) {
         console.error('获取二手物品列表失败:', error)
         this.$message.error('获取二手物品列表失败')

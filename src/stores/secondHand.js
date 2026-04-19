@@ -110,6 +110,7 @@ export const useSecondHandStore = defineStore('secondHand', {
     ],
     loading: false,
     total: 6,
+    pages: 0,
     currentPage: 1,
     pageSize: 10
   }),
@@ -150,6 +151,7 @@ export const useSecondHandStore = defineStore('secondHand', {
         const res = await getSecondHandList(params)
         this.itemList = res.data.list || []
         this.total = res.data.total || 0
+        this.pages = res.data.pages || 0
         this.currentPage = res.data.currentPage || 1
         this.pageSize = res.data.pageSize || 10
         
