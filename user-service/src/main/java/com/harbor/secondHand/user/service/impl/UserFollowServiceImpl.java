@@ -67,4 +67,31 @@ public class UserFollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFol
                 .eq(UserFollow::getUserId, UserContext.getUser())
                         .remove();
     }
+
+    @Override
+    @Transactional
+    public void follow(Long userId) {
+        Assert.notNull(userId, "用户ID不能为空");
+        
+        Long currentUserId = UserContext.getUser();
+        Assert.isTrue(!currentUserId.equals(userId), "不能关注自己");
+        
+        // 检查是否已经关注
+        UserFollow existFollow = lambdaQuery()
+                .eq(UserFollow::getUserId, currentUserId)
+                .eq(UserFollow::getFollowId, userId)
+                .one();
+        if (existFollow != null) {
+            return;
+        }
+        
+        // 创建关注记录
+        UserFollow userFollow = new UserFollow();
+        userFollow.setUserId(currentUserId);
+        userFollow.setFollowId(userId);
+        userFollow.setIsDelete(0);
+        this.save(userFollow);
+        
+        log.info("用户 {} 关注了用户 {}", currentUserId, userId);
+    }
 }

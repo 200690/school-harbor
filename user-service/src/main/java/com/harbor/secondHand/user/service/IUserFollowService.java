@@ -10,4 +10,6 @@ public interface IUserFollowService extends IService<UserFollow> {
     PageDTO<FollowVO> getMyFollow(PageQuery pageQuery);
 
     void unfollow(Long followId);
+
+    void follow(Long userId);
 }

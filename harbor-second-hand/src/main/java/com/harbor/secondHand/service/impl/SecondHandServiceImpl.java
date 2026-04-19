@@ -237,7 +237,14 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         }).toList();
         itemDetailVO.setRelatedItems(itemVOS);
         BeanUtil.copyProperties(item, itemDetailVO);
-        itemDetailVO.setImages(Arrays.stream(item.getImages().split(",")).toList());
+        if (item.getImages() == null || item.getImages().trim().isEmpty()) {
+            itemDetailVO.setImages(List.of());
+        } else {
+            itemDetailVO.setImages(Arrays.stream(item.getImages().split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList());
+        }
         // 卖家属性拷贝
         UserInfoDTO userInfoDTO = userClient.info(itemDetailVO.getSellerId()).getData();
         itemDetailVO.setSellerName(userInfoDTO.getUsername());
@@ -271,6 +278,13 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         
         ItemPO itemPO = new ItemPO();
         BeanUtil.copyProperties(itemCreateDTO, itemPO);
+        
+        // 处理images字段转换
+        if (itemCreateDTO.getImages() == null || itemCreateDTO.getImages().length == 0) {
+            itemPO.setImages(null);
+        } else {
+            itemPO.setImages(String.join(",", itemCreateDTO.getImages()));
+        }
 
         itemPO.setSellerId(UserContext.getUser());
         this.save(itemPO);
@@ -360,6 +374,16 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
         ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, item.getId()).one();
         Assert.notNull(itemPO, "商品不存在");
         BeanUtil.copyProperties(item, itemPO, CopyOptions.create().ignoreNullValue());
+        
+        // 处理images字段转换
+        if (item.getImages() != null) {
+            if (item.getImages().length == 0) {
+                itemPO.setImages(null);
+            } else {
+                itemPO.setImages(String.join(",", item.getImages()));
+            }
+        }
+        
         itemPO.setUpdateTime(LocalDateTime.now());
         this.updateById(itemPO);
 

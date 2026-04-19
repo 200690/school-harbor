@@ -25,11 +25,19 @@ public class UserFollowController {
         return Result.success(userFollowService.getMyFollow(pageQuery));
     }
 
-    @PostMapping("unfollow/{id}")
+    @PostMapping("unfollow/{userId}")
     @ApiOperation("取消关注")
-    public Result<Void> unfollow(@PathVariable Long id){
+    public Result<Void> unfollow(@PathVariable Long userId){
         log.info("取消关注");
-        userFollowService.unfollow(id);
+        userFollowService.unfollow(userId);
+        return Result.success();
+    }
+
+    @PostMapping("add/{userId}")
+    @ApiOperation("关注用户")
+    public Result<Void> follow(@PathVariable Long userId){
+        log.info("关注用户: {}", userId);
+        userFollowService.follow(userId);
         return Result.success();
     }
 }
