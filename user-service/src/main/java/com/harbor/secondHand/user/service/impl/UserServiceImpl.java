@@ -15,6 +15,7 @@ import com.harbor.secondHand.user.domain.dto.UserPageDTO;
 import com.harbor.secondHand.user.domain.po.UserBalance;
 import com.harbor.secondHand.user.mapper.BalanceMapper;
 import com.harbor.secondHand.user.producer.UserMessageProducer;
+import com.harbor.utils.SensitiveWordFilter;
 import com.harbor.utils.dto.UserInfoDTO;
 import com.harbor.secondHand.user.domain.dto.UserRegisterDTO;
 import com.harbor.secondHand.user.domain.po.User;
@@ -95,6 +96,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public void register(UserRegisterDTO userRegisterDTO) {
         // TODO 用户注册的密码加密写入数据库
+        if (userRegisterDTO.getUsername() != null) {
+            userRegisterDTO.setUsername(SensitiveWordFilter.filter(userRegisterDTO.getUsername()));
+        }
+
         User user = new User()
                 .setUsername(userRegisterDTO.getUsername())
                 .setPassword(userRegisterDTO.getPassword())
@@ -145,6 +150,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public void updateUserInfo(UserInfoDTO userInfoDTO) {
         User user = checkUserById(userInfoDTO.getId());
+
+        if (userInfoDTO.getUsername() != null) {
+            userInfoDTO.setUsername(SensitiveWordFilter.filter(userInfoDTO.getUsername()));
+        }
+        if(userInfoDTO.getSignature() != null) {
+            userInfoDTO.setSignature(SensitiveWordFilter.filter(userInfoDTO.getSignature()));
+        }
+
         BeanUtil.copyProperties(userInfoDTO, user);
         this.updateById(user);
 

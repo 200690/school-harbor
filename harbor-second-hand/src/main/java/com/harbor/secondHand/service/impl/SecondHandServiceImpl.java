@@ -29,6 +29,7 @@ import com.harbor.secondHand.service.ISecondHandService;
 import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.ItemMainDTO;
 import com.harbor.utils.dto.UserInfoDTO;
+import com.harbor.utils.SensitiveWordFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -253,6 +254,21 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
     @Override
     public void createItem(ItemCreateDTO itemCreateDTO) {
+        // 过滤敏感词
+        if (itemCreateDTO.getTitle() != null) {
+            itemCreateDTO.setTitle(SensitiveWordFilter.filter(itemCreateDTO.getTitle()));
+        }
+        if (itemCreateDTO.getDescription() != null) {
+            itemCreateDTO.setDescription(SensitiveWordFilter.filter(itemCreateDTO.getDescription()));
+        }
+        // 可选过滤其他字段
+        if (itemCreateDTO.getLocation() != null) {
+            itemCreateDTO.setLocation(SensitiveWordFilter.filter(itemCreateDTO.getLocation()));
+        }
+        if (itemCreateDTO.getSchool() != null) {
+            itemCreateDTO.setSchool(SensitiveWordFilter.filter(itemCreateDTO.getSchool()));
+        }
+        
         ItemPO itemPO = new ItemPO();
         BeanUtil.copyProperties(itemCreateDTO, itemPO);
 
@@ -326,6 +342,21 @@ public class SecondHandServiceImpl extends ServiceImpl<SecondHandMapper, ItemPO>
 
     @Override
     public void updateItem(ItemCreateDTO item) {
+        // 过滤敏感词
+        if (item.getTitle() != null) {
+            item.setTitle(SensitiveWordFilter.filter(item.getTitle()));
+        }
+        if (item.getDescription() != null) {
+            item.setDescription(SensitiveWordFilter.filter(item.getDescription()));
+        }
+        // 可选过滤其他字段
+        if (item.getLocation() != null) {
+            item.setLocation(SensitiveWordFilter.filter(item.getLocation()));
+        }
+        if (item.getSchool() != null) {
+            item.setSchool(SensitiveWordFilter.filter(item.getSchool()));
+        }
+        
         ItemPO itemPO = lambdaQuery().eq(ItemPO::getId, item.getId()).one();
         Assert.notNull(itemPO, "商品不存在");
         BeanUtil.copyProperties(item, itemPO, CopyOptions.create().ignoreNullValue());

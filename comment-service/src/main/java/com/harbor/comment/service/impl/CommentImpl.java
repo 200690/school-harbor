@@ -21,6 +21,7 @@ import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.CommentMessageDTO;
 import com.harbor.utils.dto.CreditScoreChangeDTO;
 import com.harbor.utils.dto.UserInfoDTO;
+import com.harbor.utils.SensitiveWordFilter;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -171,7 +172,7 @@ public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implemen
         comment.setUserId(currentUserId);
         comment.setUserName(currentUser.getUsername());
         comment.setUserAvatar(currentUser.getImg());
-        comment.setContent(commentDTO.getContent());
+        comment.setContent(SensitiveWordFilter.filter(commentDTO.getContent()));
         comment.setStatus(1);
         comment.setLikeCount(0);
         comment.setReplyCount(0);
@@ -197,7 +198,7 @@ public class CommentImpl extends ServiceImpl<commentMapper, CommentsPO> implemen
             
             // 设置被回复用户信息
             comment.setReplyUserId(commentDTO.getParentId());
-            comment.setReplyUserName(commentDTO.getReplyUserName());
+            comment.setReplyUserName(SensitiveWordFilter.filter(commentDTO.getReplyUserName()));
             
             // 更新父评论的回复数
             this.lambdaUpdate()

@@ -27,6 +27,7 @@ import com.harbor.partTime.producer.PublishNotificationProducer;
 import com.harbor.partTime.service.IPartTimeService;
 import com.harbor.utils.client.UserClient;
 import com.harbor.utils.dto.UserInfoDTO;
+import com.harbor.utils.SensitiveWordFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -201,6 +202,39 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
      */
     @Override
     public void newJob(PartTimeCreateDTO partTimeCreateDTO) {
+        // 过滤敏感词
+        if (partTimeCreateDTO.getTitle() != null) {
+            partTimeCreateDTO.setTitle(SensitiveWordFilter.filter(partTimeCreateDTO.getTitle()));
+        }
+        if (partTimeCreateDTO.getDescription() != null) {
+            partTimeCreateDTO.setDescription(SensitiveWordFilter.filter(partTimeCreateDTO.getDescription()));
+        }
+        if (partTimeCreateDTO.getRequirements() != null) {
+            partTimeCreateDTO.setRequirements(SensitiveWordFilter.filter(partTimeCreateDTO.getRequirements()));
+        }
+        if (partTimeCreateDTO.getEmployer() != null) {
+            partTimeCreateDTO.setEmployer(SensitiveWordFilter.filter(partTimeCreateDTO.getEmployer()));
+        }
+        if (partTimeCreateDTO.getLocation() != null) {
+            partTimeCreateDTO.setLocation(SensitiveWordFilter.filter(partTimeCreateDTO.getLocation()));
+        }
+        if (partTimeCreateDTO.getWorkTime() != null) {
+            partTimeCreateDTO.setWorkTime(SensitiveWordFilter.filter(partTimeCreateDTO.getWorkTime()));
+        }
+        if (partTimeCreateDTO.getSalaryUnit() != null) {
+            partTimeCreateDTO.setSalaryUnit(SensitiveWordFilter.filter(partTimeCreateDTO.getSalaryUnit()));
+        }
+        if (partTimeCreateDTO.getSalaryDesc() != null) {
+            partTimeCreateDTO.setSalaryDesc(SensitiveWordFilter.filter(partTimeCreateDTO.getSalaryDesc()));
+        }
+        if (partTimeCreateDTO.getContactPerson() != null) {
+            partTimeCreateDTO.setContactPerson(SensitiveWordFilter.filter(partTimeCreateDTO.getContactPerson()));
+        }
+        // contactPhone 通常不需要过滤，但也可以过滤
+        if (partTimeCreateDTO.getContactPhone() != null) {
+            partTimeCreateDTO.setContactPhone(SensitiveWordFilter.filter(partTimeCreateDTO.getContactPhone()));
+        }
+        
         PartTimePO partTimePO = new PartTimePO();
         partTimePO.setPublisherId(UserContext.getUser());
         BeanUtil.copyProperties(partTimeCreateDTO, partTimePO);
@@ -282,6 +316,39 @@ public class IPartTimeServiceImpl extends ServiceImpl<PartTimeMapper, PartTimePO
      */
     @Override
     public void updateById(PartTimeCreateDTO partTimeDTO) {
+        // 过滤敏感词
+        if (partTimeDTO.getTitle() != null) {
+            partTimeDTO.setTitle(SensitiveWordFilter.filter(partTimeDTO.getTitle()));
+        }
+        if (partTimeDTO.getDescription() != null) {
+            partTimeDTO.setDescription(SensitiveWordFilter.filter(partTimeDTO.getDescription()));
+        }
+        if (partTimeDTO.getRequirements() != null) {
+            partTimeDTO.setRequirements(SensitiveWordFilter.filter(partTimeDTO.getRequirements()));
+        }
+        if (partTimeDTO.getEmployer() != null) {
+            partTimeDTO.setEmployer(SensitiveWordFilter.filter(partTimeDTO.getEmployer()));
+        }
+        if (partTimeDTO.getLocation() != null) {
+            partTimeDTO.setLocation(SensitiveWordFilter.filter(partTimeDTO.getLocation()));
+        }
+        if (partTimeDTO.getWorkTime() != null) {
+            partTimeDTO.setWorkTime(SensitiveWordFilter.filter(partTimeDTO.getWorkTime()));
+        }
+        if (partTimeDTO.getSalaryUnit() != null) {
+            partTimeDTO.setSalaryUnit(SensitiveWordFilter.filter(partTimeDTO.getSalaryUnit()));
+        }
+        if (partTimeDTO.getSalaryDesc() != null) {
+            partTimeDTO.setSalaryDesc(SensitiveWordFilter.filter(partTimeDTO.getSalaryDesc()));
+        }
+        if (partTimeDTO.getContactPerson() != null) {
+            partTimeDTO.setContactPerson(SensitiveWordFilter.filter(partTimeDTO.getContactPerson()));
+        }
+        // contactPhone 通常不需要过滤，但也可以过滤
+        if (partTimeDTO.getContactPhone() != null) {
+            partTimeDTO.setContactPhone(SensitiveWordFilter.filter(partTimeDTO.getContactPhone()));
+        }
+        
         PartTimePO partTimePO = lambdaQuery().eq(PartTimePO::getId, partTimeDTO.getId()).one();
         Assert.notNull(partTimePO, "兼职不存在");
         BeanUtil.copyProperties(partTimeDTO, partTimePO, CopyOptions.create().ignoreNullValue());

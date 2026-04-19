@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.harbor.common.domain.PageDTO;
 import com.harbor.common.utils.UserContext;
+import com.harbor.utils.SensitiveWordFilter;
 import com.harbor.reportservice.domain.dto.ReportCreateDTO;
 import com.harbor.reportservice.domain.dto.ReportQueryDTO;
 import com.harbor.reportservice.domain.po.ReportPO;
@@ -46,7 +47,7 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, ReportPO> imple
         report.setTargetId(dto.getTargetId());
         report.setReporterId(currentUserId);
         report.setReasonType(dto.getReasonType());
-        report.setReasonDesc(dto.getReasonDesc());
+        report.setReasonDesc(SensitiveWordFilter.filter(dto.getReasonDesc()));
         report.setStatus(ReportStatusEnum.PENDING.getCode());
 
         // 将图片URL列表用逗号分隔存储
